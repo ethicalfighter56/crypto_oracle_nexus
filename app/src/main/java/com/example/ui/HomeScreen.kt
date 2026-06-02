@@ -78,7 +78,7 @@ fun HomeScreen(
     ) {
         // App Header Brand Profile
         item {
-            HeaderSection()
+            HeaderSection(viewModel)
         }
 
         // Ticker for top coins: BTC, ETH, XRP
@@ -382,7 +382,64 @@ fun BangladeshTimeWidget() {
 }
 
 @Composable
-fun HeaderSection() {
+fun TelemetryStatusRow(viewModel: CryptoViewModel) {
+    val isLiveConnected by viewModel.isLiveConnected.collectAsState()
+    val hasGeminiApiKey by viewModel.hasGeminiApiKey.collectAsState()
+
+    Row(
+        modifier = Modifier.padding(top = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        // Network Sync status
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(6.dp)
+                    .background(if (isLiveConnected) CryptoGreen else TextMuted, CircleShape)
+            )
+            Text(
+                text = if (isLiveConnected) "BINANCE SYNC: LIVE" else "LOCAL INDEX",
+                fontSize = 8.sp,
+                fontWeight = FontWeight.Bold,
+                color = if (isLiveConnected) CryptoGreen else TextSecondary,
+                letterSpacing = 0.5.sp
+            )
+        }
+
+        // Divider dot
+        Box(
+            modifier = Modifier
+                .size(2.dp)
+                .background(BorderColor, CircleShape)
+        )
+
+        // Gemini Key status
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(6.dp)
+                    .background(if (hasGeminiApiKey) CryptoCyan else AccentGold, CircleShape)
+            )
+            Text(
+                text = if (hasGeminiApiKey) "GEMINI: ACTIVE" else "GEMINI: SIMULATED",
+                fontSize = 8.sp,
+                fontWeight = FontWeight.Bold,
+                color = if (hasGeminiApiKey) CryptoCyan else AccentGold,
+                letterSpacing = 0.5.sp
+            )
+        }
+    }
+}
+
+@Composable
+fun HeaderSection(viewModel: CryptoViewModel) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -434,6 +491,9 @@ fun HeaderSection() {
                     letterSpacing = 0.5.sp,
                     modifier = Modifier.padding(top = 2.dp)
                 )
+                
+                // Real-time telemetry indicators row below labels
+                TelemetryStatusRow(viewModel)
             }
         }
         

@@ -57,6 +57,13 @@ class CryptoViewModel(application: Application) : AndroidViewModel(application) 
     private val _analysisState = MutableStateFlow<AnalysisState>(AnalysisState.Idle)
     val analysisState: StateFlow<AnalysisState> = _analysisState.asStateFlow()
 
+    // Real-Time telemetry state for robust error handling and visual feedback
+    private val _isLiveConnected = MutableStateFlow(false)
+    val isLiveConnected: StateFlow<Boolean> = _isLiveConnected.asStateFlow()
+
+    private val _hasGeminiApiKey = MutableStateFlow(com.example.BuildConfig.GEMINI_API_KEY.isNotEmpty() && com.example.BuildConfig.GEMINI_API_KEY != "MY_GEMINI_API_KEY")
+    val hasGeminiApiKey: StateFlow<Boolean> = _hasGeminiApiKey.asStateFlow()
+
     // Home feed data (prefilled with fast simulation output so it's ready instantly)
     private val _newsFeedData = MutableStateFlow<OracleAnalysisResponse>(GeminiClient.generateSimulatorData())
     val newsFeedData: StateFlow<OracleAnalysisResponse> = _newsFeedData.asStateFlow()
@@ -165,6 +172,8 @@ class CryptoViewModel(application: Application) : AndroidViewModel(application) 
                         val isWin = idx != 3 && idx != 7 && idx != 11 && idx != 14
                         val result = if (isWin) "WIN" else "LOSS"
                         val priceChange = if (isWin) (3.5 + (idx * 0.4)) else -(2.0 + (idx * 0.2))
+                        val regimes = listOf("BULLISH", "BEARISH", "SIDEWAYS", "ACCUMULATION", "DISTRIBUTION")
+                        val regimeAssigned = regimes[idx % regimes.size]
 
                         historicEntities.add(
                             SignalEntity(
@@ -179,6 +188,7 @@ class CryptoViewModel(application: Application) : AndroidViewModel(application) 
                                 timeframe = if (idx % 2 == 0) "6h" else "12h",
                                 result = result,
                                 isLong = type == "FUTURES_LONG" || type == "SPOT",
+                                marketRegime = regimeAssigned,
                                 timestamp = timestamp
                             )
                         )
@@ -198,6 +208,7 @@ class CryptoViewModel(application: Application) : AndroidViewModel(application) 
                 try {
                     val prices = GeminiClient.fetchBinancePrices()
                     if (prices.isNotEmpty()) {
+                        _isLiveConnected.value = true
                         val currentNewsFeed = _newsFeedData.value
                         _newsFeedData.value = GeminiClient.updateResponseWithBinancePrices(currentNewsFeed, prices)
 
@@ -207,11 +218,14 @@ class CryptoViewModel(application: Application) : AndroidViewModel(application) 
                                 GeminiClient.updateResponseWithBinancePrices(currentAnalysisState.data, prices)
                             )
                         }
+                    } else {
+                        _isLiveConnected.value = false
                     }
                 } catch (e: Exception) {
+                    _isLiveConnected.value = false
                     Log.e("CryptoViewModel", "Error in binance price sync loop", e)
                 }
-                delay(2000) // Highly economic 2s spacing
+                delay(4000) // Highly economic 4s spacing to avoid rate limits
             }
         }
     }
@@ -347,7 +361,8 @@ class CryptoViewModel(application: Application) : AndroidViewModel(application) 
                                     probabilityPct = spotSig.confidencePct,
                                     timeframe = "6h",
                                     result = if (Random.nextBoolean()) "WIN" else "PENDING",
-                                    isLong = true
+                                    isLong = true,
+                                    marketRegime = _marketRegime.value
                                 )
                             )
                         }

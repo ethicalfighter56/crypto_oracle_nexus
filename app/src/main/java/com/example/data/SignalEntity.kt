@@ -17,6 +17,7 @@ data class SignalEntity(
     val timeframe: String, // "6h", "12h", "1m", "5m", "15m", "30m"
     val result: String, // "WIN", "LOSS", "PENDING"
     val isLong: Boolean, // true for long, false for short (or spot)
+    val marketRegime: String = "BULLISH",
     val timestamp: Long = System.currentTimeMillis()
 )
 

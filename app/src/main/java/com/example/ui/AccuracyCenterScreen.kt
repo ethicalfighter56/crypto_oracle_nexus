@@ -2,6 +2,7 @@ package com.example.ui
 
 import androidx.compose.animation.*
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -20,6 +21,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -182,6 +185,11 @@ fun AccuracyCenterScreen(
                     }
 
                     HorizontalDivider(color = BorderColor, modifier = Modifier.padding(vertical = 14.dp))
+
+                    if (totalSignals > 0) {
+                        WinLossRatioCanvas(wins = wins, losses = losses, pending = pending)
+                        HorizontalDivider(color = BorderColor, modifier = Modifier.padding(vertical = 14.dp))
+                    }
 
                     // Secondary details: Profit Factor, Avg Return
                     Row(
@@ -419,6 +427,40 @@ fun SignalHistoryCard(entity: SignalEntity) {
                     )
                 }
             }
+
+            Spacer(modifier = Modifier.height(10.dp))
+            HorizontalDivider(color = BorderColor.copy(alpha = 0.5f))
+            Spacer(modifier = Modifier.height(6.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.Info,
+                        contentDescription = "Regime Trace",
+                        tint = CryptoCyan,
+                        modifier = Modifier.size(11.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = "PERSISTED REGIME: ${entity.marketRegime.uppercase()}",
+                        fontSize = 9.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = TextSecondary,
+                        fontFamily = FontFamily.Monospace
+                    )
+                }
+
+                Text(
+                    text = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm", java.util.Locale.getDefault()).format(java.util.Date(entity.timestamp)),
+                    fontSize = 9.sp,
+                    color = TextMuted,
+                    fontFamily = FontFamily.Monospace
+                )
+            }
         }
     }
 }
@@ -428,5 +470,111 @@ private fun formatPrice(price: Double): String {
         price >= 1000 -> String.format("$%,.2f", price)
         price >= 1 -> String.format("$%,.3f", price)
         else -> String.format("$%.6f", price)
+    }
+}
+
+@Composable
+fun WinLossRatioCanvas(wins: Int, losses: Int, pending: Int) {
+    val total = wins + losses + pending
+    if (total == 0) return
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp)
+    ) {
+        Text(
+            text = "DISTRIBUTION METRICS INDEX",
+            fontSize = 9.sp,
+            fontWeight = FontWeight.Bold,
+            color = TextSecondary,
+            letterSpacing = 1.sp,
+            modifier = Modifier.padding(bottom = 6.dp)
+        )
+
+        // Custom Canvas drawing a beautiful rounded segmented bar
+        Canvas(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(18.dp)
+                .clip(RoundedCornerShape(9.dp))
+                .background(BorderColor)
+        ) {
+            val winsWeight = wins.toFloat() / total
+            val lossesWeight = losses.toFloat() / total
+            val pendingWeight = pending.toFloat() / total
+
+            val barWidth = size.width
+
+            val winSize = barWidth * winsWeight
+            val lossSize = barWidth * lossesWeight
+            val pendingSize = barWidth * pendingWeight
+
+            // 1. Draw wins (CryptoGreen)
+            if (winSize > 0) {
+                drawRect(
+                    color = CryptoGreen,
+                    size = Size(winSize, size.height)
+                )
+            }
+
+            // 2. Draw losses (CryptoRed / Color(0xFFFF3F60))
+            if (lossSize > 0) {
+                drawRect(
+                    color = Color(0xFFFF3F60),
+                    size = Size(lossSize, size.height),
+                    topLeft = Offset(winSize, 0f)
+                )
+            }
+
+            // 3. Draw pending (TextMuted)
+            if (pendingSize > 0) {
+                drawRect(
+                    color = TextMuted,
+                    size = Size(pendingSize, size.height),
+                    topLeft = Offset(winSize + lossSize, 0f)
+                )
+            }
+        }
+
+        // Segment Labels and Legend
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 10.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            val winPct = (wins.toFloat() / total) * 100
+            val lossPct = (losses.toFloat() / total) * 100
+            val pendingPct = (pending.toFloat() / total) * 100
+
+            LegendItem(label = "WINS (${String.format("%.1f", winPct)}%)", color = CryptoGreen)
+            LegendItem(label = "LOSSES (${String.format("%.1f", lossPct)}%)", color = Color(0xFFFF3F60))
+            if (pending > 0) {
+                LegendItem(label = "PENDING (${String.format("%.1f", pendingPct)}%)", color = TextMuted)
+            }
+        }
+    }
+}
+
+@Composable
+fun LegendItem(label: String, color: Color) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(6.dp)
+                .background(color, CircleShape)
+        )
+        Text(
+            text = label,
+            fontSize = 9.sp,
+            fontWeight = FontWeight.Bold,
+            color = TextSecondary,
+            fontFamily = FontFamily.Monospace
+        )
     }
 }
