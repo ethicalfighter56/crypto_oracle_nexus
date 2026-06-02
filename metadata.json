@@ -1,0 +1,6 @@
+{
+  "name": "Crypto Signal Oracle",
+  "description": "A high-fidelity mobile application featuring cryptocurrency market analysis, spot potential indicators, and long/short futures signals with probability scores.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
