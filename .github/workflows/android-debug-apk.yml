@@ -13,11 +13,7 @@ on:
           - clean assembleDebug
   push:
     branches:
-      - main
       - phase1-oracle-nexus-upgrade
-  pull_request:
-    branches:
-      - main
 
 permissions:
   contents: read
