@@ -124,41 +124,20 @@ fun TabButton(
 
 @Composable
 private fun LanguageToggle(isBengali: Boolean, onToggle: () -> Unit) {
-    Row(
+    Box(
         modifier = Modifier
-            .background(DarkSurface, RoundedCornerShape(16.dp))
-            .border(1.dp, BorderColor, RoundedCornerShape(16.dp))
-            .padding(4.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .clip(RoundedCornerShape(12.dp))
+            .background(AccentGold.copy(alpha = 0.15f))
+            .border(1.dp, AccentGold, RoundedCornerShape(12.dp))
+            .clickable { onToggle() }
+            .padding(horizontal = 14.dp, vertical = 6.dp)
     ) {
-        Box(
-            modifier = Modifier
-                .clip(RoundedCornerShape(12.dp))
-                .background(if (!isBengali) AccentGold else Color.Transparent)
-                .clickable { if (isBengali) onToggle() }
-                .padding(horizontal = 12.dp, vertical = 6.dp)
-        ) {
-            Text(
-                "English",
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Bold,
-                color = if (!isBengali) DarkBackground else TextSecondary
-            )
-        }
-        Box(
-            modifier = Modifier
-                .clip(RoundedCornerShape(12.dp))
-                .background(if (isBengali) AccentGold else Color.Transparent)
-                .clickable { if (!isBengali) onToggle() }
-                .padding(horizontal = 12.dp, vertical = 6.dp)
-        ) {
-            Text(
-                "বাংলা",
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Bold,
-                color = if (isBengali) DarkBackground else TextSecondary
-            )
-        }
+        Text(
+            text = if (isBengali) "GLOBAL: বাংলা" else "GLOBAL: EN",
+            fontSize = 11.sp,
+            fontWeight = FontWeight.ExtraBold,
+            color = AccentGold
+        )
     }
 }
 
@@ -212,7 +191,7 @@ private fun RunningMissionsList(viewModel: CryptoViewModel, isBengali: Boolean) 
                     isNegative = isLoss,
                     isBengali = isBengali,
                     isHistory = false,
-                    onStop = { viewModel.stopMission(m.id) }
+                    onStop = { overrideValue -> viewModel.stopMission(m.id, overrideValue) }
                 )
             }
         }
@@ -236,7 +215,7 @@ private fun MissionCard(
     isNegative: Boolean,
     isBengali: Boolean,
     isHistory: Boolean,
-    onStop: () -> Unit
+    onStop: (Boolean?) -> Unit
 ) {
     val roiColor = if (isNegative) Color(0xFFFF3F60) else CryptoGreen
     Card(
@@ -395,21 +374,21 @@ private fun MissionCard(
                         confirmButton = {
                             Column(modifier = Modifier.fillMaxWidth()) {
                                 Button(
-                                    onClick = { showStopConfirm = false; onStop() },
+                                    onClick = { showStopConfirm = false; onStop(false) },
                                     modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
                                     colors = ButtonDefaults.buttonColors(containerColor = CryptoGreen)
                                 ) {
                                     Text("Take Profit", color = DarkBackground, fontWeight = FontWeight.Bold)
                                 }
                                 Button(
-                                    onClick = { showStopConfirm = false; onStop() },
+                                    onClick = { showStopConfirm = false; onStop(true) },
                                     modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
                                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF3F60))
                                 ) {
                                     Text("Stop Loss", color = DarkBackground, fontWeight = FontWeight.Bold)
                                 }
                                 Button(
-                                    onClick = { showStopConfirm = false; onStop() },
+                                    onClick = { showStopConfirm = false; onStop(null) },
                                     modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
                                     colors = ButtonDefaults.buttonColors(containerColor = AccentGold)
                                 ) {

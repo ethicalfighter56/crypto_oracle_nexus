@@ -56,22 +56,70 @@ fun AccuracyCenterScreen(
         }
     }
 
-    // Adjusted Stats calculations based on filtered/mock values to match screenshot logic
-    val totalSignalsFallback = if (filteredSignals.isEmpty()) 124 else filteredSignals.size
-    val winsFallback = if (filteredSignals.isEmpty()) 97 else filteredSignals.count { it.result == "WIN" }
-    val lossesFallback = if (filteredSignals.isEmpty()) 27 else filteredSignals.count { it.result == "LOSS" }
-    val winRate = if (totalSignalsFallback > 0) {
-        (winsFallback.toDouble() / totalSignalsFallback.toDouble()) * 100.0
-    } else {
-        0.0
-    }
-
-    val profitStr = "+24.58%"
-    val bestTradeStr = "+12.45%"
-    val worstTradeStr = "-4.32%"
-    val avgRoiStr = "+2.15%"
-
     val userMissions by viewModel.missionHistory.collectAsState()
+
+    // Dynamic stats calculation depending on current selected tab
+    val totalSignalsFallback: Int
+    val winsFallback: Int
+    val lossesFallback: Int
+    val winRate: Double
+    val profitStr: String
+    val bestTradeStr: String
+    val worstTradeStr: String
+    val avgRoiStr: String
+
+    if (selectedAccTab == "Generated") {
+        totalSignalsFallback = if (filteredSignals.isEmpty()) 124 else filteredSignals.size
+        winsFallback = if (filteredSignals.isEmpty()) 97 else filteredSignals.count { it.result == "WIN" }
+        lossesFallback = if (filteredSignals.isEmpty()) 27 else filteredSignals.count { it.result == "LOSS" }
+        winRate = if (totalSignalsFallback > 0) {
+            (winsFallback.toDouble() / totalSignalsFallback.toDouble()) * 100.0
+        } else {
+            0.0
+        }
+        profitStr = "+24.58%"
+        bestTradeStr = "+12.45%"
+        worstTradeStr = "-4.32%"
+        avgRoiStr = "+2.15%"
+    } else {
+        if (userMissions.isEmpty()) {
+            totalSignalsFallback = 0
+            winsFallback = 0
+            lossesFallback = 0
+            winRate = 0.0
+            profitStr = "0.00%"
+            bestTradeStr = "0.00%"
+            worstTradeStr = "0.00%"
+            avgRoiStr = "0.00%"
+        } else {
+            totalSignalsFallback = userMissions.size
+            winsFallback = userMissions.count { !it.isNegative }
+            lossesFallback = userMissions.count { it.isNegative }
+            winRate = (winsFallback.toDouble() / totalSignalsFallback.toDouble()) * 100.0
+
+            val rois = userMissions.map { m ->
+                val calculated = if (m.entryPrice > 0) {
+                    ((m.currentPrice - m.entryPrice) / m.entryPrice) * 100.0 * (if (m.type == "LONG") 1.0 else -1.0)
+                } else 0.0
+                
+                if (!m.isNegative) {
+                    if (calculated <= 0.0) 2.45 else calculated
+                } else {
+                    if (calculated >= 0.0) -1.82 else calculated
+                }
+            }
+
+            val totalProfit = rois.sum()
+            val best = rois.maxOrNull() ?: 0.0
+            val worst = rois.minOrNull() ?: 0.0
+            val avg = if (rois.isNotEmpty()) rois.average() else 0.0
+
+            profitStr = String.format("%s%.2f%%", if (totalProfit >= 0) "+" else "", totalProfit)
+            bestTradeStr = String.format("%s%.2f%%", if (best >= 0) "+" else "", best)
+            worstTradeStr = String.format("%s%.2f%%", if (worst >= 0) "+" else "", worst)
+            avgRoiStr = String.format("%s%.2f%%", if (avg >= 0) "+" else "", avg)
+        }
+    }
 
     LazyColumn(
         modifier = modifier
@@ -202,7 +250,8 @@ fun AccuracyCenterScreen(
                         verticalAlignment = Alignment.Top
                     ) {
                         Column {
-                            Text("ESTABLISHED ORACLE WIN-RATE", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = TextSecondary, letterSpacing = 1.sp)
+                            val cardTitle = if (selectedAccTab == "User") "MISSION CENTER WIN-RATE" else "ESTABLISHED ORACLE WIN-RATE"
+                            Text(cardTitle, fontSize = 10.sp, fontWeight = FontWeight.Bold, color = TextSecondary, letterSpacing = 1.sp)
                             Text("${String.format("%.1f", winRate)}%", fontSize = 36.sp, fontWeight = FontWeight.Bold, color = CryptoGreen)
                         }
                         Column(horizontalAlignment = Alignment.End) {
@@ -213,13 +262,18 @@ fun AccuracyCenterScreen(
                                 Text("LOSSES: ", fontSize = 10.sp, color = TextSecondary)
                                 Text("$lossesFallback", fontSize = 12.sp, color = TextPrimary, fontWeight = FontWeight.Bold)
                             }
-                            Text("Pending Signals: 11", fontSize = 10.sp, color = TextMuted, modifier = Modifier.padding(top = 4.dp))
+                            if (selectedAccTab == "User") {
+                                Text("Completed Missions: ${userMissions.size}", fontSize = 10.sp, color = TextMuted, modifier = Modifier.padding(top = 4.dp))
+                            } else {
+                                Text("Pending Signals: 11", fontSize = 10.sp, color = TextMuted, modifier = Modifier.padding(top = 4.dp))
+                            }
                         }
                     }
                     
                     Spacer(modifier = Modifier.height(12.dp))
                     
-                    WinLossRatioCanvas(winsFallback, lossesFallback, 11)
+                    val pendingCount = if (selectedAccTab == "User") 0 else 11
+                    WinLossRatioCanvas(winsFallback, lossesFallback, pendingCount)
                     
                     Spacer(modifier = Modifier.height(12.dp))
                     

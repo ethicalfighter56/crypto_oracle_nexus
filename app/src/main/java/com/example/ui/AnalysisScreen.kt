@@ -1481,29 +1481,13 @@ fun OraclePickCard(asset: Any, timeframeIndex: Int, viewModel: CryptoViewModel, 
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = "👑 ORACLE PICK OF THE MOMENT",
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Black,
-                        color = AccentGold,
-                        letterSpacing = 1.5.sp
-                    )
-                }
-
-                Box(
-                    modifier = Modifier
-                        .wrapContentWidth()
-                        .background(AccentGold.copy(alpha = 0.15f), RoundedCornerShape(6.dp))
-                        .padding(horizontal = 8.dp, vertical = 2.dp)
-                ) {
-                    Text(
-                        text = "SCORE: $score/100",
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Black,
-                        color = AccentGold
-                    )
-                }
+                Text(
+                    text = "👑 ORACLE PICK OF THE MOMENT",
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Black,
+                    color = AccentGold,
+                    letterSpacing = 1.5.sp
+                )
             }
 
             // Coin primary asset info row
@@ -1512,7 +1496,10 @@ fun OraclePickCard(asset: Any, timeframeIndex: Int, viewModel: CryptoViewModel, 
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    modifier = Modifier.weight(1f),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     Box(
                         modifier = Modifier
                             .height(38.dp)
@@ -1544,19 +1531,38 @@ fun OraclePickCard(asset: Any, timeframeIndex: Int, viewModel: CryptoViewModel, 
                     }
                 }
 
-                // Confidence Grade Pill
-                val grade = if (asset is SpotSignal) asset.confidenceGrade else if (asset is FuturesSignal) asset.confidenceGrade else "A"
-                Box(
-                    modifier = Modifier
-                        .background(CryptoCyan.copy(alpha = 0.12f), RoundedCornerShape(8.dp))
-                        .padding(horizontal = 10.dp, vertical = 4.dp)
+                Column(
+                    horizontalAlignment = Alignment.End,
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    Text(
-                        text = "RANK: $grade",
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = CryptoCyan
-                    )
+                    // SCORE Pill
+                    Box(
+                        modifier = Modifier
+                            .background(AccentGold.copy(alpha = 0.15f), RoundedCornerShape(6.dp))
+                            .padding(horizontal = 8.dp, vertical = 2.dp)
+                    ) {
+                        Text(
+                            text = "SCORE: $score/100",
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Black,
+                            color = AccentGold
+                        )
+                    }
+
+                    // Confidence Grade Pill
+                    val grade = if (asset is SpotSignal) asset.confidenceGrade else if (asset is FuturesSignal) asset.confidenceGrade else "A"
+                    Box(
+                        modifier = Modifier
+                            .background(CryptoCyan.copy(alpha = 0.12f), RoundedCornerShape(8.dp))
+                            .padding(horizontal = 10.dp, vertical = 4.dp)
+                    ) {
+                        Text(
+                            text = "RANK: $grade",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = CryptoCyan
+                        )
+                    }
                 }
             }
 

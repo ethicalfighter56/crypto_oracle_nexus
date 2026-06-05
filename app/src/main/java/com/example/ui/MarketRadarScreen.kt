@@ -556,6 +556,14 @@ fun ShortTermOpportunisticSignalsSection(timeframe: String, isBengali: Boolean, 
                         lineHeight = 16.sp
                     )
 
+                    OpportunisticSignalAdornmentSection(
+                        basePrice = basePrice,
+                        isLong = true,
+                        potential = potential,
+                        isBengali = isBengali,
+                        themeColor = CryptoGreen
+                    )
+
                     Spacer(modifier = Modifier.height(16.dp))
 
                     val mission = remember(symbol, target) {
@@ -730,6 +738,14 @@ fun ShortTermOpportunisticSignalsSection(timeframe: String, isBengali: Boolean, 
                         fontSize = 11.sp,
                         color = TextSecondary,
                         lineHeight = 16.sp
+                    )
+
+                    OpportunisticSignalAdornmentSection(
+                        basePrice = basePrice,
+                        isLong = true,
+                        potential = potential,
+                        isBengali = isBengali,
+                        themeColor = CryptoCyan
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))
@@ -908,6 +924,14 @@ fun ShortTermOpportunisticSignalsSection(timeframe: String, isBengali: Boolean, 
                         lineHeight = 16.sp
                     )
 
+                    OpportunisticSignalAdornmentSection(
+                        basePrice = basePrice,
+                        isLong = false,
+                        potential = potential,
+                        isBengali = isBengali,
+                        themeColor = Color(0xFFFF3F60)
+                    )
+
                     Spacer(modifier = Modifier.height(16.dp))
 
                     val mission = remember(symbol, target) {
@@ -997,6 +1021,120 @@ fun RadarAlertCard(alert: RadarAlert, isBengali: Boolean) {
                 color = TextSecondary,
                 lineHeight = 18.sp
             )
+        }
+    }
+}
+
+@Composable
+fun OpportunisticSignalAdornmentSection(
+    basePrice: Double,
+    isLong: Boolean,
+    potential: Double,
+    isBengali: Boolean,
+    themeColor: Color
+) {
+    val tp1 = if (isLong) basePrice * (1.0 + potential * 0.25 / 100.0) else basePrice * (1.0 - potential * 0.25 / 100.0)
+    val tp2 = if (isLong) basePrice * (1.0 + potential * 0.50 / 100.0) else basePrice * (1.0 - potential * 0.50 / 100.0)
+    val tp3 = if (isLong) basePrice * (1.0 + potential * 1.00 / 100.0) else basePrice * (1.0 - potential * 1.00 / 100.0)
+
+    val formatPrice = { price: Double ->
+        when {
+            price < 0.01 -> String.format("%.6f", price)
+            price < 1.0 -> String.format("%.4f", price)
+            else -> String.format("%,.2f", price)
+        }
+    }
+
+    Spacer(modifier = Modifier.height(10.dp))
+    HorizontalDivider(color = BorderColor.copy(alpha = 0.4f))
+    Spacer(modifier = Modifier.height(10.dp))
+
+    // 1. Take Profit Matrix
+    Text(
+        text = if (isBengali) "টার্গেট প্রফিট ম্যাট্রিক্স" else "TAKE PROFIT TARGET MATRIX",
+        fontSize = 9.sp,
+        fontWeight = FontWeight.Bold,
+        color = themeColor,
+        letterSpacing = 1.sp
+    )
+    Spacer(modifier = Modifier.height(6.dp))
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(text = "TP1 (25%)", fontSize = 8.sp, color = TextMuted)
+            Text(text = "$${formatPrice(tp1)}", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = CryptoGreen)
+        }
+        Column(modifier = Modifier.weight(1f)) {
+            Text(text = "TP2 (50%)", fontSize = 8.sp, color = TextMuted)
+            Text(text = "$${formatPrice(tp2)}", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = CryptoGreen)
+        }
+        Column(modifier = Modifier.weight(1f)) {
+            Text(text = "TP3 (100%)", fontSize = 8.sp, color = TextMuted)
+            Text(text = "$${formatPrice(tp3)}", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = CryptoGreen)
+        }
+    }
+
+    Spacer(modifier = Modifier.height(10.dp))
+    HorizontalDivider(color = BorderColor.copy(alpha = 0.4f))
+    Spacer(modifier = Modifier.height(10.dp))
+
+    // 2. Multi-AI Consensus Engines
+    Text(
+        text = if (isBengali) "মাল্টি-এআই কনসেনসাস স্কোর" else "MULTI-AI CONSENSUS ENGINES",
+        fontSize = 9.sp,
+        fontWeight = FontWeight.Bold,
+        color = themeColor,
+        letterSpacing = 1.sp
+    )
+    Spacer(modifier = Modifier.height(6.dp))
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(text = "Gemini Pro AI", fontSize = 8.sp, color = TextMuted)
+            Text(text = "94 / 100", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
+        }
+        Column(modifier = Modifier.weight(1f)) {
+            Text(text = "GPT-4Q Quant", fontSize = 8.sp, color = TextMuted)
+            Text(text = "90 / 100", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
+        }
+        Column(modifier = Modifier.weight(1f)) {
+            Text(text = "Claude Sentient", fontSize = 8.sp, color = TextMuted)
+            Text(text = "93 / 100", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
+        }
+    }
+
+    Spacer(modifier = Modifier.height(10.dp))
+    HorizontalDivider(color = BorderColor.copy(alpha = 0.4f))
+    Spacer(modifier = Modifier.height(10.dp))
+
+    // 3. Recommended Position Sizing
+    Text(
+        text = if (isBengali) "পজিশন সাইজিং পোর্টফোলিও কন্ট্রোল" else "RECOMMENDED POSITION ALLOCATION SIZING",
+        fontSize = 9.sp,
+        fontWeight = FontWeight.Bold,
+        color = themeColor,
+        letterSpacing = 1.sp
+    )
+    Spacer(modifier = Modifier.height(6.dp))
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(text = "CONSERVATIVE", fontSize = 8.sp, color = TextMuted)
+            Text(text = "2.0% Cap", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = AccentGold)
+        }
+        Column(modifier = Modifier.weight(1f)) {
+            Text(text = "BALANCED", fontSize = 8.sp, color = TextMuted)
+            Text(text = "5.0% Cap", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = AccentGold)
+        }
+        Column(modifier = Modifier.weight(1f)) {
+            Text(text = "AGGRESSIVE", fontSize = 8.sp, color = TextMuted)
+            Text(text = "10.0% Max", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = AccentGold)
         }
     }
 }

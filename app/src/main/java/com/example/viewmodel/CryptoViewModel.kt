@@ -118,10 +118,10 @@ class CryptoViewModel(application: Application) : AndroidViewModel(application) 
         _activeMissions.value = _activeMissions.value + mission
     }
 
-    fun stopMission(missionId: String) {
+    fun stopMission(missionId: String, isNegativeOverride: Boolean? = null) {
         val mission = _activeMissions.value.find { it.id == missionId } ?: return
         val currentPrice = mission.currentPrice // Simulated exit
-        val isLogicallyNegative = if (mission.type == "LONG") currentPrice < mission.entryPrice else currentPrice > mission.entryPrice
+        val isLogicallyNegative = isNegativeOverride ?: (if (mission.type == "LONG") currentPrice < mission.entryPrice else currentPrice > mission.entryPrice)
         _activeMissions.value = _activeMissions.value.filter { it.id != missionId }
         _missionHistory.value = _missionHistory.value + mission.copy(isNegative = isLogicallyNegative)
     }
