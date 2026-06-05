@@ -1,6 +1,9 @@
 package com.example.model
 
 import com.squareup.moshi.JsonClass
+import kotlin.math.abs
+import kotlin.math.max
+import java.util.Locale
 
 @JsonClass(generateAdapter = true)
 data class NewsItem(
@@ -114,14 +117,130 @@ data class Mission(
     val coinSymbol: String,
     val type: String, // LONG, SHORT
     val marketType: String, // Spot, Futures
+
+    // User locked entry. This is locked only after the user confirms mission activation.
     val entryPrice: Double,
+
+    // Immutable original signal entry. Used for historical signal validation.
     val originalSignalEntry: Double = 0.0,
+
+    // Live market price. This can update continuously from Binance.
     val currentPrice: Double,
+
+    // Existing display fields preserved.
     val targets: String,
     val stopLoss: String,
     val confidence: Int,
     val aiStatusEnglish: String = "Bullish Momentum Strong\nNo Immediate Risk Detected",
     val aiStatusBengali: String = "বুলিশ মোমেন্টাম শক্তিশালী\nকোন তাৎক্ষণিক ঝুঁকি নেই",
     val isNegative: Boolean = false,
-    val startTime: Long = System.currentTimeMillis()
-)
+    val startTime: Long = System.currentTimeMillis(),
+
+    // Titan Crypto Oracle Nexus mission intelligence fields.
+    val generatedTime: Long = System.currentTimeMillis(),
+    val marketRegime: String = "UNKNOWN",
+    val signalTimeframe: String = "6h",
+    val exitPrice: Double? = null,
+    val exitReason: String? = null,
+    val closedTime: Long? = null,
+    val finalAnalysisEnglish: String? = null,
+    val finalAnalysisBengali: String? = null,
+    val lastUpdated: Long = System.currentTimeMillis()
+) {
+    val userLockedEntry: Double
+        get() = entryPrice
+
+    val signalEntryForValidation: Double
+        get() = if (originalSignalEntry > 0.0) originalSignalEntry else entryPrice
+
+    val roiPct: Double
+        get() {
+            if (entryPrice <= 0.0) return 0.0
+            return if (type.equals("SHORT", ignoreCase = true)) {
+                ((entryPrice - currentPrice) / entryPrice) * 100.0
+            } else {
+                ((currentPrice - entryPrice) / entryPrice) * 100.0
+            }
+        }
+
+    val isProfitable: Boolean
+        get() = roiPct >= 0.0
+
+    val missionDurationMs: Long
+        get() = (closedTime ?: System.currentTimeMillis()) - startTime
+
+    val tradeHealthScore: Int
+        get() {
+            val confidenceWeight = confidence.coerceIn(0, 100)
+            val roiWeight = (50 + (roiPct * 4)).toInt().coerceIn(0, 100)
+            val drawdownPenalty = if (roiPct < -3.0) 18 else if (roiPct < -1.5) 8 else 0
+            return ((confidenceWeight * 0.55) + (roiWeight * 0.45)).toInt().coerceIn(0, 100) - drawdownPenalty
+        }
+
+    val riskLevel: String
+        get() = when {
+            tradeHealthScore >= 82 && roiPct >= 0 -> "LOW"
+            tradeHealthScore >= 62 -> "MODERATE"
+            tradeHealthScore >= 42 -> "ELEVATED"
+            else -> "HIGH"
+        }
+
+    val currentTrend: String
+        get() = when {
+            roiPct >= 4.0 -> if (type.equals("SHORT", ignoreCase = true)) "Strong Bearish Follow-Through" else "Strong Bullish Continuation"
+            roiPct >= 1.0 -> "Momentum Still Healthy"
+            roiPct > -1.0 -> "Structure Neutral"
+            roiPct > -3.0 -> "Momentum Weakening"
+            else -> "Risk Increasing"
+        }
+
+    val tp1Probability: Int
+        get() = (confidence + roiPct * 3).toInt().coerceIn(5, 95)
+
+    val tp2Probability: Int
+        get() = (confidence - 8 + roiPct * 2).toInt().coerceIn(5, 92)
+
+    val tp3Probability: Int
+        get() = (confidence - 16 + roiPct).toInt().coerceIn(5, 88)
+
+    val guardianRecommendationEnglish: String
+        get() = when {
+            roiPct >= 5.0 -> "Profit zone reached. Consider partial profit while monitoring momentum."
+            roiPct >= 2.0 && tradeHealthScore >= 75 -> "Hold Position. Momentum remains healthy and structure is still favorable."
+            roiPct >= 0.0 && tradeHealthScore >= 60 -> "Stay Patient. Current structure remains acceptable, but monitor volatility."
+            roiPct < -4.0 -> "Risk Increasing. Review position and consider profit protection or exit planning."
+            roiPct < -2.0 -> "Watch Carefully. Momentum weakening and downside risk is increasing."
+            else -> "Monitor Position. No critical change detected."
+        }
+
+    val guardianRecommendationBengali: String
+        get() = when {
+            roiPct >= 5.0 -> "প্রফিট জোনে পৌঁছেছে। মোমেন্টাম পর্যবেক্ষণ করে আংশিক প্রফিট বিবেচনা করা যেতে পারে।"
+            roiPct >= 2.0 && tradeHealthScore >= 75 -> "পজিশন ধরে রাখা যেতে পারে। মোমেন্টাম এখনো স্বাস্থ্যকর এবং স্ট্রাকচার অনুকূল।"
+            roiPct >= 0.0 && tradeHealthScore >= 60 -> "ধৈর্য ধরে পর্যবেক্ষণ করুন। বর্তমান স্ট্রাকচার গ্রহণযোগ্য, তবে ভোলাটিলিটি খেয়াল রাখুন।"
+            roiPct < -4.0 -> "ঝুঁকি বাড়ছে। পজিশন রিভিউ করুন এবং প্রফিট প্রটেকশন বা এক্সিট প্ল্যান বিবেচনা করুন।"
+            roiPct < -2.0 -> "সতর্কভাবে পর্যবেক্ষণ করুন। মোমেন্টাম দুর্বল হচ্ছে এবং ডাউনসাইড ঝুঁকি বাড়ছে।"
+            else -> "পজিশন পর্যবেক্ষণ করুন। কোনো গুরুত্বপূর্ণ পরিবর্তন ধরা পড়েনি।"
+        }
+
+    fun formattedRoi(): String = String.format(Locale.US, "%+.2f%%", roiPct)
+
+    fun closedCopy(reason: String, finalPrice: Double = currentPrice): Mission {
+        val finalRoi = if (entryPrice <= 0.0) 0.0 else if (type.equals("SHORT", ignoreCase = true)) {
+            ((entryPrice - finalPrice) / entryPrice) * 100.0
+        } else {
+            ((finalPrice - entryPrice) / entryPrice) * 100.0
+        }
+        val resultText = if (finalRoi >= 0.0) "Mission closed with positive ROI." else "Mission closed with negative ROI. Review signal conditions and risk behavior."
+        return copy(
+            currentPrice = finalPrice,
+            exitPrice = finalPrice,
+            exitReason = reason,
+            closedTime = System.currentTimeMillis(),
+            isNegative = finalRoi < 0.0,
+            finalAnalysisEnglish = resultText,
+            finalAnalysisBengali = if (finalRoi >= 0.0) "মিশন পজিটিভ ROI সহ বন্ধ হয়েছে।" else "মিশন নেগেটিভ ROI সহ বন্ধ হয়েছে। সিগনাল কন্ডিশন এবং ঝুঁকি আচরণ রিভিউ করুন।",
+            lastUpdated = System.currentTimeMillis()
+        )
+    }
+}
