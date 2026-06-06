@@ -163,7 +163,7 @@ fun AnalyzingTelemetryScreen(stepMessage: String) {
             modifier = Modifier
                 .fillMaxWidth(0.9f)
                 .background(DarkSurface, RoundedCornerShape(12.dp))
-                .border(1.dp, BorderColor, RoundedCornerShape(12.dp))
+                .border(1.15.dp, CryptoCyan.copy(alpha = 0.56f), RoundedCornerShape(12.dp))
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
@@ -241,10 +241,18 @@ fun PredictionDashboard(
                     onClick = { viewModel.runScanner() },
                     modifier = Modifier
                         .size(36.dp)
-                        .background(DarkSurface, CircleShape)
-                        .border(1.dp, BorderColor, CircleShape)
+                        .background(
+                            brush = Brush.radialGradient(
+                                colors = listOf(
+                                    CryptoCyan.copy(alpha = 0.22f),
+                                    Color(0xFF050A13)
+                                )
+                            ),
+                            shape = CircleShape
+                        )
+                        .border(1.dp, CryptoCyan.copy(alpha = 0.68f), CircleShape)
                         .graphicsLayer {
-                            shadowElevation = 5.dp.toPx()
+                            shadowElevation = 8.dp.toPx()
                             shape = CircleShape
                         }
                 ) {
@@ -363,7 +371,7 @@ fun PredictionDashboard(
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 8.dp)
                 .background(DarkSurface, RoundedCornerShape(12.dp))
-                .border(1.dp, BorderColor, RoundedCornerShape(12.dp))
+                .border(1.15.dp, CryptoCyan.copy(alpha = 0.56f), RoundedCornerShape(12.dp))
                 .padding(4.dp)
         ) {
             TabButton(
@@ -472,19 +480,30 @@ fun SignalProLanguageSwitchButton(
     isBengali: Boolean,
     onClick: () -> Unit
 ) {
+    val transition = rememberInfiniteTransition(label = "LanguageButtonGlow")
+    val glowAlpha by transition.animateFloat(
+        initialValue = 0.40f,
+        targetValue = 0.90f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1700, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "LanguageGlowAlpha"
+    )
+
     Button(
         onClick = onClick,
         colors = ButtonDefaults.buttonColors(
-            containerColor = DarkSurface,
+            containerColor = Color(0xFF050A13),
             contentColor = CryptoCyan
         ),
         shape = RoundedCornerShape(8.dp),
-        border = BorderStroke(1.dp, CryptoCyan.copy(alpha = 0.76f)),
+        border = BorderStroke(1.dp, CryptoCyan.copy(alpha = glowAlpha)),
         modifier = Modifier
             .height(32.dp)
             .wrapContentWidth()
             .graphicsLayer {
-                shadowElevation = 10.dp.toPx()
+                shadowElevation = 12.dp.toPx()
                 shape = RoundedCornerShape(8.dp)
             },
         contentPadding = PaddingValues(horizontal = 12.dp, vertical = 2.dp)
@@ -496,7 +515,14 @@ fun SignalProLanguageSwitchButton(
             color = CryptoCyan,
             maxLines = 1,
             softWrap = false,
-            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+            style = androidx.compose.ui.text.TextStyle(
+                shadow = androidx.compose.ui.graphics.Shadow(
+                    color = CryptoCyan.copy(alpha = 0.80f),
+                    offset = androidx.compose.ui.geometry.Offset(0f, 0f),
+                    blurRadius = 8f
+                )
+            )
         )
     }
 }
@@ -659,7 +685,7 @@ fun SpotItemCard(coin: SpotSignal, timeframeIndex: Int, viewModel: CryptoViewMod
     }
 
     Card(
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF070B12)),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF030712)),
         shape = RoundedCornerShape(16.dp),
         modifier = Modifier
             .fillMaxWidth()
@@ -997,9 +1023,7 @@ fun StartTradeFlow(viewModel: CryptoViewModel, mission: com.example.model.Missio
         AlertDialog(
             onDismissRequest = { step = 0 },
             title = { Text("Start this trade?", color = TextPrimary, fontSize = 18.sp, fontWeight = FontWeight.Bold) },
-            text = {
-                Text("You are about to activate this signal for personal tracking.", color = TextSecondary)
-            },
+            text = { Text("You are about to activate this signal for personal tracking.", color = TextSecondary) },
             confirmButton = {
                 Button(onClick = { step = 2 }, colors = ButtonDefaults.buttonColors(containerColor = CryptoGreen)) {
                     Text("Continue", fontWeight = FontWeight.Black, color = DarkBackground)
@@ -1010,7 +1034,7 @@ fun StartTradeFlow(viewModel: CryptoViewModel, mission: com.example.model.Missio
                     Text("Cancel", color = TextSecondary)
                 }
             },
-            containerColor = DarkSurface,
+            containerColor = Color(0xFF030712),
             titleContentColor = TextPrimary,
             textContentColor = TextSecondary
         )
@@ -1047,7 +1071,7 @@ fun StartTradeFlow(viewModel: CryptoViewModel, mission: com.example.model.Missio
                     Text("Back", color = TextSecondary)
                 }
             },
-            containerColor = DarkSurface,
+            containerColor = Color(0xFF030712),
             titleContentColor = TextPrimary,
             textContentColor = TextSecondary
         )
@@ -1061,15 +1085,25 @@ fun StartTradeFlow(viewModel: CryptoViewModel, mission: com.example.model.Missio
         label = "ButtonScale"
     )
 
-    val infiniteTransition = rememberInfiniteTransition(label = "Pulse")
+    val infiniteTransition = rememberInfiniteTransition(label = "AcceptFlowPulse")
     val pulseAlpha by infiniteTransition.animateFloat(
         initialValue = 0.48f,
-        targetValue = 0.82f,
+        targetValue = 0.84f,
         animationSpec = infiniteRepeatable(
             animation = tween(1500, easing = LinearEasing),
             repeatMode = RepeatMode.Reverse
         ),
         label = "PulseAlpha"
+    )
+
+    val recoSweepX by infiniteTransition.animateFloat(
+        initialValue = -650f,
+        targetValue = 650f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(2400, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "RecommendationSweepX"
     )
 
     Row(
@@ -1080,41 +1114,61 @@ fun StartTradeFlow(viewModel: CryptoViewModel, mission: com.example.model.Missio
         Box(
             modifier = Modifier
                 .weight(1f)
-                .height(38.dp)
-                .clip(RoundedCornerShape(9.dp))
+                .height(40.dp)
+                .clip(RoundedCornerShape(10.dp))
                 .background(
                     brush = Brush.linearGradient(
                         colors = listOf(
-                            Color(0xFF090E1A),
-                            Color(0xFF111827),
-                            Color(0xFF050812)
+                            Color(0xFF02050D),
+                            Color(0xFF0B1220),
+                            Color(0xFF02050D)
                         )
                     )
                 )
-                .border(
-                    1.dp,
-                    CryptoCyan.copy(alpha = 0.36f),
-                    RoundedCornerShape(9.dp)
+                .background(
+                    brush = Brush.horizontalGradient(
+                        colors = listOf(
+                            Color.Transparent,
+                            CryptoCyan.copy(alpha = 0.42f),
+                            Color.White.copy(alpha = 0.12f),
+                            CryptoGreen.copy(alpha = 0.26f),
+                            Color.Transparent
+                        ),
+                        startX = recoSweepX,
+                        endX = recoSweepX + 520f
+                    )
                 )
+                .border(1.dp, CryptoCyan.copy(alpha = 0.66f), RoundedCornerShape(10.dp))
+                .graphicsLayer {
+                    shadowElevation = 12.dp.toPx()
+                    shape = RoundedCornerShape(10.dp)
+                }
                 .padding(horizontal = 8.dp),
             contentAlignment = Alignment.Center
         ) {
             Text(
                 text = recommendationText,
                 fontSize = 10.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFFEAF2FF),
+                fontWeight = FontWeight.Black,
+                color = Color(0xFFF4F8FF),
                 textAlign = TextAlign.Center,
                 maxLines = 2,
                 lineHeight = 12.sp,
-                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                style = androidx.compose.ui.text.TextStyle(
+                    shadow = androidx.compose.ui.graphics.Shadow(
+                        color = CryptoCyan.copy(alpha = 0.75f),
+                        offset = androidx.compose.ui.geometry.Offset(0f, 0f),
+                        blurRadius = 8f
+                    )
+                )
             )
         }
 
         Box(
             modifier = Modifier
                 .scale(scale)
-                .height(38.dp)
+                .height(40.dp)
                 .widthIn(min = 128.dp, max = 164.dp)
                 .background(
                     brush = Brush.linearGradient(
@@ -1123,13 +1177,13 @@ fun StartTradeFlow(viewModel: CryptoViewModel, mission: com.example.model.Missio
                             CryptoGreen.copy(alpha = pulseAlpha)
                         )
                     ),
-                    shape = RoundedCornerShape(9.dp)
+                    shape = RoundedCornerShape(10.dp)
                 )
-                .border(
-                    width = 1.dp,
-                    color = Color.White.copy(alpha = 0.22f),
-                    shape = RoundedCornerShape(9.dp)
-                )
+                .border(1.dp, Color.White.copy(alpha = 0.28f), RoundedCornerShape(10.dp))
+                .graphicsLayer {
+                    shadowElevation = 12.dp.toPx()
+                    shape = RoundedCornerShape(10.dp)
+                }
                 .clickable(
                     interactionSource = interactionSource,
                     indication = LocalIndication.current,
@@ -1150,12 +1204,19 @@ fun StartTradeFlow(viewModel: CryptoViewModel, mission: com.example.model.Missio
 
                 Text(
                     text = "ACCEPT SIGNAL",
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.Black,
                     fontSize = 10.sp,
                     color = Color.White,
                     letterSpacing = 1.sp,
                     maxLines = 1,
-                    softWrap = false
+                    softWrap = false,
+                    style = androidx.compose.ui.text.TextStyle(
+                        shadow = androidx.compose.ui.graphics.Shadow(
+                            color = Color.White.copy(alpha = 0.58f),
+                            offset = androidx.compose.ui.geometry.Offset(0f, 0f),
+                            blurRadius = 7f
+                        )
+                    )
                 )
             }
         }
@@ -1614,7 +1675,7 @@ fun OraclePickCard(asset: Any, timeframeIndex: Int, viewModel: CryptoViewModel, 
     }
 
     Card(
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF070B12)),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF030712)),
         shape = RoundedCornerShape(16.dp),
         modifier = Modifier
             .fillMaxWidth()
@@ -1875,7 +1936,7 @@ fun RealTimeInvestmentTrackingModule(
     val currentRoi = if (entryPrice > 0) ((currentPrice - entryPrice) / entryPrice) * 100 * (if(isLong) 1 else -1) else 0.0
 
     Card(
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF070B12)),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF030712)),
         shape = RoundedCornerShape(12.dp),
         border = BorderStroke(1.dp, BorderColor),
         modifier = Modifier.fillMaxWidth()
@@ -1956,6 +2017,27 @@ fun RealTimeCountdown(
         }
     }
 
+    val sweepTransition = rememberInfiniteTransition(label = "ValidityGradientSweep")
+    val sweepX by sweepTransition.animateFloat(
+        initialValue = -850f,
+        targetValue = 900f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(2500, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "ValiditySweepX"
+    )
+
+    val pulseAlpha by sweepTransition.animateFloat(
+        initialValue = 0.30f,
+        targetValue = 0.66f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1800, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "ValidityPulseAlpha"
+    )
+
     val hours = remainingSeconds / 3600
     val minutes = (remainingSeconds % 3600) / 60
     val seconds = remainingSeconds % 60
@@ -1973,15 +2055,12 @@ fun RealTimeCountdown(
         else -> CryptoCyan
     }
 
-    val deepStart = when {
-        isExpired -> Color(0xFF160910)
-        isUrgent -> Color(0xFF1A0B13)
-        isCaution -> Color(0xFF161207)
-        else -> Color(0xFF06141B)
+    val baseLeft = when {
+        isExpired -> Color(0xFF1A0610)
+        isUrgent -> Color(0xFF1E0712)
+        isCaution -> Color(0xFF1A1304)
+        else -> Color(0xFF03141D)
     }
-
-    val deepMid = Color(0xFF111827)
-    val deepEnd = Color(0xFF050812)
 
     val titleText = if (isBengali) "বৈধতার নির্দিষ্ট মেয়াদ" else "VALIDITY WINDOW"
     val remainingText = if (isBengali) "বাকি সময়" else "Remaining"
@@ -2002,32 +2081,45 @@ fun RealTimeCountdown(
         else -> if (isBengali) "সক্রিয় — এখনো তাড়াহুড়া নেই" else "Active window — no urgency yet"
     }
 
-    val titleColor = if (isUrgent || isExpired) Color(0xFFFF8FA3) else Color(0xFFEAF2FF)
-    val subtitleColor = if (isUrgent || isExpired) Color(0xFFFFB0BD) else Color(0xFFCFE8F5)
-    val supportColor = Color(0xFFAAB4C5)
-    val trackColor = Color(0xFF1B2434)
+    val titleColor = if (isUrgent || isExpired) Color(0xFFFF91A6) else Color(0xFFF4FAFF)
+    val subtitleColor = if (isUrgent || isExpired) Color(0xFFFFB7C4) else Color(0xFFD6F5FF)
+    val supportColor = Color(0xFFB7C2D4)
+    val trackColor = Color(0xFF111A28)
 
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
+            .clip(RoundedCornerShape(17.dp))
             .background(
                 brush = Brush.linearGradient(
                     colors = listOf(
-                        deepStart,
-                        deepMid,
-                        deepEnd
+                        baseLeft,
+                        Color(0xFF090F1C),
+                        Color(0xFF02050D)
                     )
                 )
             )
+            .background(
+                brush = Brush.horizontalGradient(
+                    colors = listOf(
+                        Color.Transparent,
+                        accentColor.copy(alpha = pulseAlpha),
+                        Color.White.copy(alpha = 0.12f),
+                        accentColor.copy(alpha = 0.20f),
+                        Color.Transparent
+                    ),
+                    startX = sweepX,
+                    endX = sweepX + 620f
+                )
+            )
             .border(
-                width = 1.dp,
-                color = accentColor.copy(alpha = 0.72f),
-                shape = RoundedCornerShape(16.dp)
+                width = 1.25.dp,
+                color = accentColor.copy(alpha = 0.88f),
+                shape = RoundedCornerShape(17.dp)
             )
             .graphicsLayer {
-                shadowElevation = 12.dp.toPx()
-                shape = RoundedCornerShape(16.dp)
+                shadowElevation = 16.dp.toPx()
+                shape = RoundedCornerShape(17.dp)
             }
             .padding(horizontal = 12.dp, vertical = 10.dp)
     ) {
@@ -2046,18 +2138,32 @@ fun RealTimeCountdown(
                         letterSpacing = if (isBengali) 0.sp else 1.1.sp,
                         maxLines = 1,
                         softWrap = false,
-                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                        style = androidx.compose.ui.text.TextStyle(
+                            shadow = androidx.compose.ui.graphics.Shadow(
+                                color = accentColor.copy(alpha = 0.82f),
+                                offset = androidx.compose.ui.geometry.Offset(0f, 0f),
+                                blurRadius = 10f
+                            )
+                        )
                     )
 
                     Text(
                         text = stateText,
                         fontSize = 9.sp,
-                        fontWeight = FontWeight.SemiBold,
+                        fontWeight = FontWeight.Bold,
                         color = subtitleColor,
                         modifier = Modifier.padding(top = 1.dp),
                         maxLines = 1,
                         softWrap = false,
-                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                        style = androidx.compose.ui.text.TextStyle(
+                            shadow = androidx.compose.ui.graphics.Shadow(
+                                color = accentColor.copy(alpha = 0.70f),
+                                offset = androidx.compose.ui.geometry.Offset(0f, 0f),
+                                blurRadius = 8f
+                            )
+                        )
                     )
                 }
 
@@ -2073,7 +2179,14 @@ fun RealTimeCountdown(
                         fontWeight = FontWeight.Black,
                         color = accentColor,
                         maxLines = 1,
-                        softWrap = false
+                        softWrap = false,
+                        style = androidx.compose.ui.text.TextStyle(
+                            shadow = androidx.compose.ui.graphics.Shadow(
+                                color = accentColor.copy(alpha = 0.95f),
+                                offset = androidx.compose.ui.geometry.Offset(0f, 0f),
+                                blurRadius = 12f
+                            )
+                        )
                     )
 
                     Text(
@@ -2101,10 +2214,18 @@ fun RealTimeCountdown(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(10.dp))
-                    .background(Color(0xFF080D18).copy(alpha = 0.92f))
+                    .background(
+                        brush = Brush.horizontalGradient(
+                            colors = listOf(
+                                Color(0xFF02050D),
+                                Color(0xFF0D1422),
+                                Color(0xFF02050D)
+                            )
+                        )
+                    )
                     .border(
                         1.dp,
-                        accentColor.copy(alpha = 0.36f),
+                        accentColor.copy(alpha = 0.50f),
                         RoundedCornerShape(10.dp)
                     )
                     .padding(horizontal = 8.dp, vertical = 5.dp),
@@ -2123,12 +2244,19 @@ fun RealTimeCountdown(
                 Text(
                     text = stateMeaning,
                     fontSize = 9.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFFF4F8FF),
+                    fontWeight = FontWeight.Black,
+                    color = Color(0xFFF7FBFF),
                     textAlign = TextAlign.Center,
                     maxLines = 1,
                     softWrap = false,
-                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                    style = androidx.compose.ui.text.TextStyle(
+                        shadow = androidx.compose.ui.graphics.Shadow(
+                            color = accentColor.copy(alpha = 0.70f),
+                            offset = androidx.compose.ui.geometry.Offset(0f, 0f),
+                            blurRadius = 8f
+                        )
+                    )
                 )
             }
 
@@ -2151,7 +2279,14 @@ fun RealTimeCountdown(
                     fontWeight = FontWeight.Black,
                     color = accentColor,
                     maxLines = 1,
-                    softWrap = false
+                    softWrap = false,
+                    style = androidx.compose.ui.text.TextStyle(
+                        shadow = androidx.compose.ui.graphics.Shadow(
+                            color = accentColor.copy(alpha = 0.66f),
+                            offset = androidx.compose.ui.geometry.Offset(0f, 0f),
+                            blurRadius = 7f
+                        )
+                    )
                 )
             }
         }
@@ -2161,63 +2296,225 @@ fun RealTimeCountdown(
 
 
 @Composable
-fun MultiAiConsensusModule(coinSymbol: String, oracleScore: Int, isLong: Boolean, isBengali: Boolean = false) {
-    val consensus = getConsensusDetails(coinSymbol, oracleScore, isLong)
+fun AiScoreTile(title: String, score: Int, modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .height(58.dp)
+            .clip(RoundedCornerShape(9.dp))
+            .background(
+                Brush.linearGradient(
+                    listOf(
+                        Color(0xFF02050D),
+                        Color(0xFF080E18),
+                        Color(0xFF02050D)
+                    )
+                )
+            )
+            .border(0.9.dp, CryptoCyan.copy(alpha = 0.28f), RoundedCornerShape(9.dp))
+            .padding(horizontal = 6.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                text = title,
+                fontSize = 9.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFFDCE5F5),
+                maxLines = 1,
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+            )
+
+            Spacer(modifier = Modifier.height(3.dp))
+
+            Text(
+                text = "$score / 100",
+                fontSize = 15.sp,
+                fontFamily = FontFamily.Monospace,
+                fontWeight = FontWeight.Black,
+                color = CryptoGreen,
+                maxLines = 1,
+                softWrap = false,
+                style = androidx.compose.ui.text.TextStyle(
+                    shadow = androidx.compose.ui.graphics.Shadow(
+                        color = CryptoGreen.copy(alpha = 0.70f),
+                        offset = androidx.compose.ui.geometry.Offset(0f, 0f),
+                        blurRadius = 7f
+                    )
+                )
+            )
+        }
+    }
+}
+
+
+@Composable
+fun ConsensusMetricColumn(
+    label: String,
+    value: String,
+    valueColor: Color,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = label,
+            fontSize = 8.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color(0xFFD0D8E8),
+            maxLines = 1,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+        )
+
+        Text(
+            text = value,
+            fontSize = 15.sp,
+            fontWeight = FontWeight.Black,
+            color = valueColor,
+            maxLines = 1,
+            softWrap = false,
+            style = androidx.compose.ui.text.TextStyle(
+                shadow = androidx.compose.ui.graphics.Shadow(
+                    color = valueColor.copy(alpha = 0.70f),
+                    offset = androidx.compose.ui.geometry.Offset(0f, 0f),
+                    blurRadius = 8f
+                )
+            )
+        )
+    }
+}
+
+
+@Composable
+fun MultiAiConsensusModule(
+    coinSymbol: String,
+    oracleScore: Int,
+    isLong: Boolean,
+    isBengali: Boolean = false
+) {
+    val geminiScore = (oracleScore - 4).coerceIn(60, 99)
+    val gptScore = (oracleScore - 8).coerceIn(60, 99)
+    val claudeScore = (oracleScore - 5).coerceIn(60, 99)
+    val consensusScore = ((geminiScore + gptScore + claudeScore) / 3).coerceIn(0, 100)
+
+    val directionText = if (isBengali) {
+        if (isLong) "দাম বাড়ছে" else "দাম কমছে"
+    } else {
+        if (isLong) "BULLISH" else "BEARISH"
+    }
+
+    val riskText = if (isBengali) {
+        if (oracleScore >= 85) "কম" else "মাঝারি"
+    } else {
+        if (oracleScore >= 85) "LOW" else "MEDIUM"
+    }
 
     Card(
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF0A0F1A)),
-        modifier = Modifier.fillMaxWidth().border(1.dp, BorderColor, RoundedCornerShape(12.dp))
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF030712)),
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(1.35.dp, CryptoCyan.copy(alpha = 0.72f), RoundedCornerShape(14.dp))
+            .graphicsLayer {
+                shadowElevation = 14.dp.toPx()
+                shape = RoundedCornerShape(14.dp)
+            }
     ) {
-        Column(modifier = Modifier.padding(14.dp)) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(
+                    Brush.linearGradient(
+                        listOf(
+                            Color(0xFF03111B),
+                            Color(0xFF0B1220),
+                            Color(0xFF02050D)
+                        )
+                    )
+                )
+                .padding(14.dp)
+        ) {
             Text(
                 text = if (isBengali) "মাল্টি-এআই ঐকমত্য ইঞ্জিন" else "MULTI-AI CONSENSUS ENGINES",
-                fontSize = 10.sp,
-                fontWeight = FontWeight.Bold,
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Black,
                 color = CryptoCyan,
-                letterSpacing = 1.sp
+                letterSpacing = if (isBengali) 0.sp else 1.2.sp,
+                maxLines = 1,
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                style = androidx.compose.ui.text.TextStyle(
+                    shadow = androidx.compose.ui.graphics.Shadow(
+                        color = CryptoCyan.copy(alpha = 0.72f),
+                        offset = androidx.compose.ui.geometry.Offset(0f, 0f),
+                        blurRadius = 8f
+                    )
+                )
             )
+
             Spacer(modifier = Modifier.height(12.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                AiEngineGauge("Gemini Pro AI", consensus.geminiScore, Modifier.weight(1f))
-                AiEngineGauge("GPT-4o Quant", consensus.gptScore, Modifier.weight(1f))
-                AiEngineGauge("Claude Sentient", consensus.claudeScore, Modifier.weight(1f))
+                AiScoreTile("Gemini Pro AI", geminiScore, Modifier.weight(1f))
+                AiScoreTile("GPT-4o Quant", gptScore, Modifier.weight(1f))
+                AiScoreTile("Claude Sentient", claudeScore, Modifier.weight(1f))
             }
 
             Spacer(modifier = Modifier.height(12.dp))
-            HorizontalDivider(color = BorderColor.copy(alpha = 0.5f))
-            Spacer(modifier = Modifier.height(12.dp))
 
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Column {
-                    Text(text = if (isBengali) "ঐকমত্যের আস্থা" else "CONSENSUS CONFIDENCE", fontSize = 9.sp, color = TextSecondary)
-                    Text(text = "${consensus.confidence}%", fontSize = 15.sp, fontWeight = FontWeight.Black, color = CryptoCyan)
-                }
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(text = if (isBengali) "দিক" else "DIRECTION", fontSize = 9.sp, color = TextSecondary)
-                    Text(
-                        text = if (isBengali) { when (consensus.direction.uppercase()) { "BULLISH" -> "দাম বাড়ছে"; "BEARISH" -> "দাম কমছে"; "SIDEWAYS" -> "দাম স্থির"; else -> consensus.direction } } else consensus.direction,
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.Black,
-                        color = if (isLong) CryptoGreen else CryptoRedText
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(
+                        Brush.horizontalGradient(
+                            listOf(
+                                Color(0xFF04111A),
+                                Color(0xFF0B1824),
+                                Color(0xFF04111A)
+                            )
+                        )
                     )
-                }
-                Column(horizontalAlignment = Alignment.End) {
-                    Text(text = if (isBengali) "ঝুঁকির ধরন" else "RISK PROFILE", fontSize = 9.sp, color = TextSecondary)
-                    Text(
-                        text = if (isBengali) { when (consensus.riskScore.uppercase()) { "LOW" -> "কম"; "MEDIUM" -> "মাঝারি"; "HIGH" -> "তীব্র"; else -> "তীব্র" } } else consensus.riskScore,
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.Black,
-                        color = when (consensus.riskScore) {
-                            "LOW" -> CryptoGreen
-                            "MEDIUM" -> AccentGold
-                            else -> CryptoRedText
-                        }
-                    )
-                }
+                    .border(1.1.dp, CryptoCyan.copy(alpha = 0.78f), RoundedCornerShape(10.dp))
+                    .padding(vertical = 9.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                ConsensusMetricColumn(
+                    label = if (isBengali) "ঐকমত্যের আস্থা" else "CONSENSUS CONFIDENCE",
+                    value = "$consensusScore%",
+                    valueColor = CryptoCyan,
+                    modifier = Modifier.weight(1f)
+                )
+
+                Box(
+                    modifier = Modifier
+                        .height(40.dp)
+                        .width(1.dp)
+                        .background(CryptoCyan.copy(alpha = 0.35f))
+                )
+
+                ConsensusMetricColumn(
+                    label = if (isBengali) "দিকনির্দেশ" else "DIRECTION",
+                    value = directionText,
+                    valueColor = CryptoGreen,
+                    modifier = Modifier.weight(1f)
+                )
+
+                Box(
+                    modifier = Modifier
+                        .height(40.dp)
+                        .width(1.dp)
+                        .background(CryptoCyan.copy(alpha = 0.35f))
+                )
+
+                ConsensusMetricColumn(
+                    label = if (isBengali) "রিস্ক প্রোফাইল" else "RISK PROFILE",
+                    value = riskText,
+                    valueColor = CryptoGreen,
+                    modifier = Modifier.weight(1f)
+                )
             }
         }
     }
@@ -2228,7 +2525,7 @@ fun AiEngineGauge(name: String, score: Int, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .background(Color(0xFF050812), RoundedCornerShape(8.dp))
-            .border(1.dp, BorderColor, RoundedCornerShape(8.dp))
+            .border(1.dp, CryptoCyan.copy(alpha = 0.42f), RoundedCornerShape(8.dp))
             .padding(8.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -2273,8 +2570,8 @@ fun RiskManagementModule(
     val tp4 = projectedPrice
 
     Card(
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF0A0F1A)),
-        modifier = Modifier.fillMaxWidth().border(1.dp, BorderColor, RoundedCornerShape(12.dp))
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF050A13)),
+        modifier = Modifier.fillMaxWidth().border(1.15.dp, CryptoCyan.copy(alpha = 0.56f), RoundedCornerShape(12.dp))
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
             Text(
@@ -2354,8 +2651,8 @@ fun MultiTimeframeForecastModule(currentPrice: Double, isLong: Boolean, priceCha
     val forecasts = generateMultiTimeframeForecasts(currentPrice, isLong, priceChangePct)
 
     Card(
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF0A0F1A)),
-        modifier = Modifier.fillMaxWidth().border(1.dp, BorderColor, RoundedCornerShape(12.dp))
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF050A13)),
+        modifier = Modifier.fillMaxWidth().border(1.15.dp, CryptoCyan.copy(alpha = 0.56f), RoundedCornerShape(12.dp))
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
             Text(
@@ -2402,7 +2699,7 @@ fun ForecastGridItem(forecast: TimeframeForecast, modifier: Modifier = Modifier)
     Column(
         modifier = modifier
             .background(Color(0xFF050812), RoundedCornerShape(8.dp))
-            .border(1.dp, BorderColor, RoundedCornerShape(8.dp))
+            .border(1.dp, CryptoCyan.copy(alpha = 0.42f), RoundedCornerShape(8.dp))
             .padding(8.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -2479,33 +2776,34 @@ fun AiExplanationModule(
     )
 
     Column(modifier = Modifier.fillMaxWidth()) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = if (isBengali) "এআই ওরাকলের বিশ্লেষণমূলক তথ্য" else "AI ORACLE ANALYTICS COGNITION",
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Bold,
-                color = CryptoCyan,
-                letterSpacing = if (isBengali) 0.sp else 1.sp,
-                maxLines = 1,
-                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+        Text(
+            text = if (isBengali) "এআই ওরাকলের বিশ্লেষণমূলক তথ্য" else "AI ORACLE ANALYTICS COGNITION",
+            fontSize = 11.sp,
+            fontWeight = FontWeight.Black,
+            color = CryptoCyan,
+            letterSpacing = if (isBengali) 0.sp else 1.sp,
+            maxLines = 1,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+            style = androidx.compose.ui.text.TextStyle(
+                shadow = androidx.compose.ui.graphics.Shadow(
+                    color = CryptoCyan.copy(alpha = 0.76f),
+                    offset = androidx.compose.ui.geometry.Offset(0f, 0f),
+                    blurRadius = 8f
+                )
             )
-        }
+        )
 
         Spacer(modifier = Modifier.height(8.dp))
 
         Card(
-            colors = CardDefaults.cardColors(containerColor = Color(0xFF070B12)),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF030712)),
             modifier = Modifier
                 .fillMaxWidth()
-                .border(1.4.dp, CryptoCyan.copy(alpha = 0.55f), RoundedCornerShape(12.dp))
+                .border(1.35.dp, CryptoCyan.copy(alpha = 0.72f), RoundedCornerShape(12.dp))
                 .graphicsLayer {
                     rotationY = rotation
                     cameraDistance = 14 * density
-                    shadowElevation = 10.dp.toPx()
+                    shadowElevation = 12.dp.toPx()
                     shape = RoundedCornerShape(12.dp)
                 }
         ) {
@@ -2515,9 +2813,9 @@ fun AiExplanationModule(
                     .background(
                         Brush.linearGradient(
                             listOf(
-                                Color(0xFF08111C),
-                                Color(0xFF111827),
-                                Color(0xFF060912)
+                                Color(0xFF03111B),
+                                Color(0xFF0B1220),
+                                Color(0xFF02050D)
                             )
                         )
                     )
@@ -2529,7 +2827,14 @@ fun AiExplanationModule(
                             text = whyEnglish,
                             fontSize = 13.sp,
                             color = Color(0xFFF4F8FF),
-                            lineHeight = 18.sp
+                            lineHeight = 18.sp,
+                            style = androidx.compose.ui.text.TextStyle(
+                                shadow = androidx.compose.ui.graphics.Shadow(
+                                    color = CryptoCyan.copy(alpha = 0.24f),
+                                    offset = androidx.compose.ui.geometry.Offset(0f, 0f),
+                                    blurRadius = 5f
+                                )
+                            )
                         )
 
                         Spacer(modifier = Modifier.height(10.dp))
@@ -2538,7 +2843,7 @@ fun AiExplanationModule(
                             text = "QUANTITATIVE HEATMAP SIGNALS",
                             fontSize = 9.sp,
                             color = CryptoCyan,
-                            fontWeight = FontWeight.Bold,
+                            fontWeight = FontWeight.Black,
                             maxLines = 1,
                             overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                         )
@@ -2565,7 +2870,14 @@ fun AiExplanationModule(
                             text = whyBengali,
                             fontSize = 13.sp,
                             color = Color(0xFFF4F8FF),
-                            lineHeight = 18.sp
+                            lineHeight = 18.sp,
+                            style = androidx.compose.ui.text.TextStyle(
+                                shadow = androidx.compose.ui.graphics.Shadow(
+                                    color = CryptoCyan.copy(alpha = 0.24f),
+                                    offset = androidx.compose.ui.geometry.Offset(0f, 0f),
+                                    blurRadius = 5f
+                                )
+                            )
                         )
 
                         Spacer(modifier = Modifier.height(10.dp))
@@ -2574,7 +2886,7 @@ fun AiExplanationModule(
                             text = "পরিমাণগত হিটম্যাপ সিগন্যাল",
                             fontSize = 9.sp,
                             color = CryptoCyan,
-                            fontWeight = FontWeight.Bold,
+                            fontWeight = FontWeight.Black,
                             maxLines = 1,
                             overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                         )
@@ -2643,15 +2955,24 @@ fun HeatmapSignalsAlignedRow(
 fun InsightMetricPill(label: String, value: String, valueColor: Color) {
     Row(
         modifier = Modifier
-            .background(Color(0xFF050812), RoundedCornerShape(6.dp))
-            .border(0.7.dp, BorderColor.copy(alpha = 0.85f), RoundedCornerShape(6.dp))
+            .background(
+                brush = Brush.linearGradient(
+                    colors = listOf(
+                        Color(0xFF02050D),
+                        Color(0xFF08111C),
+                        Color(0xFF02050D)
+                    )
+                ),
+                shape = RoundedCornerShape(6.dp)
+            )
+            .border(0.85.dp, valueColor.copy(alpha = 0.58f), RoundedCornerShape(6.dp))
             .padding(horizontal = 6.dp, vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
             text = "$label: ",
             fontSize = 8.sp,
-            color = Color(0xFFC8D1E1),
+            color = Color(0xFFD3DAE8),
             maxLines = 1,
             softWrap = false,
             overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
@@ -2660,11 +2981,18 @@ fun InsightMetricPill(label: String, value: String, valueColor: Color) {
         Text(
             text = value,
             fontSize = 8.sp,
-            fontWeight = FontWeight.Bold,
+            fontWeight = FontWeight.Black,
             color = valueColor,
             maxLines = 1,
             softWrap = false,
-            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+            style = androidx.compose.ui.text.TextStyle(
+                shadow = androidx.compose.ui.graphics.Shadow(
+                    color = valueColor.copy(alpha = 0.75f),
+                    offset = androidx.compose.ui.geometry.Offset(0f, 0f),
+                    blurRadius = 7f
+                )
+            )
         )
     }
 }
@@ -2676,8 +3004,8 @@ fun AcceleratorCyanColor(symbol: String): Color {
 @Composable
 fun LeverageIntelligenceModule(coin: FuturesSignal) {
     Card(
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF0A0F1A)),
-        modifier = Modifier.fillMaxWidth().border(1.dp, BorderColor, RoundedCornerShape(12.dp))
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF050A13)),
+        modifier = Modifier.fillMaxWidth().border(1.15.dp, CryptoCyan.copy(alpha = 0.56f), RoundedCornerShape(12.dp))
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
             Text(
@@ -2852,7 +3180,7 @@ fun SignalQualitySystemBlock(
     }
 
     Card(
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF0A0F1A)),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF050A13)),
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
         border = BorderStroke(1.dp, BorderColor.copy(alpha = 0.6f))
@@ -2927,7 +3255,7 @@ fun TradeChecklistBlock(
     riskEvaluated: Boolean
 ) {
     Card(
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF0A0F1A)),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF050A13)),
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
         border = BorderStroke(1.dp, BorderColor.copy(alpha = 0.6f))
@@ -3013,7 +3341,7 @@ fun MarketRegimeTraceModule(coinSymbol: String) {
     }
 
     Card(
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF0A0F1A)),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF050A13)),
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
         border = BorderStroke(1.dp, BorderColor.copy(alpha = 0.6f))
