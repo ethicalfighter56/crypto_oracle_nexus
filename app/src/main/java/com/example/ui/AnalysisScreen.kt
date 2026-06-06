@@ -234,27 +234,32 @@ fun PredictionDashboard(
             
             Row(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.wrapContentWidth()
             ) {
-                SignalProLanguageSwitchButton(
-                    isBengali = isBengali,
-                    onClick = { viewModel.toggleLanguage() }
-                )
-
                 IconButton(
                     onClick = { viewModel.runScanner() },
                     modifier = Modifier
-                        .size(40.dp)
+                        .size(36.dp)
                         .background(DarkSurface, CircleShape)
                         .border(1.dp, BorderColor, CircleShape)
+                        .graphicsLayer {
+                            shadowElevation = 4.dp.toPx()
+                            shape = CircleShape
+                        }
                 ) {
                     Icon(
                         imageVector = Icons.Default.Refresh,
                         contentDescription = "Re-run scanner",
                         tint = CryptoCyan,
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.size(18.dp)
                     )
                 }
+
+                SignalProLanguageSwitchButton(
+                    isBengali = isBengali,
+                    onClick = { viewModel.toggleLanguage() }
+                )
             }
         }
 
@@ -474,15 +479,24 @@ fun SignalProLanguageSwitchButton(
             contentColor = CryptoCyan
         ),
         shape = RoundedCornerShape(8.dp),
-        border = BorderStroke(1.dp, CryptoCyan.copy(alpha = 0.60f)),
-        modifier = Modifier.height(32.dp),
-        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 2.dp)
+        border = BorderStroke(1.dp, CryptoCyan.copy(alpha = 0.72f)),
+        modifier = Modifier
+            .height(32.dp)
+            .wrapContentWidth()
+            .graphicsLayer {
+                shadowElevation = 8.dp.toPx()
+                shape = RoundedCornerShape(8.dp)
+            },
+        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 2.dp)
     ) {
         Text(
             text = if (isBengali) "English" else "বাংলা",
-            fontWeight = FontWeight.Bold,
+            fontWeight = FontWeight.Black,
             fontSize = 11.sp,
-            maxLines = 1
+            color = CryptoCyan,
+            maxLines = 1,
+            softWrap = false,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
         )
     }
 }
@@ -1905,10 +1919,17 @@ fun RealTimeCountdown(
         else -> CryptoCyan
     }
 
+    val subtleGlowColor = when {
+        isExpired -> Color(0xFF201219)
+        isUrgent -> Color(0xFF21141B)
+        isCaution -> Color(0xFF1F1B10)
+        else -> Color(0xFF101C22)
+    }
+
     val titleText = if (isBengali) "বৈধতার নির্দিষ্ট মেয়াদ" else "VALIDITY WINDOW"
     val remainingText = if (isBengali) "বাকি সময়" else "Remaining"
-    val windowText = if (isBengali) "উইন্ডো ${totalDurationHours}H" else "Window ${totalDurationHours}H"
-    val activeText = if (isBengali) "${(progress * 100).toInt()}% সক্রিয়" else "${(progress * 100).toInt()}% active"
+    val windowText = "Window ${totalDurationHours}H"
+    val activeText = "${(progress * 100).toInt()}% active"
 
     val stateText = when {
         isExpired -> if (isBengali) "সিগন্যালের মেয়াদ শেষ" else "Expired"
@@ -1918,14 +1939,14 @@ fun RealTimeCountdown(
     }
 
     val stateMeaning = when {
-        isExpired -> if (isBengali) "সিগন্যালের নির্দিষ্ট সময় শেষ" else "Signal window closed"
-        isUrgent -> if (isBengali) "শেষ পর্যায়ের সিগন্যাল — আগে যাচাই করুন" else "Late-stage signal — verify before action"
-        isCaution -> if (isBengali) "দেরি করলে সিগন্যালের মান কমতে পারে" else "Delay may reduce signal quality"
-        else -> if (isBengali) "সিগন্যাল সক্রিয় — এখনো তাড়াহুড়া নেই" else "Active window — no urgency yet"
+        isExpired -> if (isBengali) "সিগন্যালের সময় শেষ" else "Signal window closed"
+        isUrgent -> if (isBengali) "শেষ পর্যায় — আগে যাচাই করুন" else "Late-stage signal — Verify before action"
+        isCaution -> if (isBengali) "দেরি করলে মান কমতে পারে" else "Delay may reduce signal quality"
+        else -> if (isBengali) "সক্রিয় — এখনো তাড়াহুড়া নেই" else "Active window — no urgency yet"
     }
 
-    val titleColor = Color(0xFFEAF2FF)
-    val subtitleColor = Color(0xFFBFC7D6)
+    val titleColor = if (isUrgent || isExpired) Color(0xFFFF8A9E) else Color(0xFFEAF2FF)
+    val subtitleColor = if (isUrgent || isExpired) Color(0xFFFFA3B2) else Color(0xFFBFC7D6)
     val supportColor = Color(0xFF98A2B3)
     val trackColor = Color(0xFF242B3A)
 
@@ -1936,7 +1957,7 @@ fun RealTimeCountdown(
             .background(
                 brush = Brush.horizontalGradient(
                     colors = listOf(
-                        Color(0xFF141824),
+                        subtleGlowColor,
                         Color(0xFF171C2A),
                         Color(0xFF10131D)
                     )
@@ -1958,11 +1979,12 @@ fun RealTimeCountdown(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = titleText,
-                        fontSize = 9.sp,
+                        fontSize = if (isBengali) 12.sp else 9.sp,
                         fontWeight = FontWeight.Black,
                         color = titleColor,
                         letterSpacing = if (isBengali) 0.sp else 1.1.sp,
                         maxLines = 1,
+                        softWrap = false,
                         overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                     )
 
@@ -1973,6 +1995,7 @@ fun RealTimeCountdown(
                         color = subtitleColor,
                         modifier = Modifier.padding(top = 1.dp),
                         maxLines = 1,
+                        softWrap = false,
                         overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                     )
                 }
@@ -1988,7 +2011,8 @@ fun RealTimeCountdown(
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Black,
                         color = accentColor,
-                        maxLines = 1
+                        maxLines = 1,
+                        softWrap = false
                     )
 
                     Text(
@@ -1996,7 +2020,8 @@ fun RealTimeCountdown(
                         fontSize = 8.sp,
                         fontWeight = FontWeight.Bold,
                         color = supportColor,
-                        maxLines = 1
+                        maxLines = 1,
+                        softWrap = false
                     )
                 }
             }
@@ -2015,7 +2040,7 @@ fun RealTimeCountdown(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(10.dp))
-                    .background(Color(0xFF101827).copy(alpha = 0.78f))
+                    .background(Color(0xFF101827).copy(alpha = 0.82f))
                     .border(
                         1.dp,
                         accentColor.copy(alpha = 0.30f),
@@ -2036,12 +2061,12 @@ fun RealTimeCountdown(
 
                 Text(
                     text = stateMeaning,
-                    fontSize = 10.sp,
+                    fontSize = if (isBengali) 9.sp else 9.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = titleColor,
+                    color = Color(0xFFEAF2FF),
                     textAlign = TextAlign.Center,
-                    maxLines = 2,
-                    lineHeight = 12.sp,
+                    maxLines = 1,
+                    softWrap = false,
                     overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                 )
             }
@@ -2055,7 +2080,8 @@ fun RealTimeCountdown(
                     fontSize = 8.sp,
                     fontWeight = FontWeight.Bold,
                     color = supportColor,
-                    maxLines = 1
+                    maxLines = 1,
+                    softWrap = false
                 )
 
                 Text(
@@ -2063,7 +2089,8 @@ fun RealTimeCountdown(
                     fontSize = 8.sp,
                     fontWeight = FontWeight.Black,
                     color = accentColor,
-                    maxLines = 1
+                    maxLines = 1,
+                    softWrap = false
                 )
             }
         }
@@ -2378,7 +2405,13 @@ fun generateMultiTimeframeForecasts(currentPrice: Double, isLong: Boolean, price
 }
 
 @Composable
-fun AiExplanationModule(whyEnglish: String, whyBengali: String, coinSymbol: String, isBengali: Boolean, onToggleLanguage: () -> Unit) {
+fun AiExplanationModule(
+    whyEnglish: String,
+    whyBengali: String,
+    coinSymbol: String,
+    isBengali: Boolean,
+    onToggleLanguage: () -> Unit
+) {
     val rotation by animateFloatAsState(
         targetValue = if (isBengali) 180f else 0f,
         animationSpec = spring(stiffness = Spring.StiffnessLow)
@@ -2391,14 +2424,16 @@ fun AiExplanationModule(whyEnglish: String, whyBengali: String, coinSymbol: Stri
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = if (isBengali) "এআই ওরাকলের বিশ্লেষণমূলক তথ্য" else "AI ORACLE ANALYTIC COGNITION",
+                text = if (isBengali) "এআই ওরাকলের বিশ্লেষণমূলক তথ্য" else "AI ORACLE ANALYTICS COGNITION",
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Bold,
                 color = CryptoCyan,
-                letterSpacing = 1.sp
+                letterSpacing = if (isBengali) 0.sp else 1.sp,
+                maxLines = 1,
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
             )
-
         }
+
         Spacer(modifier = Modifier.height(8.dp))
 
         Card(
@@ -2424,15 +2459,31 @@ fun AiExplanationModule(whyEnglish: String, whyBengali: String, coinSymbol: Stri
                             color = TextPrimary,
                             lineHeight = 18.sp
                         )
+
                         Spacer(modifier = Modifier.height(10.dp))
-                        
-                        Text(text = "QUANTITATIVE HEATMAP SIGNALS", fontSize = 9.sp, color = CryptoCyan, fontWeight = FontWeight.Bold)
+
+                        Text(
+                            text = "QUANTITATIVE HEATMAP SIGNALS",
+                            fontSize = 9.sp,
+                            color = CryptoCyan,
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                        )
+
                         Spacer(modifier = Modifier.height(6.dp))
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            InsightMetricPill("Trend", "STRONG", CryptoGreen)
-                            InsightMetricPill("Momentum", "HOT", AcceleratorCyanColor(coinSymbol))
-                            InsightMetricPill("Volume", "ACCUMULATING", AccentGold)
-                        }
+
+                        HeatmapSignalsAlignedRow(
+                            firstLabel = "Trend",
+                            firstValue = "STRONG",
+                            firstColor = CryptoGreen,
+                            secondLabel = "Momentum",
+                            secondValue = "HOT",
+                            secondColor = AcceleratorCyanColor(coinSymbol),
+                            thirdLabel = "Volume",
+                            thirdValue = "ACCUMULATING",
+                            thirdColor = AccentGold
+                        )
                     }
                 } else {
                     Column(
@@ -2444,21 +2495,77 @@ fun AiExplanationModule(whyEnglish: String, whyBengali: String, coinSymbol: Stri
                             color = TextPrimary,
                             lineHeight = 18.sp
                         )
+
                         Spacer(modifier = Modifier.height(10.dp))
-                        
-                        Text(text = "রিয়াল-টাইম কোয়ান্ট সংকেতসমূহ", fontSize = 9.sp, color = CryptoCyan, fontWeight = FontWeight.Bold)
+
+                        Text(
+                            text = "পরিমাণগত হিটম্যাপ সিগন্যাল",
+                            fontSize = 9.sp,
+                            color = CryptoCyan,
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                        )
+
                         Spacer(modifier = Modifier.height(6.dp))
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            InsightMetricPill("ট্রেন্ড", "শক্তিশালী", CryptoGreen)
-                            InsightMetricPill("মোমেন্টাম", "উচ্চ", AcceleratorCyanColor(coinSymbol))
-                            InsightMetricPill("ভলিউম", "সঞ্চয়কারী", AccentGold)
-                        }
+
+                        HeatmapSignalsAlignedRow(
+                            firstLabel = "ট্রেন্ড",
+                            firstValue = "শক্তিশালী",
+                            firstColor = CryptoGreen,
+                            secondLabel = "মোমেন্টাম",
+                            secondValue = "তীব্র",
+                            secondColor = AcceleratorCyanColor(coinSymbol),
+                            thirdLabel = "ভলিউম",
+                            thirdValue = "সঞ্চয় হচ্ছে",
+                            thirdColor = AccentGold
+                        )
                     }
                 }
             }
         }
     }
 }
+
+@Composable
+fun HeatmapSignalsAlignedRow(
+    firstLabel: String,
+    firstValue: String,
+    firstColor: Color,
+    secondLabel: String,
+    secondValue: String,
+    secondColor: Color,
+    thirdLabel: String,
+    thirdValue: String,
+    thirdColor: Color
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier.weight(1f),
+            contentAlignment = Alignment.CenterStart
+        ) {
+            InsightMetricPill(firstLabel, firstValue, firstColor)
+        }
+
+        Box(
+            modifier = Modifier.weight(1f),
+            contentAlignment = Alignment.Center
+        ) {
+            InsightMetricPill(secondLabel, secondValue, secondColor)
+        }
+
+        Box(
+            modifier = Modifier.weight(1f),
+            contentAlignment = Alignment.CenterEnd
+        ) {
+            InsightMetricPill(thirdLabel, thirdValue, thirdColor)
+        }
+    }
+}
+
 
 @Composable
 fun InsightMetricPill(label: String, value: String, valueColor: Color) {
@@ -2469,8 +2576,24 @@ fun InsightMetricPill(label: String, value: String, valueColor: Color) {
             .padding(horizontal = 6.dp, vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(text = "$label: ", fontSize = 8.sp, color = TextSecondary)
-        Text(text = value, fontSize = 8.sp, fontWeight = FontWeight.Bold, color = valueColor)
+        Text(
+            text = "$label: ",
+            fontSize = 8.sp,
+            color = TextSecondary,
+            maxLines = 1,
+            softWrap = false,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+        )
+
+        Text(
+            text = value,
+            fontSize = 8.sp,
+            fontWeight = FontWeight.Bold,
+            color = valueColor,
+            maxLines = 1,
+            softWrap = false,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+        )
     }
 }
 
