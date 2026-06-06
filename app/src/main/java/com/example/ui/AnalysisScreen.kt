@@ -244,7 +244,7 @@ fun PredictionDashboard(
                         .background(DarkSurface, CircleShape)
                         .border(1.dp, BorderColor, CircleShape)
                         .graphicsLayer {
-                            shadowElevation = 4.dp.toPx()
+                            shadowElevation = 5.dp.toPx()
                             shape = CircleShape
                         }
                 ) {
@@ -479,12 +479,12 @@ fun SignalProLanguageSwitchButton(
             contentColor = CryptoCyan
         ),
         shape = RoundedCornerShape(8.dp),
-        border = BorderStroke(1.dp, CryptoCyan.copy(alpha = 0.72f)),
+        border = BorderStroke(1.dp, CryptoCyan.copy(alpha = 0.76f)),
         modifier = Modifier
             .height(32.dp)
             .wrapContentWidth()
             .graphicsLayer {
-                shadowElevation = 8.dp.toPx()
+                shadowElevation = 10.dp.toPx()
                 shape = RoundedCornerShape(8.dp)
             },
         contentPadding = PaddingValues(horizontal = 12.dp, vertical = 2.dp)
@@ -659,7 +659,7 @@ fun SpotItemCard(coin: SpotSignal, timeframeIndex: Int, viewModel: CryptoViewMod
     }
 
     Card(
-        colors = CardDefaults.cardColors(containerColor = DarkSurface),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF070B12)),
         shape = RoundedCornerShape(16.dp),
         modifier = Modifier
             .fillMaxWidth()
@@ -977,6 +977,21 @@ fun SpotItemCard(coin: SpotSignal, timeframeIndex: Int, viewModel: CryptoViewMod
 @Composable
 fun StartTradeFlow(viewModel: CryptoViewModel, mission: com.example.model.Mission, livePrice: Double) {
     var step by remember { mutableStateOf(0) }
+    val isBengali by viewModel.isBengali.collectAsState()
+
+    val recommendationText = remember(mission, isBengali) {
+        val highConfidence = mission.confidence >= 85
+        val isLong = mission.type.uppercase() == "LONG"
+
+        when {
+            isBengali && highConfidence && isLong -> "উচ্চ আস্থা — এন্ট্রি যাচাই করুন"
+            isBengali && highConfidence && !isLong -> "উচ্চ আস্থা — শর্ট যাচাই করুন"
+            isBengali && !highConfidence -> "সতর্কভাবে যাচাই করুন"
+            !isBengali && highConfidence && isLong -> "High confidence — verify entry"
+            !isBengali && highConfidence && !isLong -> "High confidence — verify short"
+            else -> "Verify setup before action"
+        }
+    }
 
     if (step == 1) {
         AlertDialog(
@@ -1001,7 +1016,7 @@ fun StartTradeFlow(viewModel: CryptoViewModel, mission: com.example.model.Missio
         )
     } else if (step == 2) {
         val verifiedEntryLocked = remember { livePrice }
-        
+
         AlertDialog(
             onDismissRequest = { step = 0 },
             title = { Text("Confirm Trade Activation", color = CryptoCyan, fontSize = 18.sp, fontWeight = FontWeight.Bold) },
@@ -1017,8 +1032,8 @@ fun StartTradeFlow(viewModel: CryptoViewModel, mission: com.example.model.Missio
                 Button(onClick = {
                     viewModel.startMission(mission.copy(
                         id = java.util.UUID.randomUUID().toString(),
-                        entryPrice = verifiedEntryLocked, // User's personal locked entry price
-                        originalSignalEntry = mission.entryPrice, // Keep original
+                        entryPrice = verifiedEntryLocked,
+                        originalSignalEntry = mission.entryPrice,
                         startTime = System.currentTimeMillis()
                     ))
                     viewModel.sendLocalAlert("Mission Started", "AI intelligence system successfully started monitoring ${mission.coinSymbol}")
@@ -1038,54 +1053,89 @@ fun StartTradeFlow(viewModel: CryptoViewModel, mission: com.example.model.Missio
         )
     }
 
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.97f else 1f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow),
+        label = "ButtonScale"
+    )
+
+    val infiniteTransition = rememberInfiniteTransition(label = "Pulse")
+    val pulseAlpha by infiniteTransition.animateFloat(
+        initialValue = 0.48f,
+        targetValue = 0.82f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1500, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "PulseAlpha"
+    )
+
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.End
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        val interactionSource = remember { MutableInteractionSource() }
-        val isPressed by interactionSource.collectIsPressedAsState()
-        val scale by animateFloatAsState(
-            targetValue = if (isPressed) 0.97f else 1f,
-            animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow),
-            label = "ButtonScale"
-        )
-        
-        // Pulse glow
-        val infiniteTransition = rememberInfiniteTransition(label = "Pulse")
-        val pulseAlpha by infiniteTransition.animateFloat(
-            initialValue = 0.5f,
-            targetValue = 0.8f,
-            animationSpec = infiniteRepeatable(
-                animation = tween(1500, easing = LinearEasing),
-                repeatMode = RepeatMode.Reverse
-            ),
-            label = "PulseAlpha"
-        )
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .height(38.dp)
+                .clip(RoundedCornerShape(9.dp))
+                .background(
+                    brush = Brush.linearGradient(
+                        colors = listOf(
+                            Color(0xFF090E1A),
+                            Color(0xFF111827),
+                            Color(0xFF050812)
+                        )
+                    )
+                )
+                .border(
+                    1.dp,
+                    CryptoCyan.copy(alpha = 0.36f),
+                    RoundedCornerShape(9.dp)
+                )
+                .padding(horizontal = 8.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = recommendationText,
+                fontSize = 10.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFFEAF2FF),
+                textAlign = TextAlign.Center,
+                maxLines = 2,
+                lineHeight = 12.sp,
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+            )
+        }
 
         Box(
             modifier = Modifier
                 .scale(scale)
-                .height(36.dp)
+                .height(38.dp)
+                .widthIn(min = 128.dp, max = 164.dp)
                 .background(
                     brush = Brush.linearGradient(
                         colors = listOf(
-                            CryptoCyan.copy(alpha = pulseAlpha), 
+                            CryptoCyan.copy(alpha = pulseAlpha),
                             CryptoGreen.copy(alpha = pulseAlpha)
                         )
                     ),
-                    shape = RoundedCornerShape(8.dp)
+                    shape = RoundedCornerShape(9.dp)
                 )
                 .border(
                     width = 1.dp,
-                    color = Color.White.copy(alpha = 0.2f),
-                    shape = RoundedCornerShape(8.dp)
+                    color = Color.White.copy(alpha = 0.22f),
+                    shape = RoundedCornerShape(9.dp)
                 )
                 .clickable(
                     interactionSource = interactionSource,
                     indication = LocalIndication.current,
                     onClick = { step = 1 }
                 )
-                .padding(horizontal = 16.dp),
+                .padding(horizontal = 10.dp),
             contentAlignment = Alignment.Center
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -1093,15 +1143,19 @@ fun StartTradeFlow(viewModel: CryptoViewModel, mission: com.example.model.Missio
                     imageVector = Icons.Default.PlayArrow,
                     contentDescription = "Start Trade",
                     tint = Color.White,
-                    modifier = Modifier.size(16.dp)
+                    modifier = Modifier.size(15.dp)
                 )
-                Spacer(modifier = Modifier.width(6.dp))
+
+                Spacer(modifier = Modifier.width(5.dp))
+
                 Text(
                     text = "ACCEPT SIGNAL",
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 10.sp,
                     color = Color.White,
-                    letterSpacing = 1.2.sp
+                    letterSpacing = 1.sp,
+                    maxLines = 1,
+                    softWrap = false
                 )
             }
         }
@@ -1560,7 +1614,7 @@ fun OraclePickCard(asset: Any, timeframeIndex: Int, viewModel: CryptoViewModel, 
     }
 
     Card(
-        colors = CardDefaults.cardColors(containerColor = DarkSurface),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF070B12)),
         shape = RoundedCornerShape(16.dp),
         modifier = Modifier
             .fillMaxWidth()
@@ -1821,7 +1875,7 @@ fun RealTimeInvestmentTrackingModule(
     val currentRoi = if (entryPrice > 0) ((currentPrice - entryPrice) / entryPrice) * 100 * (if(isLong) 1 else -1) else 0.0
 
     Card(
-        colors = CardDefaults.cardColors(containerColor = DarkSurface),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF070B12)),
         shape = RoundedCornerShape(12.dp),
         border = BorderStroke(1.dp, BorderColor),
         modifier = Modifier.fillMaxWidth()
@@ -1919,12 +1973,15 @@ fun RealTimeCountdown(
         else -> CryptoCyan
     }
 
-    val subtleGlowColor = when {
-        isExpired -> Color(0xFF201219)
-        isUrgent -> Color(0xFF21141B)
-        isCaution -> Color(0xFF1F1B10)
-        else -> Color(0xFF101C22)
+    val deepStart = when {
+        isExpired -> Color(0xFF160910)
+        isUrgent -> Color(0xFF1A0B13)
+        isCaution -> Color(0xFF161207)
+        else -> Color(0xFF06141B)
     }
+
+    val deepMid = Color(0xFF111827)
+    val deepEnd = Color(0xFF050812)
 
     val titleText = if (isBengali) "বৈধতার নির্দিষ্ট মেয়াদ" else "VALIDITY WINDOW"
     val remainingText = if (isBengali) "বাকি সময়" else "Remaining"
@@ -1945,29 +2002,33 @@ fun RealTimeCountdown(
         else -> if (isBengali) "সক্রিয় — এখনো তাড়াহুড়া নেই" else "Active window — no urgency yet"
     }
 
-    val titleColor = if (isUrgent || isExpired) Color(0xFFFF8A9E) else Color(0xFFEAF2FF)
-    val subtitleColor = if (isUrgent || isExpired) Color(0xFFFFA3B2) else Color(0xFFBFC7D6)
-    val supportColor = Color(0xFF98A2B3)
-    val trackColor = Color(0xFF242B3A)
+    val titleColor = if (isUrgent || isExpired) Color(0xFFFF8FA3) else Color(0xFFEAF2FF)
+    val subtitleColor = if (isUrgent || isExpired) Color(0xFFFFB0BD) else Color(0xFFCFE8F5)
+    val supportColor = Color(0xFFAAB4C5)
+    val trackColor = Color(0xFF1B2434)
 
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
             .background(
-                brush = Brush.horizontalGradient(
+                brush = Brush.linearGradient(
                     colors = listOf(
-                        subtleGlowColor,
-                        Color(0xFF171C2A),
-                        Color(0xFF10131D)
+                        deepStart,
+                        deepMid,
+                        deepEnd
                     )
                 )
             )
             .border(
                 width = 1.dp,
-                color = accentColor.copy(alpha = 0.58f),
+                color = accentColor.copy(alpha = 0.72f),
                 shape = RoundedCornerShape(16.dp)
             )
+            .graphicsLayer {
+                shadowElevation = 12.dp.toPx()
+                shape = RoundedCornerShape(16.dp)
+            }
             .padding(horizontal = 12.dp, vertical = 10.dp)
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -2040,10 +2101,10 @@ fun RealTimeCountdown(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(10.dp))
-                    .background(Color(0xFF101827).copy(alpha = 0.82f))
+                    .background(Color(0xFF080D18).copy(alpha = 0.92f))
                     .border(
                         1.dp,
-                        accentColor.copy(alpha = 0.30f),
+                        accentColor.copy(alpha = 0.36f),
                         RoundedCornerShape(10.dp)
                     )
                     .padding(horizontal = 8.dp, vertical = 5.dp),
@@ -2061,9 +2122,9 @@ fun RealTimeCountdown(
 
                 Text(
                     text = stateMeaning,
-                    fontSize = if (isBengali) 9.sp else 9.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = Color(0xFFEAF2FF),
+                    fontSize = 9.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFFF4F8FF),
                     textAlign = TextAlign.Center,
                     maxLines = 1,
                     softWrap = false,
@@ -2104,7 +2165,7 @@ fun MultiAiConsensusModule(coinSymbol: String, oracleScore: Int, isLong: Boolean
     val consensus = getConsensusDetails(coinSymbol, oracleScore, isLong)
 
     Card(
-        colors = CardDefaults.cardColors(containerColor = DarkSurfaceVariant),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF0A0F1A)),
         modifier = Modifier.fillMaxWidth().border(1.dp, BorderColor, RoundedCornerShape(12.dp))
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
@@ -2166,7 +2227,7 @@ fun MultiAiConsensusModule(coinSymbol: String, oracleScore: Int, isLong: Boolean
 fun AiEngineGauge(name: String, score: Int, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
-            .background(DarkBackground, RoundedCornerShape(8.dp))
+            .background(Color(0xFF050812), RoundedCornerShape(8.dp))
             .border(1.dp, BorderColor, RoundedCornerShape(8.dp))
             .padding(8.dp),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -2212,7 +2273,7 @@ fun RiskManagementModule(
     val tp4 = projectedPrice
 
     Card(
-        colors = CardDefaults.cardColors(containerColor = DarkSurfaceVariant),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF0A0F1A)),
         modifier = Modifier.fillMaxWidth().border(1.dp, BorderColor, RoundedCornerShape(12.dp))
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
@@ -2264,7 +2325,7 @@ fun RiskManagementModule(
 fun TpBadge(label: String, price: Double, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
-            .background(DarkBackground, RoundedCornerShape(6.dp))
+            .background(Color(0xFF050812), RoundedCornerShape(6.dp))
             .border(1.dp, BorderColor, RoundedCornerShape(6.dp))
             .padding(6.dp),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -2279,7 +2340,7 @@ fun TpBadge(label: String, price: Double, modifier: Modifier = Modifier) {
 fun SizingBox(label: String, size: String, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
-            .background(DarkBackground, RoundedCornerShape(6.dp))
+            .background(Color(0xFF050812), RoundedCornerShape(6.dp))
             .padding(6.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -2293,7 +2354,7 @@ fun MultiTimeframeForecastModule(currentPrice: Double, isLong: Boolean, priceCha
     val forecasts = generateMultiTimeframeForecasts(currentPrice, isLong, priceChangePct)
 
     Card(
-        colors = CardDefaults.cardColors(containerColor = DarkSurfaceVariant),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF0A0F1A)),
         modifier = Modifier.fillMaxWidth().border(1.dp, BorderColor, RoundedCornerShape(12.dp))
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
@@ -2340,7 +2401,7 @@ fun MultiTimeframeForecastModule(currentPrice: Double, isLong: Boolean, priceCha
 fun ForecastGridItem(forecast: TimeframeForecast, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
-            .background(DarkBackground, RoundedCornerShape(8.dp))
+            .background(Color(0xFF050812), RoundedCornerShape(8.dp))
             .border(1.dp, BorderColor, RoundedCornerShape(8.dp))
             .padding(8.dp),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -2437,18 +2498,29 @@ fun AiExplanationModule(
         Spacer(modifier = Modifier.height(8.dp))
 
         Card(
-            colors = CardDefaults.cardColors(containerColor = DarkSurfaceVariant),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF070B12)),
             modifier = Modifier
                 .fillMaxWidth()
-                .border(2.dp, BorderColor, RoundedCornerShape(12.dp))
+                .border(1.4.dp, CryptoCyan.copy(alpha = 0.55f), RoundedCornerShape(12.dp))
                 .graphicsLayer {
                     rotationY = rotation
                     cameraDistance = 14 * density
+                    shadowElevation = 10.dp.toPx()
+                    shape = RoundedCornerShape(12.dp)
                 }
         ) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .background(
+                        Brush.linearGradient(
+                            listOf(
+                                Color(0xFF08111C),
+                                Color(0xFF111827),
+                                Color(0xFF060912)
+                            )
+                        )
+                    )
                     .padding(14.dp)
             ) {
                 if (rotation <= 90f) {
@@ -2456,7 +2528,7 @@ fun AiExplanationModule(
                         Text(
                             text = whyEnglish,
                             fontSize = 13.sp,
-                            color = TextPrimary,
+                            color = Color(0xFFF4F8FF),
                             lineHeight = 18.sp
                         )
 
@@ -2492,7 +2564,7 @@ fun AiExplanationModule(
                         Text(
                             text = whyBengali,
                             fontSize = 13.sp,
-                            color = TextPrimary,
+                            color = Color(0xFFF4F8FF),
                             lineHeight = 18.sp
                         )
 
@@ -2571,15 +2643,15 @@ fun HeatmapSignalsAlignedRow(
 fun InsightMetricPill(label: String, value: String, valueColor: Color) {
     Row(
         modifier = Modifier
-            .background(DarkBackground, RoundedCornerShape(6.dp))
-            .border(0.7.dp, BorderColor, RoundedCornerShape(6.dp))
+            .background(Color(0xFF050812), RoundedCornerShape(6.dp))
+            .border(0.7.dp, BorderColor.copy(alpha = 0.85f), RoundedCornerShape(6.dp))
             .padding(horizontal = 6.dp, vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
             text = "$label: ",
             fontSize = 8.sp,
-            color = TextSecondary,
+            color = Color(0xFFC8D1E1),
             maxLines = 1,
             softWrap = false,
             overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
@@ -2604,7 +2676,7 @@ fun AcceleratorCyanColor(symbol: String): Color {
 @Composable
 fun LeverageIntelligenceModule(coin: FuturesSignal) {
     Card(
-        colors = CardDefaults.cardColors(containerColor = DarkSurfaceVariant),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF0A0F1A)),
         modifier = Modifier.fillMaxWidth().border(1.dp, BorderColor, RoundedCornerShape(12.dp))
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
@@ -2630,7 +2702,7 @@ fun LeverageIntelligenceModule(coin: FuturesSignal) {
 fun LeverageBox(title: String, multiplier: String, desc: String, accent: Color, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
-            .background(DarkBackground, RoundedCornerShape(8.dp))
+            .background(Color(0xFF050812), RoundedCornerShape(8.dp))
             .border(1.dp, BorderColor.copy(alpha = 0.5f), RoundedCornerShape(8.dp))
             .padding(8.dp),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -2780,7 +2852,7 @@ fun SignalQualitySystemBlock(
     }
 
     Card(
-        colors = CardDefaults.cardColors(containerColor = DarkSurfaceVariant),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF0A0F1A)),
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
         border = BorderStroke(1.dp, BorderColor.copy(alpha = 0.6f))
@@ -2855,7 +2927,7 @@ fun TradeChecklistBlock(
     riskEvaluated: Boolean
 ) {
     Card(
-        colors = CardDefaults.cardColors(containerColor = DarkSurfaceVariant),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF0A0F1A)),
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
         border = BorderStroke(1.dp, BorderColor.copy(alpha = 0.6f))
@@ -2941,7 +3013,7 @@ fun MarketRegimeTraceModule(coinSymbol: String) {
     }
 
     Card(
-        colors = CardDefaults.cardColors(containerColor = DarkSurfaceVariant),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF0A0F1A)),
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
         border = BorderStroke(1.dp, BorderColor.copy(alpha = 0.6f))
