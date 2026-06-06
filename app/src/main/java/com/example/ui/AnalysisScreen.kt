@@ -249,7 +249,7 @@ fun PredictionDashboard(
                             ),
                             shape = CircleShape
                         )
-                        .border(0.8.dp, CryptoCyan.copy(alpha = 0.60f), CircleShape)
+                        .border(1.dp, BorderColor, CircleShape)
                 ) {
                     Icon(
                         imageVector = Icons.Default.Refresh,
@@ -2454,6 +2454,7 @@ fun AiScoreTile(title: String, score: Int, modifier: Modifier = Modifier) {
                 fontWeight = FontWeight.Bold,
                 color = Color(0xFFDCE5F5),
                 maxLines = 1,
+                textAlign = TextAlign.Center,
                 overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
             )
 
@@ -2466,7 +2467,8 @@ fun AiScoreTile(title: String, score: Int, modifier: Modifier = Modifier) {
                 fontWeight = FontWeight.Black,
                 color = CryptoGreen,
                 maxLines = 1,
-                softWrap = false
+                softWrap = false,
+                textAlign = TextAlign.Center
             )
         }
     }
@@ -2480,30 +2482,41 @@ fun ConsensusMetricColumn(
     valueColor: Color,
     modifier: Modifier = Modifier
 ) {
+    val valueSize = when {
+        value.length >= 9 -> 12.sp
+        value.length >= 6 -> 13.sp
+        else -> 15.sp
+    }
+
     Column(
-        modifier = modifier.padding(horizontal = 3.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+        modifier = modifier
+            .heightIn(min = 50.dp)
+            .padding(horizontal = 2.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
     ) {
         Text(
             text = label,
-            fontSize = 7.6.sp,
+            fontSize = 7.5.sp,
             fontWeight = FontWeight.Bold,
             color = Color(0xFFD0D8E8),
             maxLines = 2,
-            lineHeight = 9.sp,
+            lineHeight = 8.5.sp,
             textAlign = TextAlign.Center,
             overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
         )
 
-        Spacer(modifier = Modifier.height(2.dp))
+        Spacer(modifier = Modifier.height(3.dp))
 
         Text(
             text = value,
-            fontSize = 15.sp,
+            fontSize = valueSize,
             fontWeight = FontWeight.Black,
             color = valueColor,
             maxLines = 1,
-            softWrap = false
+            softWrap = false,
+            textAlign = TextAlign.Center,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
         )
     }
 }
@@ -2590,28 +2603,28 @@ fun MultiAiConsensusModule(
                         )
                     )
                     .border(0.8.dp, CryptoCyan.copy(alpha = 0.62f), RoundedCornerShape(10.dp))
-                    .padding(vertical = 9.dp, horizontal = 4.dp),
+                    .padding(vertical = 8.dp, horizontal = 6.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 ConsensusMetricColumn(
                     label = if (isBengali) "ঐকমত্যের আস্থা" else "CONSENSUS CONFIDENCE",
                     value = "$consensusScore%",
                     valueColor = CryptoCyan,
-                    modifier = Modifier.weight(1.35f)
+                    modifier = Modifier.weight(1.25f)
                 )
 
                 ConsensusMetricColumn(
                     label = if (isBengali) "দিকনির্দেশ" else "DIRECTION",
                     value = directionText,
                     valueColor = CryptoGreen,
-                    modifier = Modifier.weight(0.85f)
+                    modifier = Modifier.weight(1.05f)
                 )
 
                 ConsensusMetricColumn(
                     label = if (isBengali) "রিস্ক প্রোফাইল" else "RISK PROFILE",
                     value = riskText,
                     valueColor = CryptoGreen,
-                    modifier = Modifier.weight(0.95f)
+                    modifier = Modifier.weight(1.0f)
                 )
             }
         }
@@ -3064,7 +3077,11 @@ fun InsightMetricPill(
     valueColor: Color,
     modifier: Modifier = Modifier
 ) {
-    val valueSize = if (value.length >= 11) 8.4.sp else 10.5.sp
+    val valueSize = when {
+        value.length >= 11 -> 8.4.sp
+        value.length >= 8 -> 9.2.sp
+        else -> 10.5.sp
+    }
 
     Column(
         modifier = modifier
@@ -3278,8 +3295,9 @@ fun QualityMetricColumn(
     modifier: Modifier = Modifier
 ) {
     Column(
-        modifier = modifier,
-        horizontalAlignment = Alignment.CenterHorizontally
+        modifier = modifier.heightIn(min = 42.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
     ) {
         Text(
             text = label,
@@ -3291,7 +3309,7 @@ fun QualityMetricColumn(
             overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
         )
 
-        Spacer(modifier = Modifier.height(2.dp))
+        Spacer(modifier = Modifier.height(3.dp))
 
         Text(
             text = value,
@@ -3300,7 +3318,8 @@ fun QualityMetricColumn(
             fontWeight = FontWeight.Bold,
             fontFamily = FontFamily.Monospace,
             maxLines = 1,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
         )
     }
 }
@@ -3327,7 +3346,7 @@ fun SignalQualitySystemBlock(
         "MEDIUM" -> if (isBengali) "মাঝারি" else "MEDIUM"
         "HIGH" -> if (isBengali) "তীব্র" else "HIGH"
         "EXTREME" -> if (isBengali) "খুব বেশি" else "EXTREME"
-        else -> if (isBengali) riskGrade else riskGrade
+        else -> riskGrade
     }
 
     val riskColor = when (riskGrade.uppercase()) {
@@ -3357,7 +3376,9 @@ fun SignalQualitySystemBlock(
                 fontSize = 10.sp,
                 fontWeight = FontWeight.Bold,
                 color = TextSecondary,
-                letterSpacing = if (isBengali) 0.sp else 1.sp
+                letterSpacing = if (isBengali) 0.sp else 1.sp,
+                maxLines = 1,
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
             )
 
             Spacer(modifier = Modifier.height(10.dp))
@@ -3367,18 +3388,21 @@ fun SignalQualitySystemBlock(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column {
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = if (isBengali) "শ্রেণি" else "CLASSIFICATION",
                         fontSize = 8.sp,
-                        color = TextMuted
+                        color = TextMuted,
+                        maxLines = 1
                     )
 
                     Text(
                         text = if (isBengali) indicator else indicator.uppercase(),
-                        fontSize = 13.sp,
+                        fontSize = if (isBengali) 12.sp else 13.sp,
                         fontWeight = FontWeight.Black,
-                        color = themeColor
+                        color = themeColor,
+                        maxLines = 1,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                     )
                 }
 
@@ -3391,7 +3415,8 @@ fun SignalQualitySystemBlock(
                         text = "CQI: $score/100",
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
-                        color = themeColor
+                        color = themeColor,
+                        maxLines = 1
                     )
                 }
             }
@@ -3451,7 +3476,9 @@ fun TradeChecklistBlock(
                 fontSize = 10.sp,
                 fontWeight = FontWeight.Bold,
                 color = TextSecondary,
-                letterSpacing = if (isBengali) 0.sp else 1.sp
+                letterSpacing = if (isBengali) 0.sp else 1.sp,
+                maxLines = 1,
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
             )
 
             Spacer(modifier = Modifier.height(10.dp))
@@ -3579,7 +3606,9 @@ fun MarketRegimeTraceModule(
                 fontSize = 10.sp,
                 fontWeight = FontWeight.Bold,
                 color = TextSecondary,
-                letterSpacing = if (isBengali) 0.sp else 1.sp
+                letterSpacing = if (isBengali) 0.sp else 1.sp,
+                maxLines = 1,
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
             )
 
             Spacer(modifier = Modifier.height(10.dp))
@@ -3592,9 +3621,10 @@ fun MarketRegimeTraceModule(
                 ) {
                     Text(
                         text = regimeText,
-                        fontSize = if (isBengali) 11.sp else 11.sp,
+                        fontSize = 11.sp,
                         fontWeight = FontWeight.ExtraBold,
-                        color = tint
+                        color = tint,
+                        maxLines = 1
                     )
                 }
 

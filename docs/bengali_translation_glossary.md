@@ -11,10 +11,6 @@ Use simple Bengali that normal traders can understand.
 | VALIDITY WINDOW | বৈধতার নির্দিষ্ট মেয়াদ |
 | AI ORACLE ANALYTICS COGNITION | এআই ওরাকলের বিশ্লেষণমূলক তথ্য |
 | AI Decision Brief | AI সিদ্ধান্ত সংক্ষেপ |
-| Signal Verdict | সিগন্যাল রায় |
-| Why It Matters | কেন গুরুত্বপূর্ণ |
-| Risk Warning | ঝুঁকির সতর্কতা |
-| Suggested Action | প্রস্তাবিত কাজ |
 | High Confidence | উচ্চ আস্থা |
 | Verify Entry | এন্ট্রি যাচাই |
 | CONFIDENCE | আস্থা |
