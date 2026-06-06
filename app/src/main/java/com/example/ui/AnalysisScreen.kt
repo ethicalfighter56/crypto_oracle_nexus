@@ -192,6 +192,7 @@ fun PredictionDashboard(
     var futuresSubTab by remember { mutableStateOf(0) }
     var spotTimeframe by remember { mutableStateOf(0) }
     var futuresTimeframe by remember { mutableStateOf(0) }
+    val isBengali by viewModel.isBengali.collectAsState()
 
     Column(modifier = Modifier.fillMaxSize()) {
         // App Custom Toolbar
@@ -231,18 +232,29 @@ fun PredictionDashboard(
             }
             Spacer(modifier = Modifier.weight(1f))
             
-            // Re-run scanner
-            IconButton(
-                onClick = { viewModel.runScanner() },
-                modifier = Modifier
-                    .background(DarkSurface, CircleShape)
-                    .border(1.dp, BorderColor, CircleShape)
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(
-                    imageVector = Icons.Default.Refresh,
-                    contentDescription = "Re-run scanner",
-                    tint = CryptoCyan
+                SignalProLanguageSwitchButton(
+                    isBengali = isBengali,
+                    onClick = { viewModel.toggleLanguage() }
                 )
+
+                IconButton(
+                    onClick = { viewModel.runScanner() },
+                    modifier = Modifier
+                        .size(40.dp)
+                        .background(DarkSurface, CircleShape)
+                        .border(1.dp, BorderColor, CircleShape)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Refresh,
+                        contentDescription = "Re-run scanner",
+                        tint = CryptoCyan,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
             }
         }
 
@@ -448,6 +460,33 @@ fun PredictionDashboard(
         }
     }
 }
+
+
+@Composable
+fun SignalProLanguageSwitchButton(
+    isBengali: Boolean,
+    onClick: () -> Unit
+) {
+    Button(
+        onClick = onClick,
+        colors = ButtonDefaults.buttonColors(
+            containerColor = DarkSurface,
+            contentColor = CryptoCyan
+        ),
+        shape = RoundedCornerShape(8.dp),
+        border = BorderStroke(1.dp, CryptoCyan.copy(alpha = 0.60f)),
+        modifier = Modifier.height(32.dp),
+        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 2.dp)
+    ) {
+        Text(
+            text = if (isBengali) "English" else "বাংলা",
+            fontWeight = FontWeight.Bold,
+            fontSize = 11.sp,
+            maxLines = 1
+        )
+    }
+}
+
 
 @Composable
 fun TabButton(
@@ -830,7 +869,7 @@ fun SpotItemCard(coin: SpotSignal, timeframeIndex: Int, viewModel: CryptoViewMod
                         3 -> 72
                         else -> 168
                     }
-                    RealTimeCountdown(coin.coinSymbol, hours)
+                    RealTimeCountdown(coin.coinSymbol, hours, isBengali)
                     
                     Spacer(modifier = Modifier.height(16.dp))
                     
@@ -866,7 +905,7 @@ fun SpotItemCard(coin: SpotSignal, timeframeIndex: Int, viewModel: CryptoViewMod
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    MultiAiConsensusModule(coin.coinSymbol, coin.oracleScore, true)
+                    MultiAiConsensusModule(coin.coinSymbol, coin.oracleScore, true, isBengali)
 
                     Spacer(modifier = Modifier.height(16.dp))
 
@@ -1350,7 +1389,7 @@ fun FuturesItemCard(coin: FuturesSignal, timeframeIndex: Int, viewModel: CryptoV
                         3 -> 72
                         else -> 168
                     }
-                    RealTimeCountdown(coin.coinSymbol, hours)
+                    RealTimeCountdown(coin.coinSymbol, hours, isBengali)
 
                     Spacer(modifier = Modifier.height(16.dp))
                     RealTimeInvestmentTrackingModule(
@@ -1388,7 +1427,7 @@ fun FuturesItemCard(coin: FuturesSignal, timeframeIndex: Int, viewModel: CryptoV
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    MultiAiConsensusModule(coin.coinSymbol, coin.oracleScore, isLong)
+                    MultiAiConsensusModule(coin.coinSymbol, coin.oracleScore, isLong, isBengali)
 
                     Spacer(modifier = Modifier.height(16.dp))
 
@@ -1421,7 +1460,7 @@ fun FuturesItemCard(coin: FuturesSignal, timeframeIndex: Int, viewModel: CryptoV
                             stopLoss = formatPrice(coin.invalidationPrice),
                             confidence = probability,
                             aiStatusEnglish = if (isLong) "Bullish convergence intact." else "Bearish momentum building.",
-                            aiStatusBengali = if (isLong) "বুলিশ কনভারজেন্স অটুট রয়েছে।" else "বেয়ারিশ মোমেন্টাম তৈরি হচ্ছে।"
+                            aiStatusBengali = if (isLong) "দাম বাড়ছে কনভারজেন্স অটুট রয়েছে।" else "দাম কমছে মোমেন্টাম তৈরি হচ্ছে।"
                         )
                     }
                     StartTradeFlow(viewModel = viewModel, mission = mission, livePrice = livePrice)
@@ -1662,7 +1701,7 @@ fun OraclePickCard(asset: Any, timeframeIndex: Int, viewModel: CryptoViewModel, 
                         3 -> 72
                         else -> 168
                     }
-                    RealTimeCountdown(symbol, hours)
+                    RealTimeCountdown(symbol, hours, isBengali)
 
                     Spacer(modifier = Modifier.height(16.dp))
                     RealTimeInvestmentTrackingModule(entryPrice = entryPrice, projectedPrice = projPrice, isLong = isLong, currentPrice = curPrice)
@@ -1678,7 +1717,7 @@ fun OraclePickCard(asset: Any, timeframeIndex: Int, viewModel: CryptoViewModel, 
                         is SpotSignal -> asset.oracleScore
                         is FuturesSignal -> asset.oracleScore
                         else -> 80
-                    }, isLong)
+                    }, isLong, isBengali)
 
                     Spacer(modifier = Modifier.height(16.dp))
 
@@ -1829,7 +1868,11 @@ fun RealTimeInvestmentTrackingModule(
 }
 
 @Composable
-fun RealTimeCountdown(coinSymbol: String, totalDurationHours: Int) {
+fun RealTimeCountdown(
+    coinSymbol: String,
+    totalDurationHours: Int,
+    isBengali: Boolean = false
+) {
     val totalSeconds = (totalDurationHours * 3600).coerceAtLeast(1)
 
     var remainingSeconds by remember(coinSymbol, totalDurationHours) {
@@ -1857,16 +1900,28 @@ fun RealTimeCountdown(coinSymbol: String, totalDurationHours: Int) {
 
     val accentColor = when {
         isExpired -> CryptoRedText
-        isUrgent -> Color(0xFFFF7A90)
+        isUrgent -> Color(0xFFFF6F86)
         isCaution -> AccentGold
         else -> CryptoCyan
     }
 
+    val titleText = if (isBengali) "বৈধতার নির্দিষ্ট মেয়াদ" else "VALIDITY WINDOW"
+    val remainingText = if (isBengali) "বাকি সময়" else "Remaining"
+    val windowText = if (isBengali) "উইন্ডো ${totalDurationHours}H" else "Window ${totalDurationHours}H"
+    val activeText = if (isBengali) "${(progress * 100).toInt()}% সক্রিয়" else "${(progress * 100).toInt()}% active"
+
     val stateText = when {
-        isExpired -> "Expired"
-        isUrgent -> "Critical window • Review quickly"
-        isCaution -> "Caution window • Monitor closely"
-        else -> "Signal active • Risk window open"
+        isExpired -> if (isBengali) "সিগন্যালের মেয়াদ শেষ" else "Expired"
+        isUrgent -> if (isBengali) "শেষ পর্যায় • দ্রুত যাচাই করুন" else "Critical window • Review quickly"
+        isCaution -> if (isBengali) "সতর্ক পর্যায় • নজর রাখুন" else "Caution window • Monitor closely"
+        else -> if (isBengali) "সিগন্যাল সক্রিয় • ঝুঁকির সময় চলছে" else "Signal active • Risk window open"
+    }
+
+    val stateMeaning = when {
+        isExpired -> if (isBengali) "সিগন্যালের নির্দিষ্ট সময় শেষ" else "Signal window closed"
+        isUrgent -> if (isBengali) "শেষ পর্যায়ের সিগন্যাল — আগে যাচাই করুন" else "Late-stage signal — verify before action"
+        isCaution -> if (isBengali) "দেরি করলে সিগন্যালের মান কমতে পারে" else "Delay may reduce signal quality"
+        else -> if (isBengali) "সিগন্যাল সক্রিয় — এখনো তাড়াহুড়া নেই" else "Active window — no urgency yet"
     }
 
     val titleColor = Color(0xFFEAF2FF)
@@ -1889,7 +1944,7 @@ fun RealTimeCountdown(coinSymbol: String, totalDurationHours: Int) {
             )
             .border(
                 width = 1.dp,
-                color = accentColor.copy(alpha = 0.52f),
+                color = accentColor.copy(alpha = 0.58f),
                 shape = RoundedCornerShape(16.dp)
             )
             .padding(horizontal = 12.dp, vertical = 10.dp)
@@ -1902,11 +1957,13 @@ fun RealTimeCountdown(coinSymbol: String, totalDurationHours: Int) {
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "VALIDITY WINDOW",
+                        text = titleText,
                         fontSize = 9.sp,
                         fontWeight = FontWeight.Black,
                         color = titleColor,
-                        letterSpacing = 1.15.sp
+                        letterSpacing = if (isBengali) 0.sp else 1.1.sp,
+                        maxLines = 1,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                     )
 
                     Text(
@@ -1915,13 +1972,18 @@ fun RealTimeCountdown(coinSymbol: String, totalDurationHours: Int) {
                         fontWeight = FontWeight.SemiBold,
                         color = subtitleColor,
                         modifier = Modifier.padding(top = 1.dp),
-                        maxLines = 1
+                        maxLines = 1,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                     )
                 }
 
                 Column(horizontalAlignment = Alignment.End) {
                     Text(
-                        text = if (isExpired) "EXPIRED" else timeText,
+                        text = if (isExpired) {
+                            if (isBengali) "শেষ" else "EXPIRED"
+                        } else {
+                            timeText
+                        },
                         fontFamily = FontFamily.Monospace,
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Black,
@@ -1930,10 +1992,11 @@ fun RealTimeCountdown(coinSymbol: String, totalDurationHours: Int) {
                     )
 
                     Text(
-                        text = if (isExpired) "Expired" else "Remaining",
+                        text = remainingText,
                         fontSize = 8.sp,
                         fontWeight = FontWeight.Bold,
-                        color = supportColor
+                        color = supportColor,
+                        maxLines = 1
                     )
                 }
             }
@@ -1949,21 +2012,58 @@ fun RealTimeCountdown(coinSymbol: String, totalDurationHours: Int) {
             )
 
             Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(Color(0xFF101827).copy(alpha = 0.78f))
+                    .border(
+                        1.dp,
+                        accentColor.copy(alpha = 0.30f),
+                        RoundedCornerShape(10.dp)
+                    )
+                    .padding(horizontal = 8.dp, vertical = 5.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Info,
+                    contentDescription = null,
+                    tint = accentColor,
+                    modifier = Modifier.size(14.dp)
+                )
+
+                Spacer(modifier = Modifier.width(6.dp))
+
+                Text(
+                    text = stateMeaning,
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = titleColor,
+                    textAlign = TextAlign.Center,
+                    maxLines = 2,
+                    lineHeight = 12.sp,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                )
+            }
+
+            Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "Window ${totalDurationHours}H",
+                    text = windowText,
                     fontSize = 8.sp,
                     fontWeight = FontWeight.Bold,
-                    color = supportColor
+                    color = supportColor,
+                    maxLines = 1
                 )
 
                 Text(
-                    text = "${(progress * 100).toInt()}% active",
+                    text = activeText,
                     fontSize = 8.sp,
                     fontWeight = FontWeight.Black,
-                    color = accentColor
+                    color = accentColor,
+                    maxLines = 1
                 )
             }
         }
@@ -1973,7 +2073,7 @@ fun RealTimeCountdown(coinSymbol: String, totalDurationHours: Int) {
 
 
 @Composable
-fun MultiAiConsensusModule(coinSymbol: String, oracleScore: Int, isLong: Boolean) {
+fun MultiAiConsensusModule(coinSymbol: String, oracleScore: Int, isLong: Boolean, isBengali: Boolean = false) {
     val consensus = getConsensusDetails(coinSymbol, oracleScore, isLong)
 
     Card(
@@ -1982,7 +2082,7 @@ fun MultiAiConsensusModule(coinSymbol: String, oracleScore: Int, isLong: Boolean
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
             Text(
-                text = "MULTI-AI CONSENSUS ENGINES",
+                text = if (isBengali) "মাল্টি-এআই ঐকমত্য ইঞ্জিন" else "MULTI-AI CONSENSUS ENGINES",
                 fontSize = 10.sp,
                 fontWeight = FontWeight.Bold,
                 color = CryptoCyan,
@@ -2005,22 +2105,22 @@ fun MultiAiConsensusModule(coinSymbol: String, oracleScore: Int, isLong: Boolean
 
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Column {
-                    Text(text = "CONSENSUS CONFIDENCE", fontSize = 9.sp, color = TextSecondary)
+                    Text(text = if (isBengali) "ঐকমত্যের আস্থা" else "CONSENSUS CONFIDENCE", fontSize = 9.sp, color = TextSecondary)
                     Text(text = "${consensus.confidence}%", fontSize = 15.sp, fontWeight = FontWeight.Black, color = CryptoCyan)
                 }
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(text = "DIRECTION", fontSize = 9.sp, color = TextSecondary)
+                    Text(text = if (isBengali) "দিক" else "DIRECTION", fontSize = 9.sp, color = TextSecondary)
                     Text(
-                        text = consensus.direction,
+                        text = if (isBengali) { when (consensus.direction.uppercase()) { "BULLISH" -> "দাম বাড়ছে"; "BEARISH" -> "দাম কমছে"; "SIDEWAYS" -> "দাম স্থির"; else -> consensus.direction } } else consensus.direction,
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Black,
                         color = if (isLong) CryptoGreen else CryptoRedText
                     )
                 }
                 Column(horizontalAlignment = Alignment.End) {
-                    Text(text = "RISK PROFILE", fontSize = 9.sp, color = TextSecondary)
+                    Text(text = if (isBengali) "ঝুঁকির ধরন" else "RISK PROFILE", fontSize = 9.sp, color = TextSecondary)
                     Text(
-                        text = consensus.riskScore,
+                        text = if (isBengali) { when (consensus.riskScore.uppercase()) { "LOW" -> "কম"; "MEDIUM" -> "মাঝারি"; "HIGH" -> "তীব্র"; else -> "তীব্র" } } else consensus.riskScore,
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Black,
                         color = when (consensus.riskScore) {
@@ -2291,25 +2391,13 @@ fun AiExplanationModule(whyEnglish: String, whyBengali: String, coinSymbol: Stri
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "AI ORACLE ANALYTIC COGNITION",
+                text = if (isBengali) "এআই ওরাকলের বিশ্লেষণমূলক তথ্য" else "AI ORACLE ANALYTIC COGNITION",
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Bold,
                 color = CryptoCyan,
                 letterSpacing = 1.sp
             )
 
-            TextButton(
-                onClick = onToggleLanguage,
-                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
-                modifier = Modifier.height(28.dp)
-            ) {
-                Text(
-                    text = if (isBengali) "Show EN" else "বাংলায় দেখুন ➔",
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = AccentGold
-                )
-            }
         }
         Spacer(modifier = Modifier.height(8.dp))
 
