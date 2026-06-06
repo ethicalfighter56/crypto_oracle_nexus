@@ -232,7 +232,7 @@ fun PredictionDashboard(
             }
             
             Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.wrapContentWidth()
             ) {
@@ -475,35 +475,23 @@ fun SignalProLanguageSwitchButton(
     isBengali: Boolean,
     onClick: () -> Unit
 ) {
-    val transition = rememberInfiniteTransition(label = "LanguageButtonBorder")
-    val borderAlpha by transition.animateFloat(
-        initialValue = 0.52f,
-        targetValue = 0.88f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(2100, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "LanguageBorderAlpha"
-    )
-
     Button(
         onClick = onClick,
         colors = ButtonDefaults.buttonColors(
-            containerColor = Color(0xFF050A13),
+            containerColor = DarkSurface,
             contentColor = CryptoCyan
         ),
         shape = RoundedCornerShape(8.dp),
-        border = BorderStroke(0.8.dp, CryptoCyan.copy(alpha = borderAlpha)),
+        border = BorderStroke(1.dp, BorderColor),
         modifier = Modifier
-            .height(32.dp)
+            .height(36.dp)
             .width(82.dp),
-        contentPadding = PaddingValues(horizontal = 6.dp, vertical = 2.dp)
+        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
     ) {
         Text(
             text = if (isBengali) "English" else "বাংলা",
-            fontWeight = FontWeight.Black,
+            fontWeight = FontWeight.Bold,
             fontSize = 11.sp,
-            color = CryptoCyan,
             maxLines = 1,
             softWrap = false,
             overflow = androidx.compose.ui.text.style.TextOverflow.Clip
@@ -911,7 +899,8 @@ fun SpotItemCard(coin: SpotSignal, timeframeIndex: Int, viewModel: CryptoViewMod
                         confidence = confidence,
                         probability = (confidence - 4).coerceIn(40, 99),
                         riskGrade = if (coin.oracleScore >= 85) "LOW" else "MEDIUM"
-                    )
+                    ,
+                        isBengali = isBengali)
 
                     Spacer(modifier = Modifier.height(16.dp))
 
@@ -921,11 +910,13 @@ fun SpotItemCard(coin: SpotSignal, timeframeIndex: Int, viewModel: CryptoViewMod
                         momentumConfirmed = coin.momentumStrength != "WEAK",
                         liquidityConfirmed = coin.liquidityStrength != "WEAK",
                         riskEvaluated = true
-                    )
+                    ,
+                        isBengali = isBengali)
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    MarketRegimeTraceModule(coin.coinSymbol)
+                    MarketRegimeTraceModule(coin.coinSymbol,
+                        isBengali = isBengali)
 
                     Spacer(modifier = Modifier.height(16.dp))
 
@@ -985,74 +976,268 @@ fun SpotItemCard(coin: SpotSignal, timeframeIndex: Int, viewModel: CryptoViewMod
 }
 
 @Composable
-fun StartTradeFlow(viewModel: CryptoViewModel, mission: com.example.model.Mission, livePrice: Double) {
+fun DecisionBriefBlock(
+    title: String,
+    value: String,
+    accentColor: Color
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(10.dp))
+            .background(
+                Brush.linearGradient(
+                    listOf(
+                        Color(0xFF02050D),
+                        Color(0xFF08111C),
+                        Color(0xFF02050D)
+                    )
+                )
+            )
+            .border(0.75.dp, accentColor.copy(alpha = 0.46f), RoundedCornerShape(10.dp))
+            .padding(horizontal = 10.dp, vertical = 8.dp)
+    ) {
+        Text(
+            text = title,
+            fontSize = 10.sp,
+            fontWeight = FontWeight.Black,
+            color = accentColor,
+            maxLines = 1
+        )
+
+        Spacer(modifier = Modifier.height(3.dp))
+
+        Text(
+            text = value,
+            fontSize = 12.sp,
+            color = TextPrimary,
+            lineHeight = 16.sp
+        )
+    }
+}
+
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun StartTradeFlow(
+    viewModel: CryptoViewModel,
+    mission: com.example.model.Mission,
+    livePrice: Double = mission.entryPrice
+) {
     var step by remember { mutableStateOf(0) }
+    var showDecisionBrief by remember { mutableStateOf(false) }
     val isBengali by viewModel.isBengali.collectAsState()
 
-    val recommendationText = remember(mission, isBengali) {
-        val highConfidence = mission.confidence >= 85
-        val isLong = mission.type.uppercase() == "LONG"
+    val highConfidence = mission.confidence >= 85
+    val isLong = mission.type.uppercase() == "LONG"
 
-        when {
-            isBengali && highConfidence && isLong -> "উচ্চ আস্থা — এন্ট্রি যাচাই করুন"
-            isBengali && highConfidence && !isLong -> "উচ্চ আস্থা — শর্ট যাচাই করুন"
-            isBengali && !highConfidence -> "সতর্কভাবে যাচাই করুন"
-            !isBengali && highConfidence && isLong -> "High confidence — Verify entry"
-            !isBengali && highConfidence && !isLong -> "High confidence — Verify short"
-            else -> "Verify setup before action"
+    val recommendationText = when {
+        isBengali && highConfidence && isLong -> "উচ্চ আস্থা | এন্ট্রি যাচাই"
+        isBengali && highConfidence && !isLong -> "উচ্চ আস্থা | শর্ট যাচাই"
+        isBengali && !highConfidence -> "সতর্কভাবে যাচাই করুন"
+        !isBengali && highConfidence -> "High Confidence | Verify Entry"
+        else -> "Review Carefully | Verify Entry"
+    }
+
+    val verdictText = when {
+        isBengali && highConfidence -> "সিগন্যাল শক্তিশালী, তবে এন্ট্রি যাচাই করে নিন।"
+        isBengali -> "সিগন্যাল কার্যকর, তবে ঝুঁকি যাচাই করা জরুরি।"
+        highConfidence -> "Signal is strong, but entry confirmation is still required."
+        else -> "Signal is active, but risk review is required before action."
+    }
+
+    val whyText = if (isBengali) {
+        "ট্রেন্ড, মতিগতি, লেনদেন, AI consensus এবং risk profile মিলিয়ে এই setup তৈরি হয়েছে।"
+    } else {
+        "This setup combines trend, momentum, volume, AI consensus, and risk profile signals."
+    }
+
+    val riskText = if (isBengali) {
+        if (highConfidence) "রিস্ক কম থেকে মাঝারি। Stop loss এবং position size মেনে চলুন।"
+        else "রিস্ক মাঝারি। দেরিতে entry নিলে signal quality কমতে পারে।"
+    } else {
+        if (highConfidence) "Risk is low to medium. Follow stop loss and position sizing."
+        else "Risk is medium. Late entry may reduce signal quality."
+    }
+
+    val actionText = if (isBengali) {
+        if (isLong) "এন্ট্রি price, stop loss এবং target মিলিয়ে তারপর Accept Signal করুন।"
+        else "শর্ট এন্ট্রি, stop loss এবং target মিলিয়ে তারপর Accept Signal করুন।"
+    } else {
+        if (isLong) "Verify entry price, stop loss, and target before accepting the signal."
+        else "Verify short entry, stop loss, and target before accepting the signal."
+    }
+
+    val disclaimerText = if (isBengali) {
+        "এআই সিদ্ধান্তে সহায়তা করে; চূড়ান্ত ট্রেডিং সিদ্ধান্ত আপনার।"
+    } else {
+        "AI assists decision-making; the final trading decision is yours."
+    }
+
+    if (showDecisionBrief) {
+        ModalBottomSheet(
+            onDismissRequest = { showDecisionBrief = false },
+            containerColor = Color(0xFF030712),
+            contentColor = TextPrimary
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 18.dp, vertical = 10.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Text(
+                    text = if (isBengali) "AI সিদ্ধান্ত সংক্ষেপ" else "AI Decision Brief",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Black,
+                    color = CryptoCyan
+                )
+
+                Text(
+                    text = if (isBengali) "দ্রুত সিদ্ধান্ত নেওয়ার জন্য সংক্ষিপ্ত সারাংশ" else "Compact signal summary for faster decision-making",
+                    fontSize = 11.sp,
+                    color = TextSecondary
+                )
+
+                DecisionBriefBlock(
+                    title = if (isBengali) "সিগন্যাল রায়" else "Signal Verdict",
+                    value = verdictText,
+                    accentColor = if (highConfidence) CryptoGreen else AccentGold
+                )
+
+                DecisionBriefBlock(
+                    title = if (isBengali) "কেন গুরুত্বপূর্ণ" else "Why It Matters",
+                    value = whyText,
+                    accentColor = CryptoCyan
+                )
+
+                DecisionBriefBlock(
+                    title = if (isBengali) "ঝুঁকির সতর্কতা" else "Risk Warning",
+                    value = riskText,
+                    accentColor = AccentGold
+                )
+
+                DecisionBriefBlock(
+                    title = if (isBengali) "প্রস্তাবিত কাজ" else "Suggested Action",
+                    value = actionText,
+                    accentColor = CryptoGreen
+                )
+
+                Text(
+                    text = disclaimerText,
+                    fontSize = 10.sp,
+                    color = TextMuted,
+                    lineHeight = 14.sp
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    TextButton(
+                        onClick = { showDecisionBrief = false },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(
+                            text = if (isBengali) "বন্ধ করুন" else "Close",
+                            color = TextSecondary
+                        )
+                    }
+
+                    Button(
+                        onClick = {
+                            showDecisionBrief = false
+                            step = 1
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = CryptoGreen),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(
+                            text = if (isBengali) "সিগন্যাল নিন" else "Accept Signal",
+                            color = DarkBackground,
+                            fontWeight = FontWeight.Black
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+            }
         }
     }
 
     if (step == 1) {
-        AlertDialog(
-            onDismissRequest = { step = 0 },
-            title = { Text("Start this trade?", color = TextPrimary, fontSize = 18.sp, fontWeight = FontWeight.Bold) },
-            text = { Text("You are about to activate this signal for personal tracking.", color = TextSecondary) },
-            confirmButton = {
-                Button(onClick = { step = 2 }, colors = ButtonDefaults.buttonColors(containerColor = CryptoGreen)) {
-                    Text("Continue", fontWeight = FontWeight.Black, color = DarkBackground)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { step = 0 }) {
-                    Text("Cancel", color = TextSecondary)
-                }
-            },
-            containerColor = Color(0xFF030712),
-            titleContentColor = TextPrimary,
-            textContentColor = TextSecondary
-        )
-    } else if (step == 2) {
         val verifiedEntryLocked = remember { livePrice }
 
         AlertDialog(
             onDismissRequest = { step = 0 },
-            title = { Text("Confirm Trade Activation", color = CryptoCyan, fontSize = 18.sp, fontWeight = FontWeight.Bold) },
+            title = {
+                Text(
+                    text = if (isBengali) "ট্রেড যাচাই করুন" else "Verify Trade Details",
+                    color = CryptoCyan,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            },
             text = {
                 Column {
-                    Text("Current Market Price:", color = TextSecondary, fontSize = 12.sp)
-                    Text(String.format("%.4f USDT", verifiedEntryLocked), color = TextPrimary, fontSize = 24.sp, fontWeight = FontWeight.Black, fontFamily = FontFamily.Monospace)
+                    Text(
+                        text = if (isBengali) "দিক: ${mission.type} (${mission.marketType})" else "Direction: ${mission.type} (${mission.marketType})",
+                        color = TextSecondary,
+                        fontSize = 14.sp
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = if (isBengali) "লকড এন্ট্রি প্রাইস:" else "Locked Entry Price:",
+                        color = TextSecondary,
+                        fontSize = 12.sp
+                    )
+                    Text(
+                        text = String.format("$%.4f", verifiedEntryLocked),
+                        color = TextPrimary,
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Black,
+                        fontFamily = FontFamily.Monospace
+                    )
                     Spacer(modifier = Modifier.height(16.dp))
-                    Text("This price will be locked as your personal mission entry price.\nThe original signal entry remains unchanged for validation.", color = AccentGold, fontSize = 11.sp)
+                    Text(
+                        text = if (isBengali) {
+                            "Accept করার পর এই entry personal mission হিসেবে track হবে।"
+                        } else {
+                            "Once accepted, this entry will activate personal mission tracking."
+                        },
+                        color = AccentGold,
+                        fontSize = 10.sp
+                    )
                 }
             },
             confirmButton = {
-                Button(onClick = {
-                    viewModel.startMission(mission.copy(
-                        id = java.util.UUID.randomUUID().toString(),
-                        entryPrice = verifiedEntryLocked,
-                        originalSignalEntry = mission.entryPrice,
-                        startTime = System.currentTimeMillis()
-                    ))
-                    viewModel.sendLocalAlert("Mission Started", "AI intelligence system successfully started monitoring ${mission.coinSymbol}")
-                    step = 0
-                }, colors = ButtonDefaults.buttonColors(containerColor = CryptoGreen)) {
-                    Text("Activate Mission", fontWeight = FontWeight.Black, color = DarkBackground)
+                Button(
+                    onClick = {
+                        viewModel.startMission(
+                            mission.copy(
+                                id = java.util.UUID.randomUUID().toString(),
+                                entryPrice = verifiedEntryLocked,
+                                startTime = System.currentTimeMillis()
+                            )
+                        )
+                        viewModel.sendLocalAlert("Mission Started", "AI intelligence system successfully started monitoring ${mission.coinSymbol}")
+                        step = 0
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = CryptoGreen)
+                ) {
+                    Text(
+                        text = if (isBengali) "মিশন চালু করুন" else "CONFIRM MISSION",
+                        fontWeight = FontWeight.Black,
+                        color = DarkBackground
+                    )
                 }
             },
             dismissButton = {
-                TextButton(onClick = { step = 1 }) {
-                    Text("Back", color = TextSecondary)
+                TextButton(onClick = { step = 0 }) {
+                    Text(
+                        text = if (isBengali) "বাতিল" else "Cancel",
+                        color = TextSecondary
+                    )
                 }
             },
             containerColor = Color(0xFF030712),
@@ -1132,6 +1317,7 @@ fun StartTradeFlow(viewModel: CryptoViewModel, mission: com.example.model.Missio
                     )
                 )
                 .border(0.8.dp, CryptoCyan.copy(alpha = 0.66f), RoundedCornerShape(10.dp))
+                .clickable { showDecisionBrief = true }
                 .padding(horizontal = 8.dp),
             contentAlignment = Alignment.Center
         ) {
@@ -1509,7 +1695,8 @@ fun FuturesItemCard(coin: FuturesSignal, timeframeIndex: Int, viewModel: CryptoV
                         confidence = probability,
                         probability = (probability - 4).coerceIn(40, 99),
                         riskGrade = if (coin.oracleScore >= 83) "LOW" else "MEDIUM"
-                    )
+                    ,
+                        isBengali = isBengali)
 
                     Spacer(modifier = Modifier.height(16.dp))
 
@@ -1519,11 +1706,13 @@ fun FuturesItemCard(coin: FuturesSignal, timeframeIndex: Int, viewModel: CryptoV
                         momentumConfirmed = coin.momentumStrength != "WEAK",
                         liquidityConfirmed = coin.liquidityStrength != "WEAK",
                         riskEvaluated = true
-                    )
+                    ,
+                        isBengali = isBengali)
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    MarketRegimeTraceModule(coin.coinSymbol)
+                    MarketRegimeTraceModule(coin.coinSymbol,
+                        isBengali = isBengali)
 
                     Spacer(modifier = Modifier.height(16.dp))
 
@@ -2749,7 +2938,7 @@ fun AiExplanationModule(
                             )
                         )
                     )
-                    .padding(14.dp)
+                    .padding(horizontal = 12.dp, vertical = 12.dp)
             ) {
                 if (rotation <= 90f) {
                     Column {
@@ -2760,7 +2949,7 @@ fun AiExplanationModule(
                             lineHeight = 18.sp
                         )
 
-                        Spacer(modifier = Modifier.height(10.dp))
+                        Spacer(modifier = Modifier.height(8.dp))
 
                         Text(
                             text = "QUANTITATIVE HEATMAP SIGNALS",
@@ -2796,7 +2985,7 @@ fun AiExplanationModule(
                             lineHeight = 18.sp
                         )
 
-                        Spacer(modifier = Modifier.height(10.dp))
+                        Spacer(modifier = Modifier.height(8.dp))
 
                         Text(
                             text = "পরিমাণগত হিটম্যাপ সিগন্যাল",
@@ -2841,40 +3030,46 @@ fun HeatmapSignalsAlignedRow(
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp)
     ) {
-        Box(
-            modifier = Modifier.weight(0.86f),
-            contentAlignment = Alignment.CenterStart
-        ) {
-            InsightMetricPill(firstLabel, firstValue, firstColor)
-        }
+        InsightMetricPill(
+            label = firstLabel,
+            value = firstValue,
+            valueColor = firstColor,
+            modifier = Modifier.weight(1f)
+        )
 
-        Box(
-            modifier = Modifier.weight(0.78f),
-            contentAlignment = Alignment.Center
-        ) {
-            InsightMetricPill(secondLabel, secondValue, secondColor)
-        }
+        InsightMetricPill(
+            label = secondLabel,
+            value = secondValue,
+            valueColor = secondColor,
+            modifier = Modifier.weight(1f)
+        )
 
-        Box(
-            modifier = Modifier.weight(1.58f),
-            contentAlignment = Alignment.CenterEnd
-        ) {
-            InsightMetricPill(thirdLabel, thirdValue, thirdColor)
-        }
+        InsightMetricPill(
+            label = thirdLabel,
+            value = thirdValue,
+            valueColor = thirdColor,
+            modifier = Modifier.weight(1.25f)
+        )
     }
 }
 
 
 @Composable
-fun InsightMetricPill(label: String, value: String, valueColor: Color) {
-    val valueSize = if (value.length >= 11) 7.0.sp else 8.sp
-    val labelSize = if (value.length >= 11) 7.0.sp else 7.4.sp
+fun InsightMetricPill(
+    label: String,
+    value: String,
+    valueColor: Color,
+    modifier: Modifier = Modifier
+) {
+    val valueSize = if (value.length >= 11) 8.4.sp else 10.5.sp
 
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
+    Column(
+        modifier = modifier
+            .height(48.dp)
+            .clip(RoundedCornerShape(8.dp))
             .background(
                 brush = Brush.linearGradient(
                     colors = listOf(
@@ -2882,22 +3077,25 @@ fun InsightMetricPill(label: String, value: String, valueColor: Color) {
                         Color(0xFF08111C),
                         Color(0xFF02050D)
                     )
-                ),
-                shape = RoundedCornerShape(6.dp)
+                )
             )
-            .border(0.75.dp, valueColor.copy(alpha = 0.50f), RoundedCornerShape(6.dp))
-            .padding(horizontal = 4.dp, vertical = 4.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Center
+            .border(0.75.dp, valueColor.copy(alpha = 0.50f), RoundedCornerShape(8.dp))
+            .padding(horizontal = 5.dp, vertical = 6.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
     ) {
         Text(
-            text = "$label: ",
-            fontSize = labelSize,
+            text = label,
+            fontSize = 8.5.sp,
             color = Color(0xFFD3DAE8),
+            fontWeight = FontWeight.Bold,
             maxLines = 1,
             softWrap = false,
-            overflow = androidx.compose.ui.text.style.TextOverflow.Clip
+            textAlign = TextAlign.Center,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
         )
+
+        Spacer(modifier = Modifier.height(2.dp))
 
         Text(
             text = value,
@@ -2906,7 +3104,8 @@ fun InsightMetricPill(label: String, value: String, valueColor: Color) {
             color = valueColor,
             maxLines = 1,
             softWrap = false,
-            overflow = androidx.compose.ui.text.style.TextOverflow.Clip
+            textAlign = TextAlign.Center,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
         )
     }
 }
@@ -3072,18 +3271,70 @@ fun ScrollableTimeframeRow(
 }
 
 @Composable
+fun QualityMetricColumn(
+    label: String,
+    value: String,
+    valueColor: Color,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = label,
+            fontSize = 8.sp,
+            color = TextMuted,
+            fontWeight = FontWeight.Bold,
+            maxLines = 1,
+            textAlign = TextAlign.Center,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+        )
+
+        Spacer(modifier = Modifier.height(2.dp))
+
+        Text(
+            text = value,
+            fontSize = 12.sp,
+            color = valueColor,
+            fontWeight = FontWeight.Bold,
+            fontFamily = FontFamily.Monospace,
+            maxLines = 1,
+            textAlign = TextAlign.Center
+        )
+    }
+}
+
+
+@Composable
 fun SignalQualitySystemBlock(
     score: Int,
     confidence: Int,
     probability: Int,
-    riskGrade: String
+    riskGrade: String,
+    isBengali: Boolean = false
 ) {
     val indicator = when {
-        score >= 90 -> "Institutional Grade"
-        score >= 82 -> "High Confidence"
-        score >= 70 -> "Strong"
-        score >= 55 -> "Moderate"
-        else -> "Weak"
+        score >= 90 -> if (isBengali) "ইনস্টিটিউশনাল মান" else "Institutional Grade"
+        score >= 82 -> if (isBengali) "উচ্চ আস্থা" else "High Confidence"
+        score >= 70 -> if (isBengali) "শক্তিশালী" else "Strong"
+        score >= 55 -> if (isBengali) "মাঝারি" else "Moderate"
+        else -> if (isBengali) "দুর্বল" else "Weak"
+    }
+
+    val riskText = when (riskGrade.uppercase()) {
+        "LOW" -> if (isBengali) "কম" else "LOW"
+        "MEDIUM" -> if (isBengali) "মাঝারি" else "MEDIUM"
+        "HIGH" -> if (isBengali) "তীব্র" else "HIGH"
+        "EXTREME" -> if (isBengali) "খুব বেশি" else "EXTREME"
+        else -> if (isBengali) riskGrade else riskGrade
+    }
+
+    val riskColor = when (riskGrade.uppercase()) {
+        "LOW" -> CryptoGreen
+        "MEDIUM" -> AccentGold
+        "HIGH", "EXTREME" -> Color(0xFFFF3F60)
+        else -> AccentGold
     }
 
     val themeColor = when {
@@ -3095,18 +3346,20 @@ fun SignalQualitySystemBlock(
 
     Card(
         colors = CardDefaults.cardColors(containerColor = Color(0xFF050A13)),
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        border = BorderStroke(1.dp, BorderColor.copy(alpha = 0.6f))
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(0.95.dp, CryptoCyan.copy(alpha = 0.62f), RoundedCornerShape(12.dp)),
+        shape = RoundedCornerShape(12.dp)
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
             Text(
-                text = "SIGNAL QUALITY ENGINE INDEX",
+                text = if (isBengali) "সিগন্যাল মান যাচাই সূচক" else "SIGNAL QUALITY ENGINE INDEX",
                 fontSize = 10.sp,
                 fontWeight = FontWeight.Bold,
                 color = TextSecondary,
-                letterSpacing = 1.sp
+                letterSpacing = if (isBengali) 0.sp else 1.sp
             )
+
             Spacer(modifier = Modifier.height(10.dp))
 
             Row(
@@ -3115,9 +3368,14 @@ fun SignalQualitySystemBlock(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column {
-                    Text(text = "CLASSIFICATION", fontSize = 8.sp, color = TextMuted)
                     Text(
-                        text = indicator.uppercase(),
+                        text = if (isBengali) "শ্রেণি" else "CLASSIFICATION",
+                        fontSize = 8.sp,
+                        color = TextMuted
+                    )
+
+                    Text(
+                        text = if (isBengali) indicator else indicator.uppercase(),
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Black,
                         color = themeColor
@@ -3142,19 +3400,30 @@ fun SignalQualitySystemBlock(
             HorizontalDivider(color = BorderColor.copy(alpha = 0.4f))
             Spacer(modifier = Modifier.height(10.dp))
 
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Column {
-                    Text(text = "CONFIDENCE", fontSize = 8.sp, color = TextMuted)
-                    Text(text = "$confidence%", fontSize = 12.sp, color = TextPrimary, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
-                }
-                Column {
-                    Text(text = "PROBABILITY", fontSize = 8.sp, color = TextMuted)
-                    Text(text = "$probability%", fontSize = 12.sp, color = TextPrimary, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
-                }
-                Column(horizontalAlignment = Alignment.End) {
-                    Text(text = "RISK SCORE", fontSize = 8.sp, color = TextMuted)
-                    Text(text = riskGrade, fontSize = 12.sp, color = if (riskGrade == "LOW") CryptoGreen else AccentGold, fontWeight = FontWeight.Bold)
-                }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                QualityMetricColumn(
+                    label = if (isBengali) "আস্থা" else "CONFIDENCE",
+                    value = "$confidence%",
+                    valueColor = TextPrimary,
+                    modifier = Modifier.weight(1f)
+                )
+
+                QualityMetricColumn(
+                    label = if (isBengali) "সম্ভাবনা" else "PROBABILITY",
+                    value = "$probability%",
+                    valueColor = TextPrimary,
+                    modifier = Modifier.weight(1f)
+                )
+
+                QualityMetricColumn(
+                    label = if (isBengali) "রিস্ক" else "RISK SCORE",
+                    value = riskText,
+                    valueColor = riskColor,
+                    modifier = Modifier.weight(1f)
+                )
             }
         }
     }
@@ -3166,30 +3435,33 @@ fun TradeChecklistBlock(
     volumeConfirmed: Boolean,
     momentumConfirmed: Boolean,
     liquidityConfirmed: Boolean,
-    riskEvaluated: Boolean
+    riskEvaluated: Boolean,
+    isBengali: Boolean = false
 ) {
     Card(
         colors = CardDefaults.cardColors(containerColor = Color(0xFF050A13)),
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        border = BorderStroke(1.dp, BorderColor.copy(alpha = 0.6f))
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(0.95.dp, CryptoCyan.copy(alpha = 0.62f), RoundedCornerShape(12.dp)),
+        shape = RoundedCornerShape(12.dp)
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
             Text(
-                text = "INSTITUTIONAL CONFIRMATION CHECKLIST",
+                text = if (isBengali) "ইনস্টিটিউশনাল নিশ্চিতকরণ তালিকা" else "INSTITUTIONAL CONFIRMATION CHECKLIST",
                 fontSize = 10.sp,
                 fontWeight = FontWeight.Bold,
                 color = TextSecondary,
-                letterSpacing = 1.sp
+                letterSpacing = if (isBengali) 0.sp else 1.sp
             )
+
             Spacer(modifier = Modifier.height(10.dp))
 
             val items = listOf(
-                "Trend Confirmed" to trendConfirmed,
-                "Volume Confirmed" to volumeConfirmed,
-                "Momentum Confirmed" to momentumConfirmed,
-                "Liquidity Confirmed" to liquidityConfirmed,
-                "Risk Evaluated" to riskEvaluated
+                (if (isBengali) "বাজারের দিক নিশ্চিত" else "Trend Confirmed") to trendConfirmed,
+                (if (isBengali) "লেনদেন নিশ্চিত" else "Volume Confirmed") to volumeConfirmed,
+                (if (isBengali) "মতিগতির জোর নিশ্চিত" else "Momentum Confirmed") to momentumConfirmed,
+                (if (isBengali) "নিরাপদ তহবিল নিশ্চিত" else "Liquidity Confirmed") to liquidityConfirmed,
+                (if (isBengali) "ঝুঁকি যাচাইকৃত" else "Risk Evaluated") to riskEvaluated
             )
 
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -3217,12 +3489,16 @@ fun TradeChecklistBlock(
                                 Box(modifier = Modifier.size(4.dp).background(Color(0xFFFF3F60), CircleShape))
                             }
                         }
+
                         Spacer(modifier = Modifier.width(8.dp))
+
                         Text(
                             text = label,
-                            fontSize = 11.sp,
+                            fontSize = if (isBengali) 11.5.sp else 11.sp,
                             fontWeight = FontWeight.Medium,
-                            color = if (checked) TextPrimary else TextMuted
+                            color = if (checked) TextPrimary else TextMuted,
+                            maxLines = 1,
+                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                         )
                     }
                 }
@@ -3232,18 +3508,54 @@ fun TradeChecklistBlock(
 }
 
 @Composable
-fun MarketRegimeTraceModule(coinSymbol: String) {
-    // Generate a beautiful, stable, hash-based market regime state for this asset
+fun MarketRegimeTraceModule(
+    coinSymbol: String,
+    isBengali: Boolean = false
+) {
     val seed = coinSymbol.hashCode().absoluteValue
     val regimes = listOf("BULLISH", "BEARISH", "SIDEWAYS", "ACCUMULATION", "DISTRIBUTION")
     val regime = regimes[seed % regimes.size]
 
+    val regimeText = when (regime) {
+        "BULLISH" -> if (isBengali) "দাম বাড়ার ভাব" else "BULLISH"
+        "BEARISH" -> if (isBengali) "মন্দা ভাব" else "BEARISH"
+        "SIDEWAYS" -> if (isBengali) "দাম স্থির ভাব" else "SIDEWAYS"
+        "ACCUMULATION" -> if (isBengali) "সঞ্চয় হচ্ছে" else "ACCUMULATION"
+        else -> if (isBengali) "বিক্রির চাপ" else "DISTRIBUTION"
+    }
+
+    val statusText = if (isBengali) "বর্তমানে সক্রিয়" else "ACTIVE DURING INSIGHT"
+
     val description = when(regime) {
-        "BULLISH" -> "High liquidity markup phase driven by strong smart money orders."
-        "BEARISH" -> "Markdown liquidations under persistent offer pressure."
-        "SIDEWAYS" -> "Range bound bracket with low volatility waiting for core breaks."
-        "ACCUMULATION" -> "Institutional accumulation in value brackets."
-        else -> "Smart money distribution at premium resistance heights."
+        "BULLISH" -> if (isBengali) {
+            "বাজারে ক্রেতার চাপ বেশি, দাম উপরে যাওয়ার সম্ভাবনা আছে।"
+        } else {
+            "High liquidity markup phase driven by strong smart money orders."
+        }
+
+        "BEARISH" -> if (isBengali) {
+            "বাজারে বিক্রির চাপ বেশি, দাম নিচে যাওয়ার ঝুঁকি আছে।"
+        } else {
+            "Markdown liquidations under persistent offer pressure."
+        }
+
+        "SIDEWAYS" -> if (isBengali) {
+            "দাম নির্দিষ্ট রেঞ্জে ঘুরছে, বড় ব্রেকের জন্য অপেক্ষা করছে।"
+        } else {
+            "Range bound bracket with low volatility waiting for core breaks."
+        }
+
+        "ACCUMULATION" -> if (isBengali) {
+            "বড় ক্রেতারা ধীরে ধীরে পজিশন তৈরি করছে।"
+        } else {
+            "Institutional accumulation in value brackets."
+        }
+
+        else -> if (isBengali) {
+            "উচ্চ দামে বিক্রির চাপ তৈরি হচ্ছে।"
+        } else {
+            "Smart money distribution at premium resistance heights."
+        }
     }
 
     val tint = when(regime) {
@@ -3256,18 +3568,20 @@ fun MarketRegimeTraceModule(coinSymbol: String) {
 
     Card(
         colors = CardDefaults.cardColors(containerColor = Color(0xFF050A13)),
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        border = BorderStroke(1.dp, BorderColor.copy(alpha = 0.6f))
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(0.95.dp, CryptoCyan.copy(alpha = 0.62f), RoundedCornerShape(12.dp)),
+        shape = RoundedCornerShape(12.dp)
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
             Text(
-                text = "PERSISTED REGIME TRACE",
+                text = if (isBengali) "চলতি বাজারের মতিগতি" else "PERSISTED REGIME TRACE",
                 fontSize = 10.sp,
                 fontWeight = FontWeight.Bold,
                 color = TextSecondary,
-                letterSpacing = 1.sp
+                letterSpacing = if (isBengali) 0.sp else 1.sp
             )
+
             Spacer(modifier = Modifier.height(10.dp))
 
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -3277,21 +3591,36 @@ fun MarketRegimeTraceModule(coinSymbol: String) {
                         .padding(horizontal = 8.dp, vertical = 3.dp)
                 ) {
                     Text(
-                        text = regime,
-                        fontSize = 11.sp,
+                        text = regimeText,
+                        fontSize = if (isBengali) 11.sp else 11.sp,
                         fontWeight = FontWeight.ExtraBold,
                         color = tint
                     )
                 }
-                Spacer(modifier = Modifier.width(10.dp))
+
+                Spacer(modifier = Modifier.width(8.dp))
+
                 Text(
-                    text = "ACTIVE DURING INSIGHT",
-                    fontSize = 8.sp,
+                    text = "|",
+                    fontSize = 10.sp,
                     color = TextMuted,
                     fontWeight = FontWeight.Bold
                 )
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                Text(
+                    text = statusText,
+                    fontSize = if (isBengali) 10.sp else 8.sp,
+                    color = TextMuted,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                )
             }
+
             Spacer(modifier = Modifier.height(8.dp))
+
             Text(
                 text = description,
                 fontSize = 11.sp,

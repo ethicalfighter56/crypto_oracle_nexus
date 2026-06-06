@@ -1,32 +1,43 @@
 # Crypto Oracle Nexus Bengali Translation Glossary
 
-This glossary is the project-level source of truth for Bengali translation.
+Project-level Bengali translation source of truth.
 
-Rule:
-Same English term should use the same Bengali meaning unless the owner manually selects an easier local Bengali wording.
-
-Approved core Bengali wording:
+Owner override rule:
+Manually selected simple Bengali wording must be preserved.
+Use simple Bengali that normal traders can understand.
 
 | English | Bengali |
 |---|---|
 | VALIDITY WINDOW | বৈধতার নির্দিষ্ট মেয়াদ |
 | AI ORACLE ANALYTICS COGNITION | এআই ওরাকলের বিশ্লেষণমূলক তথ্য |
-| CONSENSUS CONFIDENCE | ঐকমত্যের আস্থা |
+| AI Decision Brief | AI সিদ্ধান্ত সংক্ষেপ |
+| Signal Verdict | সিগন্যাল রায় |
+| Why It Matters | কেন গুরুত্বপূর্ণ |
+| Risk Warning | ঝুঁকির সতর্কতা |
+| Suggested Action | প্রস্তাবিত কাজ |
+| High Confidence | উচ্চ আস্থা |
+| Verify Entry | এন্ট্রি যাচাই |
+| CONFIDENCE | আস্থা |
+| PROBABILITY | সম্ভাবনা |
+| RISK SCORE | রিস্ক |
 | LOW | কম |
 | MEDIUM | মাঝারি |
 | HIGH | তীব্র |
-| BULLISH | দাম বাড়ছে |
-| BEARISH | দাম কমছে |
-| SIDEWAYS | দাম স্থির |
-| ACCUMULATING | সঞ্চয় হচ্ছে |
+| EXTREME | খুব বেশি |
+| Trend Confirmed | বাজারের দিক নিশ্চিত |
+| Volume Confirmed | লেনদেন নিশ্চিত |
+| Momentum Confirmed | মতিগতির জোর নিশ্চিত |
+| Liquidity Confirmed | নিরাপদ তহবিল নিশ্চিত |
+| Risk Evaluated | ঝুঁকি যাচাইকৃত |
+| PERSISTED REGIME TRACE | চলতি বাজারের মতিগতি |
+| BULLISH | দাম বাড়ার ভাব |
+| BEARISH | মন্দা ভাব |
+| SIDEWAYS | দাম স্থির ভাব |
+| ACCUMULATION | সঞ্চয় হচ্ছে |
+| DISTRIBUTION | বিক্রির চাপ |
+| ACTIVE DURING INSIGHT | বর্তমানে সক্রিয় |
 | Momentum | মতিগতি |
 | Volume | লেনদেন |
-| Caution window • Monitor closely | সতর্ক পর্যায় • ভালোভাবে নজর রাখুন |
-| Late-stage signal — Verify before action | শেষ পর্যায়ের সিগনাল — আগে যাচাই করুন |
-| Delay may reduce signal quality | দেরি করলে সিগন্যালের মান কমতে পারে |
-| Active window — No urgency yet | সক্রিয় — এখনো তাড়াহুড়া নেই |
+| ACCUMULATING | সঞ্চয় হচ্ছে |
 
-Owner override rule:
-- Manually selected simple Bengali wording must be preserved.
-- Do not blindly overwrite local Bengali wording if it is easier for normal users.
-- Keep prices, ROI, TP, SL, score, rank, coin symbols, and percentages unchanged.
+Keep prices, ROI, TP, SL, score, rank, coin symbols, and percentages unchanged.
