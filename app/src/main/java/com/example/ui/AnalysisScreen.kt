@@ -1027,6 +1027,7 @@ fun StartTradeFlow(
     var step by remember { mutableStateOf(0) }
     var showDecisionBrief by remember { mutableStateOf(false) }
     val isBengali by viewModel.isBengali.collectAsState()
+    val decisionBriefSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     val highConfidence = mission.confidence >= 85
     val isLong = mission.type.uppercase() == "LONG"
@@ -1077,12 +1078,16 @@ fun StartTradeFlow(
     if (showDecisionBrief) {
         ModalBottomSheet(
             onDismissRequest = { showDecisionBrief = false },
+            sheetState = decisionBriefSheetState,
             containerColor = Color(0xFF030712),
             contentColor = TextPrimary
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .fillMaxHeight(0.92f)
+                    .verticalScroll(rememberScrollState())
+                    .navigationBarsPadding()
                     .padding(horizontal = 18.dp, vertical = 10.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
@@ -1160,7 +1165,7 @@ fun StartTradeFlow(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(24.dp))
             }
         }
     }
