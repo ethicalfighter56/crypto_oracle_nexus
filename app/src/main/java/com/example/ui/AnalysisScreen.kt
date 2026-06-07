@@ -235,7 +235,7 @@ fun PredictionDashboard(
             }
             
             Row(
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                horizontalArrangement = Arrangement.spacedBy(0.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.wrapContentWidth()
             ) {
@@ -261,6 +261,8 @@ fun PredictionDashboard(
                         modifier = Modifier.size(18.dp)
                     )
                 }
+
+                Spacer(modifier = Modifier.width(16.dp))
 
                 SignalProLanguageSwitchButton(
                     isBengali = isBengali,
@@ -998,23 +1000,24 @@ fun DecisionBriefBlock(
                 )
             )
             .border(0.75.dp, accentColor.copy(alpha = 0.46f), RoundedCornerShape(10.dp))
-            .padding(horizontal = 10.dp, vertical = 8.dp)
+            .padding(horizontal = 11.dp, vertical = 9.dp)
     ) {
         Text(
             text = title,
-            fontSize = 10.sp,
+            fontSize = 11.5.sp,
             fontWeight = FontWeight.Black,
             color = accentColor,
-            maxLines = 1
+            maxLines = 1,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
         )
 
-        Spacer(modifier = Modifier.height(3.dp))
+        Spacer(modifier = Modifier.height(4.dp))
 
         Text(
             text = value,
-            fontSize = 12.sp,
+            fontSize = 13.5.sp,
             color = TextPrimary,
-            lineHeight = 16.sp
+            lineHeight = 18.sp
         )
     }
 }
@@ -1096,14 +1099,14 @@ fun StartTradeFlow(
             ) {
                 Text(
                     text = if (isBengali) "AI সিদ্ধান্ত সংক্ষেপ" else "AI Decision Brief",
-                    fontSize = 18.sp,
+                    fontSize = 20.sp,
                     fontWeight = FontWeight.Black,
                     color = CryptoCyan
                 )
 
                 Text(
                     text = if (isBengali) "দ্রুত সিদ্ধান্ত নেওয়ার জন্য সংক্ষিপ্ত সারাংশ" else "Compact signal summary for faster decision-making",
-                    fontSize = 11.sp,
+                    fontSize = 12.5.sp,
                     color = TextSecondary
                 )
 
@@ -1133,9 +1136,9 @@ fun StartTradeFlow(
 
                 Text(
                     text = disclaimerText,
-                    fontSize = 10.sp,
+                    fontSize = 11.5.sp,
                     color = TextMuted,
-                    lineHeight = 14.sp
+                    lineHeight = 16.sp
                 )
 
                 Row(
