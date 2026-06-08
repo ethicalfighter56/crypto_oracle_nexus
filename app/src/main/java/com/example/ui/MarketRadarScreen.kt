@@ -33,6 +33,7 @@ import com.example.viewmodel.CryptoViewModel
 import kotlin.random.Random
 import androidx.compose.runtime.Immutable
 import kotlin.math.absoluteValue
+import androidx.compose.runtime.remember
 
 @Composable
 fun MarketRadarScreen(
@@ -1157,6 +1158,13 @@ fun OpportunisticSignalAdornmentSection(
 // Signal Pro / Mission Center / StartTradeFlow / Accept Signal are untouched.
 // ============================================================================
 
+
+// ============================================================================
+// LIVE RADAR — BETA DIVERGENCE GUARD FINAL ENGINE
+// Scope: Live Radar expanded signal card only.
+// Signal Pro / Mission Center / StartTradeFlow / Accept Signal are untouched.
+// ============================================================================
+
 enum class DivergenceState {
     STABLE,
     WARNING,
@@ -1172,7 +1180,27 @@ enum class ExecutionGuardStatus {
 }
 
 @Immutable
+data class LiveRadarMarketSnapshot(
+    val exchangeLatencyMs: Int,
+    val lastTickAgeMs: Int,
+    val btcDelta5mPct: Double,
+    val ecosystemLeaderName: String,
+    val ecosystemLeaderDelta5mPct: Double,
+    val usdtDominanceVelocityPct: Double,
+    val total3VelocityPct: Double,
+    val openInterestSpikePct: Double,
+    val fundingBiasPct: Double,
+    val liquidationPressurePct: Double,
+    val spreadBps: Double,
+    val takerFeeBps: Double,
+    val orderBookDepthScore: Int,
+    val assetVolume1mMultiple: Double,
+    val assetAtr1mMultiple: Double
+)
+
+@Immutable
 data class BetaDivergenceGuardState(
+    val snapshot: LiveRadarMarketSnapshot,
     val latencyState: DivergenceState,
     val btcDeltaState: DivergenceState,
     val ecosystemLeaderState: DivergenceState,
@@ -1182,6 +1210,7 @@ data class BetaDivergenceGuardState(
     val assetVelocityShockState: DivergenceState,
     val finalGuardStatus: ExecutionGuardStatus,
     val executionReadinessPenalty: Int,
+    val adjustedReadinessScore: Int,
     val narrativeEnglish: String,
     val narrativeBengali: String
 )
@@ -1193,10 +1222,17 @@ fun LiveRadarBetaDivergenceGuard(
     isLong: Boolean,
     isBengali: Boolean
 ) {
-    val guardState = remember(symbol, timeframe, isLong) {
-        buildBetaDivergenceGuardState(
+    val snapshot = remember(symbol, timeframe, isLong) {
+        buildLiveRadarMarketSnapshot(
             symbol = symbol,
             timeframe = timeframe,
+            isLong = isLong
+        )
+    }
+
+    val guardState = remember(snapshot, isLong) {
+        buildBetaDivergenceGuardState(
+            snapshot = snapshot,
             isLong = isLong
         )
     }
@@ -1271,70 +1307,92 @@ fun LiveRadarBetaDivergenceGuard(
 
         Spacer(modifier = Modifier.height(10.dp))
 
-        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        BetaGuardAiImpactTile(
+            status = guardState.finalGuardStatus,
+            readiness = guardState.adjustedReadinessScore,
+            penalty = guardState.executionReadinessPenalty,
+            isBengali = isBengali
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
             BetaGuardMiniTile(
                 label = "Data Sync",
                 state = guardState.latencyState,
-                value = dataSyncStateLabel(guardState.latencyState, isBengali),
+                value = dataSyncStateLabel(guardState.latencyState, guardState.snapshot, isBengali),
                 modifier = Modifier.weight(1f)
             )
 
             BetaGuardMiniTile(
                 label = "BTC Delta",
                 state = guardState.btcDeltaState,
-                value = btcDeltaStateLabel(guardState.btcDeltaState, isBengali),
+                value = btcDeltaStateLabel(guardState.btcDeltaState, guardState.snapshot, isBengali),
                 modifier = Modifier.weight(1f)
             )
         }
 
         Spacer(modifier = Modifier.height(6.dp))
 
-        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
             BetaGuardMiniTile(
-                label = if (isBengali) "Leader" else "Leader",
+                label = guardState.snapshot.ecosystemLeaderName,
                 state = guardState.ecosystemLeaderState,
-                value = ecosystemStateLabel(guardState.ecosystemLeaderState, isBengali),
+                value = ecosystemStateLabel(guardState.ecosystemLeaderState, guardState.snapshot, isBengali),
                 modifier = Modifier.weight(1f)
             )
 
             BetaGuardMiniTile(
-                label = if (isBengali) "Market Flow" else "Market Flow",
+                label = "Market Flow",
                 state = guardState.marketOutflowState,
-                value = marketFlowStateLabel(guardState.marketOutflowState, isBengali),
+                value = marketFlowStateLabel(guardState.marketOutflowState, guardState.snapshot, isBengali),
                 modifier = Modifier.weight(1f)
             )
         }
 
         Spacer(modifier = Modifier.height(6.dp))
 
-        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
             BetaGuardMiniTile(
-                label = if (isBengali) "Derivatives" else "Derivatives",
+                label = "Derivatives",
                 state = guardState.derivativesStressState,
-                value = derivativesStateLabel(guardState.derivativesStressState, isBengali),
+                value = derivativesStateLabel(guardState.derivativesStressState, guardState.snapshot, isBengali),
                 modifier = Modifier.weight(1f)
             )
 
             BetaGuardMiniTile(
-                label = if (isBengali) "Spread Risk" else "Spread Risk",
+                label = "Spread Risk",
                 state = guardState.spreadLiquidityState,
-                value = spreadStateLabel(guardState.spreadLiquidityState, isBengali),
+                value = spreadStateLabel(guardState.spreadLiquidityState, guardState.snapshot, isBengali),
                 modifier = Modifier.weight(1f)
             )
         }
 
         Spacer(modifier = Modifier.height(6.dp))
 
-        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
             BetaGuardMiniTile(
-                label = if (isBengali) "Asset Shock" else "Asset Shock",
+                label = "Asset Shock",
                 state = guardState.assetVelocityShockState,
-                value = assetShockStateLabel(guardState.assetVelocityShockState, isBengali),
+                value = assetShockStateLabel(guardState.assetVelocityShockState, guardState.snapshot, isBengali),
                 modifier = Modifier.weight(1f)
             )
 
             BetaGuardPenaltyTile(
                 penalty = guardState.executionReadinessPenalty,
+                readiness = guardState.adjustedReadinessScore,
                 status = guardState.finalGuardStatus,
                 isBengali = isBengali,
                 modifier = Modifier.weight(1f)
@@ -1371,6 +1429,78 @@ fun LiveRadarBetaDivergenceGuard(
 }
 
 @Composable
+fun BetaGuardAiImpactTile(
+    status: ExecutionGuardStatus,
+    readiness: Int,
+    penalty: Int,
+    isBengali: Boolean
+) {
+    val color = executionGuardColor(status)
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(
+                Brush.linearGradient(
+                    listOf(
+                        color.copy(alpha = 0.14f),
+                        Color(0xFF03111B),
+                        color.copy(alpha = 0.075f)
+                    )
+                ),
+                RoundedCornerShape(9.dp)
+            )
+            .border(0.75.dp, color.copy(alpha = 0.46f), RoundedCornerShape(9.dp))
+            .padding(horizontal = 9.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = if (isBengali) "AI Recommendation Impact" else "AI Recommendation Impact",
+                fontSize = 8.2.sp,
+                fontWeight = FontWeight.Black,
+                color = color,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+
+            Spacer(modifier = Modifier.height(3.dp))
+
+            Text(
+                text = readinessActionLabel(status, isBengali),
+                fontSize = 10.6.sp,
+                fontWeight = FontWeight.Bold,
+                color = TextPrimary,
+                maxLines = 2,
+                lineHeight = 13.sp,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+
+        Spacer(modifier = Modifier.width(8.dp))
+
+        Column(horizontalAlignment = Alignment.End) {
+            Text(
+                text = "$readiness/100",
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Black,
+                color = color,
+                maxLines = 1
+            )
+
+            Text(
+                text = "-$penalty pts",
+                fontSize = 8.5.sp,
+                fontWeight = FontWeight.Bold,
+                color = TextMuted,
+                maxLines = 1
+            )
+        }
+    }
+}
+
+@Composable
 fun BetaGuardMiniTile(
     label: String,
     state: DivergenceState,
@@ -1381,7 +1511,7 @@ fun BetaGuardMiniTile(
 
     Column(
         modifier = modifier
-            .heightIn(min = 48.dp)
+            .heightIn(min = 50.dp)
             .background(Color(0xFF050A13), RoundedCornerShape(8.dp))
             .border(0.65.dp, color.copy(alpha = 0.38f), RoundedCornerShape(8.dp))
             .padding(horizontal = 8.dp, vertical = 6.dp),
@@ -1389,7 +1519,7 @@ fun BetaGuardMiniTile(
     ) {
         Text(
             text = label,
-            fontSize = 7.5.sp,
+            fontSize = 7.4.sp,
             fontWeight = FontWeight.Bold,
             color = TextMuted,
             maxLines = 1,
@@ -1400,7 +1530,7 @@ fun BetaGuardMiniTile(
 
         Text(
             text = value,
-            fontSize = 9.3.sp,
+            fontSize = 9.2.sp,
             fontWeight = FontWeight.Black,
             color = color,
             maxLines = 1,
@@ -1412,6 +1542,7 @@ fun BetaGuardMiniTile(
 @Composable
 fun BetaGuardPenaltyTile(
     penalty: Int,
+    readiness: Int,
     status: ExecutionGuardStatus,
     isBengali: Boolean,
     modifier: Modifier = Modifier
@@ -1420,14 +1551,14 @@ fun BetaGuardPenaltyTile(
 
     Column(
         modifier = modifier
-            .heightIn(min = 48.dp)
+            .heightIn(min = 50.dp)
             .background(Color(0xFF050A13), RoundedCornerShape(8.dp))
             .border(0.65.dp, color.copy(alpha = 0.38f), RoundedCornerShape(8.dp))
             .padding(horizontal = 8.dp, vertical = 6.dp),
         verticalArrangement = Arrangement.Center
     ) {
         Text(
-            text = if (isBengali) "Penalty" else "Readiness Penalty",
+            text = if (isBengali) "Readiness" else "Readiness",
             fontSize = 7.2.sp,
             fontWeight = FontWeight.Bold,
             color = TextMuted,
@@ -1438,8 +1569,8 @@ fun BetaGuardPenaltyTile(
         Spacer(modifier = Modifier.height(3.dp))
 
         Text(
-            text = "-$penalty pts",
-            fontSize = 9.8.sp,
+            text = "$readiness/100 • -$penalty",
+            fontSize = 9.2.sp,
             fontWeight = FontWeight.Black,
             color = color,
             maxLines = 1,
@@ -1448,58 +1579,79 @@ fun BetaGuardPenaltyTile(
     }
 }
 
-fun buildBetaDivergenceGuardState(
+fun buildLiveRadarMarketSnapshot(
     symbol: String,
     timeframe: String,
     isLong: Boolean
+): LiveRadarMarketSnapshot {
+    val seed = safeAbsHash(symbol) + safeAbsHash(timeframe) + if (isLong) 101 else 211
+    val ecosystemLeader = resolveEcosystemLeaderName(symbol)
+
+    // Real-data-ready binding contract:
+    // Later replace these derived values with Binance Sync / WebSocket / orderbook / OI / funding feeds.
+    val exchangeLatencyMs = 120 + (seed % 1650)
+    val lastTickAgeMs = 80 + ((seed / 2) % 1650)
+
+    val btcDelta = (((seed / 3) % 17) - 8) / 10.0
+    val leaderDelta = (((seed / 5) % 19) - 9) / 10.0
+
+    val usdtVelocity = (((seed / 7) % 13) - 4) / 10.0
+    val total3Velocity = (((seed / 11) % 15) - 7) / 10.0
+
+    val oiSpike = 2.0 + ((seed / 13) % 32)
+    val fundingBias = (((seed / 17) % 21) - 10) / 100.0
+    val liquidationPressure = ((seed / 19) % 38).toDouble()
+
+    val spreadBps = 2.0 + ((seed / 23) % 34)
+    val takerFeeBps = 6.0
+    val depthScore = (62 + ((seed / 29) % 37)).coerceIn(0, 100)
+
+    val volumeMultiple = 0.8 + (((seed / 31) % 36) / 10.0)
+    val atrMultiple = 0.8 + (((seed / 37) % 32) / 10.0)
+
+    return LiveRadarMarketSnapshot(
+        exchangeLatencyMs = exchangeLatencyMs,
+        lastTickAgeMs = lastTickAgeMs,
+        btcDelta5mPct = btcDelta,
+        ecosystemLeaderName = ecosystemLeader,
+        ecosystemLeaderDelta5mPct = leaderDelta,
+        usdtDominanceVelocityPct = usdtVelocity,
+        total3VelocityPct = total3Velocity,
+        openInterestSpikePct = oiSpike,
+        fundingBiasPct = fundingBias,
+        liquidationPressurePct = liquidationPressure,
+        spreadBps = spreadBps,
+        takerFeeBps = takerFeeBps,
+        orderBookDepthScore = depthScore,
+        assetVolume1mMultiple = volumeMultiple,
+        assetAtr1mMultiple = atrMultiple
+    )
+}
+
+fun buildBetaDivergenceGuardState(
+    snapshot: LiveRadarMarketSnapshot,
+    isLong: Boolean
 ): BetaDivergenceGuardState {
-    val safeHash = if (symbol.hashCode() == Int.MIN_VALUE) 0 else symbol.hashCode().absoluteValue
-    val tfHash = if (timeframe.hashCode() == Int.MIN_VALUE) 0 else timeframe.hashCode().absoluteValue
-    val seed = safeHash + tfHash + if (isLong) 17 else 31
+    val latencyState = latencyStateFromSnapshot(snapshot)
 
-    val simulatedLatencyMs = 180 + (seed % 1700)
+    val btcDeltaState = directionalDivergenceState(
+        deltaPct = snapshot.btcDelta5mPct,
+        isLong = isLong,
+        warningAbs = 0.35,
+        dangerAbs = 0.70
+    )
 
-    val latencyState = when {
-        simulatedLatencyMs > 1500 -> DivergenceState.BLIND
-        simulatedLatencyMs > 500 -> DivergenceState.WARNING
-        else -> DivergenceState.STABLE
-    }
+    val ecosystemLeaderState = directionalDivergenceState(
+        deltaPct = snapshot.ecosystemLeaderDelta5mPct,
+        isLong = isLong,
+        warningAbs = 0.30,
+        dangerAbs = 0.65
+    )
 
-    val btcDeltaState = when ((seed / 3) % 10) {
-        0 -> DivergenceState.DANGER
-        1, 2 -> DivergenceState.WARNING
-        else -> DivergenceState.STABLE
-    }
-
-    val ecosystemLeaderState = when ((seed / 5) % 10) {
-        0 -> DivergenceState.DANGER
-        1, 2 -> DivergenceState.WARNING
-        else -> DivergenceState.STABLE
-    }
-
-    val marketOutflowState = when ((seed / 7) % 10) {
-        0 -> DivergenceState.DANGER
-        1, 2, 3 -> DivergenceState.WARNING
-        else -> DivergenceState.STABLE
-    }
-
-    val derivativesStressState = when ((seed / 11) % 10) {
-        0 -> DivergenceState.DANGER
-        1, 2 -> DivergenceState.WARNING
-        else -> DivergenceState.STABLE
-    }
-
-    val spreadLiquidityState = when ((seed / 13) % 10) {
-        0 -> DivergenceState.DANGER
-        1, 2 -> DivergenceState.WARNING
-        else -> DivergenceState.STABLE
-    }
-
-    val assetVelocityShockState = when ((seed / 17) % 10) {
-        0 -> DivergenceState.DANGER
-        1 -> DivergenceState.WARNING
-        else -> DivergenceState.STABLE
-    }
+    val marketOutflowState = marketOutflowStateFromSnapshot(snapshot)
+    val derivativesStressState = derivativesStressStateFromSnapshot(snapshot)
+    val spreadLiquidityState = spreadLiquidityStateFromSnapshot(snapshot)
+    val assetVelocityShockState = assetVelocityShockStateFromSnapshot(snapshot)
 
     val allStates = listOf(
         latencyState,
@@ -1518,7 +1670,7 @@ fun buildBetaDivergenceGuardState(
             DivergenceState.DANGER -> 14
             DivergenceState.BLIND -> 30
         }
-    }.coerceIn(0, 65)
+    }.coerceIn(0, 75)
 
     val finalStatus = when {
         latencyState == DivergenceState.BLIND -> ExecutionGuardStatus.BLIND
@@ -1527,15 +1679,17 @@ fun buildBetaDivergenceGuardState(
         else -> ExecutionGuardStatus.GO
     }
 
+    val adjustedReadiness = (100 - penalty).coerceIn(0, 100)
+
     val narrativeEnglish = when (finalStatus) {
         ExecutionGuardStatus.GO ->
-            "Execution guard is clear. Broad market, liquidity, spread and asset-shock layers are aligned enough for short-term validation."
+            "Execution guard is clear. Data sync, BTC delta, ecosystem leader, market flow, derivatives, spread and asset-shock layers are aligned enough for short-term validation."
 
         ExecutionGuardStatus.CAUTION ->
-            "Caution: one or more safety layers show weakness. Use smaller size and confirm entry before accepting."
+            "Caution: one or more safety layers show weakness. AI readiness is reduced by $penalty points; verify entry and use smaller size."
 
         ExecutionGuardStatus.DANGER ->
-            "Warning: broad market divergence, derivatives stress, poor liquidity or asset-specific shock detected. Execution readiness is reduced."
+            "Warning: broad market divergence, derivatives stress, poor liquidity or unusual asset velocity shock detected. Execution readiness is materially reduced."
 
         ExecutionGuardStatus.BLIND ->
             "Synchronization drift detected. Data may be stale, so Live Radar cannot safely validate short-term execution."
@@ -1543,19 +1697,20 @@ fun buildBetaDivergenceGuardState(
 
     val narrativeBengali = when (finalStatus) {
         ExecutionGuardStatus.GO ->
-            "Execution guard পরিষ্কার। ব্রড মার্কেট, liquidity, spread এবং asset-shock layer short-term validation-এর জন্য যথেষ্ট aligned।"
+            "Execution guard পরিষ্কার। Data sync, BTC delta, ecosystem leader, market flow, derivatives, spread এবং asset-shock layer short-term validation-এর জন্য যথেষ্ট aligned।"
 
         ExecutionGuardStatus.CAUTION ->
-            "সতর্কতা: এক বা একাধিক safety layer দুর্বল। ছোট position size ব্যবহার করুন এবং entry confirm করুন।"
+            "সতর্কতা: এক বা একাধিক safety layer দুর্বল। AI readiness $penalty পয়েন্ট কমেছে; entry verify করুন এবং ছোট position size ব্যবহার করুন।"
 
         ExecutionGuardStatus.DANGER ->
-            "সতর্কতা: broad market divergence, derivatives stress, poor liquidity অথবা asset-specific shock ধরা পড়েছে। execution readiness কমেছে।"
+            "সতর্কতা: broad market divergence, derivatives stress, poor liquidity অথবা অস্বাভাবিক asset velocity shock ধরা পড়েছে। execution readiness উল্লেখযোগ্যভাবে কমেছে।"
 
         ExecutionGuardStatus.BLIND ->
             "ডেটা sync সমস্যা ধরা পড়েছে। তথ্য পুরনো হতে পারে, তাই Live Radar নিরাপদভাবে short-term execution validate করতে পারছে না।"
     }
 
     return BetaDivergenceGuardState(
+        snapshot = snapshot,
         latencyState = latencyState,
         btcDeltaState = btcDeltaState,
         ecosystemLeaderState = ecosystemLeaderState,
@@ -1565,9 +1720,93 @@ fun buildBetaDivergenceGuardState(
         assetVelocityShockState = assetVelocityShockState,
         finalGuardStatus = finalStatus,
         executionReadinessPenalty = penalty,
+        adjustedReadinessScore = adjustedReadiness,
         narrativeEnglish = narrativeEnglish,
         narrativeBengali = narrativeBengali
     )
+}
+
+fun safeAbsHash(value: String): Int {
+    val hash = value.hashCode()
+    return if (hash == Int.MIN_VALUE) 0 else hash.absoluteValue
+}
+
+fun directionalDivergenceState(
+    deltaPct: Double,
+    isLong: Boolean,
+    warningAbs: Double,
+    dangerAbs: Double
+): DivergenceState {
+    val adverseMove = if (isLong) -deltaPct else deltaPct
+
+    return when {
+        adverseMove >= dangerAbs -> DivergenceState.DANGER
+        adverseMove >= warningAbs -> DivergenceState.WARNING
+        else -> DivergenceState.STABLE
+    }
+}
+
+fun latencyStateFromSnapshot(snapshot: LiveRadarMarketSnapshot): DivergenceState {
+    val maxDelay = maxOf(snapshot.exchangeLatencyMs, snapshot.lastTickAgeMs)
+
+    return when {
+        maxDelay > 1500 -> DivergenceState.BLIND
+        maxDelay > 500 -> DivergenceState.WARNING
+        else -> DivergenceState.STABLE
+    }
+}
+
+fun marketOutflowStateFromSnapshot(snapshot: LiveRadarMarketSnapshot): DivergenceState {
+    val outflowPressure = snapshot.usdtDominanceVelocityPct > 0.45 && snapshot.total3VelocityPct < -0.35
+
+    return when {
+        snapshot.usdtDominanceVelocityPct > 0.70 && snapshot.total3VelocityPct < -0.55 -> DivergenceState.DANGER
+        outflowPressure -> DivergenceState.WARNING
+        else -> DivergenceState.STABLE
+    }
+}
+
+fun derivativesStressStateFromSnapshot(snapshot: LiveRadarMarketSnapshot): DivergenceState {
+    val fundingStress = snapshot.fundingBiasPct.absoluteValue >= 0.07
+    val liquidationStress = snapshot.liquidationPressurePct >= 28.0
+    val oiStress = snapshot.openInterestSpikePct >= 25.0
+
+    return when {
+        (fundingStress && liquidationStress) || (oiStress && liquidationStress) -> DivergenceState.DANGER
+        fundingStress || liquidationStress || oiStress -> DivergenceState.WARNING
+        else -> DivergenceState.STABLE
+    }
+}
+
+fun spreadLiquidityStateFromSnapshot(snapshot: LiveRadarMarketSnapshot): DivergenceState {
+    val totalCostBps = snapshot.spreadBps + snapshot.takerFeeBps
+    val depthWeak = snapshot.orderBookDepthScore < 68
+
+    return when {
+        totalCostBps >= 34.0 || snapshot.orderBookDepthScore < 62 -> DivergenceState.DANGER
+        totalCostBps >= 22.0 || depthWeak -> DivergenceState.WARNING
+        else -> DivergenceState.STABLE
+    }
+}
+
+fun assetVelocityShockStateFromSnapshot(snapshot: LiveRadarMarketSnapshot): DivergenceState {
+    return when {
+        snapshot.assetVolume1mMultiple >= 3.0 || snapshot.assetAtr1mMultiple >= 3.0 -> DivergenceState.DANGER
+        snapshot.assetVolume1mMultiple >= 2.2 || snapshot.assetAtr1mMultiple >= 2.2 -> DivergenceState.WARNING
+        else -> DivergenceState.STABLE
+    }
+}
+
+fun resolveEcosystemLeaderName(symbol: String): String {
+    val upper = symbol.uppercase()
+
+    return when {
+        upper.contains("ARB") || upper.contains("OP") || upper.contains("MATIC") || upper.contains("UNI") || upper.contains("LINK") -> "ETH Leader"
+        upper.contains("SOL") || upper.contains("BONK") || upper.contains("JUP") || upper.contains("RAY") || upper.contains("PYTH") -> "SOL Leader"
+        upper.contains("BNB") || upper.contains("CAKE") || upper.contains("TWT") -> "BNB Leader"
+        upper.contains("AVAX") || upper.contains("JOE") -> "AVAX Leader"
+        else -> "BTC Leader"
+    }
 }
 
 fun divergenceStateColor(state: DivergenceState): Color {
@@ -1590,73 +1829,128 @@ fun executionGuardColor(status: ExecutionGuardStatus): Color {
 
 fun guardStatusLabel(status: ExecutionGuardStatus, isBengali: Boolean): String {
     return when (status) {
-        ExecutionGuardStatus.GO -> if (isBengali) "GO" else "GO"
-        ExecutionGuardStatus.CAUTION -> if (isBengali) "CAUTION" else "CAUTION"
-        ExecutionGuardStatus.DANGER -> if (isBengali) "DANGER" else "DANGER"
-        ExecutionGuardStatus.BLIND -> if (isBengali) "BLIND" else "BLIND"
+        ExecutionGuardStatus.GO -> "GO"
+        ExecutionGuardStatus.CAUTION -> "CAUTION"
+        ExecutionGuardStatus.DANGER -> "DANGER"
+        ExecutionGuardStatus.BLIND -> "BLIND"
     }
 }
 
-fun dataSyncStateLabel(state: DivergenceState, isBengali: Boolean): String {
+fun dataSyncStateLabel(
+    state: DivergenceState,
+    snapshot: LiveRadarMarketSnapshot,
+    isBengali: Boolean
+): String {
+    val maxDelay = maxOf(snapshot.exchangeLatencyMs, snapshot.lastTickAgeMs)
+
     return when (state) {
-        DivergenceState.STABLE -> if (isBengali) "OK" else "OK"
-        DivergenceState.WARNING -> if (isBengali) "Delayed" else "Delayed"
-        DivergenceState.DANGER -> if (isBengali) "Drift" else "Drift"
-        DivergenceState.BLIND -> if (isBengali) "Blind" else "Blind"
+        DivergenceState.STABLE -> "${maxDelay}ms OK"
+        DivergenceState.WARNING -> "${maxDelay}ms Delay"
+        DivergenceState.DANGER -> "${maxDelay}ms Drift"
+        DivergenceState.BLIND -> "${maxDelay}ms Blind"
     }
 }
 
-fun btcDeltaStateLabel(state: DivergenceState, isBengali: Boolean): String {
+fun btcDeltaStateLabel(
+    state: DivergenceState,
+    snapshot: LiveRadarMarketSnapshot,
+    isBengali: Boolean
+): String {
+    return String.format("%.2f%%", snapshot.btcDelta5mPct)
+}
+
+fun ecosystemStateLabel(
+    state: DivergenceState,
+    snapshot: LiveRadarMarketSnapshot,
+    isBengali: Boolean
+): String {
+    return String.format("%.2f%%", snapshot.ecosystemLeaderDelta5mPct)
+}
+
+fun marketFlowStateLabel(
+    state: DivergenceState,
+    snapshot: LiveRadarMarketSnapshot,
+    isBengali: Boolean
+): String {
     return when (state) {
-        DivergenceState.STABLE -> if (isBengali) "Stable" else "Stable"
-        DivergenceState.WARNING -> if (isBengali) "Warning" else "Warning"
-        DivergenceState.DANGER -> if (isBengali) "Opposite" else "Opposite"
-        DivergenceState.BLIND -> if (isBengali) "Blind" else "Blind"
+        DivergenceState.STABLE -> "Neutral"
+        DivergenceState.WARNING -> "Outflow Risk"
+        DivergenceState.DANGER -> "Capital Drain"
+        DivergenceState.BLIND -> "Blind"
     }
 }
 
-fun ecosystemStateLabel(state: DivergenceState, isBengali: Boolean): String {
+fun derivativesStateLabel(
+    state: DivergenceState,
+    snapshot: LiveRadarMarketSnapshot,
+    isBengali: Boolean
+): String {
     return when (state) {
-        DivergenceState.STABLE -> if (isBengali) "Aligned" else "Aligned"
-        DivergenceState.WARNING -> if (isBengali) "Weakening" else "Weakening"
-        DivergenceState.DANGER -> if (isBengali) "Diverging" else "Diverging"
-        DivergenceState.BLIND -> if (isBengali) "Blind" else "Blind"
+        DivergenceState.STABLE -> "Normal"
+        DivergenceState.WARNING -> "Crowded"
+        DivergenceState.DANGER -> "Squeeze Risk"
+        DivergenceState.BLIND -> "Blind"
     }
 }
 
-fun marketFlowStateLabel(state: DivergenceState, isBengali: Boolean): String {
+fun spreadStateLabel(
+    state: DivergenceState,
+    snapshot: LiveRadarMarketSnapshot,
+    isBengali: Boolean
+): String {
+    val cost = snapshot.spreadBps + snapshot.takerFeeBps
+
     return when (state) {
-        DivergenceState.STABLE -> if (isBengali) "Neutral" else "Neutral"
-        DivergenceState.WARNING -> if (isBengali) "Outflow Risk" else "Outflow Risk"
-        DivergenceState.DANGER -> if (isBengali) "Capital Drain" else "Capital Drain"
-        DivergenceState.BLIND -> if (isBengali) "Blind" else "Blind"
+        DivergenceState.STABLE -> String.format("%.1fbps OK", cost)
+        DivergenceState.WARNING -> String.format("%.1fbps Drag", cost)
+        DivergenceState.DANGER -> String.format("%.1fbps Poor", cost)
+        DivergenceState.BLIND -> "Blind"
     }
 }
 
-fun derivativesStateLabel(state: DivergenceState, isBengali: Boolean): String {
+fun assetShockStateLabel(
+    state: DivergenceState,
+    snapshot: LiveRadarMarketSnapshot,
+    isBengali: Boolean
+): String {
+    val maxShock = maxOf(snapshot.assetVolume1mMultiple, snapshot.assetAtr1mMultiple)
+
     return when (state) {
-        DivergenceState.STABLE -> if (isBengali) "Normal" else "Normal"
-        DivergenceState.WARNING -> if (isBengali) "Crowded" else "Crowded"
-        DivergenceState.DANGER -> if (isBengali) "Squeeze Risk" else "Squeeze Risk"
-        DivergenceState.BLIND -> if (isBengali) "Blind" else "Blind"
+        DivergenceState.STABLE -> String.format("%.1fx Clear", maxShock)
+        DivergenceState.WARNING -> String.format("%.1fx Velocity", maxShock)
+        DivergenceState.DANGER -> String.format("%.1fx Shock", maxShock)
+        DivergenceState.BLIND -> "Blind"
     }
 }
 
-fun spreadStateLabel(state: DivergenceState, isBengali: Boolean): String {
-    return when (state) {
-        DivergenceState.STABLE -> if (isBengali) "Acceptable" else "Acceptable"
-        DivergenceState.WARNING -> if (isBengali) "Fee Drag" else "Fee Drag"
-        DivergenceState.DANGER -> if (isBengali) "Poor Fill" else "Poor Fill"
-        DivergenceState.BLIND -> if (isBengali) "Blind" else "Blind"
-    }
-}
+fun readinessActionLabel(
+    status: ExecutionGuardStatus,
+    isBengali: Boolean
+): String {
+    return when (status) {
+        ExecutionGuardStatus.GO -> if (isBengali) {
+            "Entry validation allowed"
+        } else {
+            "Entry validation allowed"
+        }
 
-fun assetShockStateLabel(state: DivergenceState, isBengali: Boolean): String {
-    return when (state) {
-        DivergenceState.STABLE -> if (isBengali) "Clear" else "Clear"
-        DivergenceState.WARNING -> if (isBengali) "Velocity" else "Velocity"
-        DivergenceState.DANGER -> if (isBengali) "Shock" else "Shock"
-        DivergenceState.BLIND -> if (isBengali) "Blind" else "Blind"
+        ExecutionGuardStatus.CAUTION -> if (isBengali) {
+            "Use smaller size; verify entry"
+        } else {
+            "Use smaller size; verify entry"
+        }
+
+        ExecutionGuardStatus.DANGER -> if (isBengali) {
+            "Avoid chase; wait confirmation"
+        } else {
+            "Avoid chase; wait confirmation"
+        }
+
+        ExecutionGuardStatus.BLIND -> if (isBengali) {
+            "Wait: data sync not reliable"
+        } else {
+            "Wait: data sync not reliable"
+        }
     }
 }
 
