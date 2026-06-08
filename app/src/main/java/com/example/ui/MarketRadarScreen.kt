@@ -722,7 +722,7 @@ fun ShortTermOpportunisticSignalsSection(timeframe: String, isBengali: Boolean, 
                         isLong = false,
                         potential = potential,
                         isBengali = isBengali,
-                        themeColor = LiveRadarDangerRed
+                        themeColor = CryptoCyan
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))
@@ -1060,14 +1060,14 @@ private fun AiOracleAnalyticMetadataSection(
         OracleAnalyticMetadataGrid(
             details = details,
             isBengali = isBengali,
-            sectionColor = sectionColor
+            sectionColor = LiveRadarInstitutionalGreen
         )
 
         Spacer(modifier = Modifier.height(8.dp))
 
         OracleMetadataDescriptionTile(
             text = if (isBengali) details["desc_bn"].orEmpty() else details["desc"].orEmpty(),
-            borderColor = sectionColor
+            borderColor = LiveRadarInstitutionalGreen
         )
     }
 }
@@ -1122,11 +1122,12 @@ private fun OracleAnalyticMetadataGrid(
                 modifier = Modifier.weight(1f)
             )
 
+            val probabilityColor = probabilityScoreColor(details["prob"].orEmpty())
             OracleMetadataTile(
                 title = if (isBengali) "সম্ভাব্যতা স্কোর" else "PROBABILITY SCORE",
                 value = details["prob"].orEmpty(),
-                titleColor = sectionColor,
-                valueColor = probabilityScoreColor(details["prob"].orEmpty()),
+                titleColor = probabilityColor,
+                valueColor = probabilityColor,
                 borderColor = sectionColor,
                 valueSizeSp = 15.8f,
                 modifier = Modifier.weight(1f)
@@ -1489,7 +1490,7 @@ private fun TakeProfitTargetTile(
         modifier = modifier
             .heightIn(min = 44.dp)
             .background(LiveRadarTileDark, RoundedCornerShape(9.dp))
-            .border(0.8.dp, accent, RoundedCornerShape(9.dp))
+            .border(0.55.dp, accent, RoundedCornerShape(9.dp))
             .padding(horizontal = 7.dp, vertical = 4.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
@@ -1529,7 +1530,7 @@ private fun ConsensusEngineTile(
         modifier = modifier
             .heightIn(min = 44.dp)
             .background(LiveRadarTileDark, RoundedCornerShape(9.dp))
-            .border(0.75.dp, accent, RoundedCornerShape(9.dp))
+            .border(0.55.dp, accent, RoundedCornerShape(9.dp))
             .padding(horizontal = 7.dp, vertical = 4.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
@@ -1569,7 +1570,7 @@ private fun ConsensusSummaryStrip(
         modifier = modifier
             .fillMaxWidth()
             .background(LiveRadarTileDark, RoundedCornerShape(10.dp))
-            .border(0.8.dp, accent, RoundedCornerShape(10.dp))
+            .border(0.55.dp, accent, RoundedCornerShape(10.dp))
             .padding(horizontal = 8.dp, vertical = 6.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -1642,7 +1643,7 @@ private fun AllocationSizingTile(
         modifier = modifier
             .heightIn(min = 42.dp)
             .background(LiveRadarTileDark, RoundedCornerShape(9.dp))
-            .border(0.75.dp, accent, RoundedCornerShape(9.dp))
+            .border(0.55.dp, accent, RoundedCornerShape(9.dp))
             .padding(horizontal = 6.dp, vertical = 3.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
@@ -1674,7 +1675,7 @@ private fun AllocationSizingTile(
 private fun probabilityScoreColor(rawValue: String): Color {
     val score = rawValue.filter { it.isDigit() }.toIntOrNull() ?: return LiveRadarSoftWhite
     return when {
-        score <= 60 -> LiveRadarDangerRed
+        score <= 70 -> LiveRadarDangerRed
         score <= 80 -> LiveRadarInstitutionalYellow
         else -> LiveRadarInstitutionalGreen
     }
