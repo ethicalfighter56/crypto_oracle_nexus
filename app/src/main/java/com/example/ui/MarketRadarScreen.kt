@@ -34,6 +34,8 @@ import kotlin.random.Random
 import androidx.compose.runtime.Immutable
 import kotlin.math.absoluteValue
 import androidx.compose.runtime.remember
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.width
 
 @Composable
 fun MarketRadarScreen(
@@ -566,7 +568,7 @@ fun ShortTermOpportunisticSignalsSection(timeframe: String, isBengali: Boolean, 
                         isBengali = isBengali
                     )
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
 
                     OpportunisticSignalAdornmentSection(
                         basePrice = basePrice,
@@ -752,6 +754,15 @@ fun ShortTermOpportunisticSignalsSection(timeframe: String, isBengali: Boolean, 
                         lineHeight = 16.sp
                     )
 
+                    LiveRadarBetaDivergenceGuard(
+                        symbol = symbol,
+                        timeframe = timeframe,
+                        isLong = target >= basePrice,
+                        isBengali = isBengali
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
                     OpportunisticSignalAdornmentSection(
                         basePrice = basePrice,
                         isLong = true,
@@ -935,6 +946,15 @@ fun ShortTermOpportunisticSignalsSection(timeframe: String, isBengali: Boolean, 
                         color = TextSecondary,
                         lineHeight = 16.sp
                     )
+
+                    LiveRadarBetaDivergenceGuard(
+                        symbol = symbol,
+                        timeframe = timeframe,
+                        isLong = target >= basePrice,
+                        isBengali = isBengali
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
 
                     OpportunisticSignalAdornmentSection(
                         basePrice = basePrice,
@@ -1165,6 +1185,14 @@ fun OpportunisticSignalAdornmentSection(
 // Signal Pro / Mission Center / StartTradeFlow / Accept Signal are untouched.
 // ============================================================================
 
+
+// ============================================================================
+// LIVE RADAR — BETA DIVERGENCE GUARD FINAL COMPACT ENGINE
+// Scope: Live Radar expanded signal cards only.
+// Applied to: Hot Spot Top 3, Futures Long Top 3, Futures Short Top 3.
+// Signal Pro / Mission Center / StartTradeFlow / Accept Signal are untouched.
+// ============================================================================
+
 enum class DivergenceState {
     STABLE,
     WARNING,
@@ -1246,14 +1274,14 @@ fun LiveRadarBetaDivergenceGuard(
                 Brush.linearGradient(
                     listOf(
                         Color(0xFF02050D),
-                        accentColor.copy(alpha = 0.055f),
+                        accentColor.copy(alpha = 0.038f),
                         Color(0xFF02050D)
                     )
                 ),
-                RoundedCornerShape(12.dp)
+                RoundedCornerShape(11.dp)
             )
-            .border(0.85.dp, accentColor.copy(alpha = 0.52f), RoundedCornerShape(12.dp))
-            .padding(12.dp)
+            .border(0.75.dp, accentColor.copy(alpha = 0.44f), RoundedCornerShape(11.dp))
+            .padding(horizontal = 10.dp, vertical = 9.dp)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -1263,40 +1291,39 @@ fun LiveRadarBetaDivergenceGuard(
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = "BETA DIVERGENCE GUARD",
-                    fontSize = 9.sp,
+                    fontSize = 8.6.sp,
                     fontWeight = FontWeight.Black,
                     color = accentColor,
-                    letterSpacing = 1.sp,
+                    letterSpacing = 0.85.sp,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
 
-                Spacer(modifier = Modifier.height(3.dp))
+                Spacer(modifier = Modifier.height(2.dp))
 
                 Text(
                     text = if (isBengali) {
-                        "ব্রড মার্কেট + অ্যাসেট শক + ডেটা ফ্রেশনেস সেফটি শিল্ড"
+                        "Market + Asset Shock + Data Safety"
                     } else {
-                        "Broad Market + Asset Shock + Data Freshness Safety Shield"
+                        "Market + Asset Shock + Data Safety"
                     },
-                    fontSize = 9.5.sp,
+                    fontSize = 8.7.sp,
                     fontWeight = FontWeight.Bold,
                     color = TextSecondary,
-                    maxLines = 2,
-                    lineHeight = 12.sp,
+                    maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
             }
 
             Box(
                 modifier = Modifier
-                    .background(accentColor.copy(alpha = 0.14f), RoundedCornerShape(7.dp))
-                    .border(0.7.dp, accentColor.copy(alpha = 0.48f), RoundedCornerShape(7.dp))
-                    .padding(horizontal = 8.dp, vertical = 5.dp)
+                    .background(accentColor.copy(alpha = 0.115f), RoundedCornerShape(7.dp))
+                    .border(0.65.dp, accentColor.copy(alpha = 0.40f), RoundedCornerShape(7.dp))
+                    .padding(horizontal = 8.dp, vertical = 4.dp)
             ) {
                 Text(
                     text = guardStatusLabel(guardState.finalGuardStatus, isBengali),
-                    fontSize = 10.sp,
+                    fontSize = 9.2.sp,
                     fontWeight = FontWeight.Black,
                     color = accentColor,
                     maxLines = 1,
@@ -1305,7 +1332,7 @@ fun LiveRadarBetaDivergenceGuard(
             }
         }
 
-        Spacer(modifier = Modifier.height(10.dp))
+        Spacer(modifier = Modifier.height(7.dp))
 
         BetaGuardAiImpactTile(
             status = guardState.finalGuardStatus,
@@ -1314,11 +1341,11 @@ fun LiveRadarBetaDivergenceGuard(
             isBengali = isBengali
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(6.dp))
 
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(6.dp)
+            horizontalArrangement = Arrangement.spacedBy(5.dp)
         ) {
             BetaGuardMiniTile(
                 label = "Data Sync",
@@ -1335,11 +1362,11 @@ fun LiveRadarBetaDivergenceGuard(
             )
         }
 
-        Spacer(modifier = Modifier.height(6.dp))
+        Spacer(modifier = Modifier.height(5.dp))
 
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(6.dp)
+            horizontalArrangement = Arrangement.spacedBy(5.dp)
         ) {
             BetaGuardMiniTile(
                 label = guardState.snapshot.ecosystemLeaderName,
@@ -1356,11 +1383,11 @@ fun LiveRadarBetaDivergenceGuard(
             )
         }
 
-        Spacer(modifier = Modifier.height(6.dp))
+        Spacer(modifier = Modifier.height(5.dp))
 
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(6.dp)
+            horizontalArrangement = Arrangement.spacedBy(5.dp)
         ) {
             BetaGuardMiniTile(
                 label = "Derivatives",
@@ -1377,11 +1404,11 @@ fun LiveRadarBetaDivergenceGuard(
             )
         }
 
-        Spacer(modifier = Modifier.height(6.dp))
+        Spacer(modifier = Modifier.height(5.dp))
 
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(6.dp)
+            horizontalArrangement = Arrangement.spacedBy(5.dp)
         ) {
             BetaGuardMiniTile(
                 label = "Asset Shock",
@@ -1399,7 +1426,7 @@ fun LiveRadarBetaDivergenceGuard(
             )
         }
 
-        Spacer(modifier = Modifier.height(10.dp))
+        Spacer(modifier = Modifier.height(7.dp))
 
         Box(
             modifier = Modifier
@@ -1408,21 +1435,23 @@ fun LiveRadarBetaDivergenceGuard(
                     Brush.linearGradient(
                         listOf(
                             Color(0xFF02050D),
-                            accentColor.copy(alpha = 0.09f),
+                            accentColor.copy(alpha = 0.060f),
                             Color(0xFF02050D)
                         )
                     ),
-                    RoundedCornerShape(9.dp)
+                    RoundedCornerShape(8.dp)
                 )
-                .border(0.75.dp, accentColor.copy(alpha = 0.42f), RoundedCornerShape(9.dp))
-                .padding(horizontal = 10.dp, vertical = 8.dp)
+                .border(0.65.dp, accentColor.copy(alpha = 0.35f), RoundedCornerShape(8.dp))
+                .padding(horizontal = 9.dp, vertical = 7.dp)
         ) {
             Text(
                 text = if (isBengali) guardState.narrativeBengali else guardState.narrativeEnglish,
-                fontSize = 10.8.sp,
+                fontSize = 9.8.sp,
                 fontWeight = FontWeight.Bold,
                 color = TextPrimary,
-                lineHeight = 14.sp
+                lineHeight = 13.sp,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
             )
         }
     }
@@ -1443,47 +1472,46 @@ fun BetaGuardAiImpactTile(
             .background(
                 Brush.linearGradient(
                     listOf(
-                        color.copy(alpha = 0.14f),
+                        color.copy(alpha = 0.10f),
                         Color(0xFF03111B),
-                        color.copy(alpha = 0.075f)
+                        color.copy(alpha = 0.055f)
                     )
                 ),
-                RoundedCornerShape(9.dp)
+                RoundedCornerShape(8.dp)
             )
-            .border(0.75.dp, color.copy(alpha = 0.46f), RoundedCornerShape(9.dp))
-            .padding(horizontal = 9.dp, vertical = 8.dp),
+            .border(0.65.dp, color.copy(alpha = 0.38f), RoundedCornerShape(8.dp))
+            .padding(horizontal = 8.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = if (isBengali) "AI Recommendation Impact" else "AI Recommendation Impact",
-                fontSize = 8.2.sp,
+                text = "AI Guard Impact",
+                fontSize = 7.8.sp,
                 fontWeight = FontWeight.Black,
                 color = color,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
 
-            Spacer(modifier = Modifier.height(3.dp))
+            Spacer(modifier = Modifier.height(2.dp))
 
             Text(
                 text = readinessActionLabel(status, isBengali),
-                fontSize = 10.6.sp,
+                fontSize = 9.4.sp,
                 fontWeight = FontWeight.Bold,
                 color = TextPrimary,
-                maxLines = 2,
-                lineHeight = 13.sp,
+                maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
         }
 
-        Spacer(modifier = Modifier.width(8.dp))
+        Spacer(modifier = Modifier.width(7.dp))
 
         Column(horizontalAlignment = Alignment.End) {
             Text(
                 text = "$readiness/100",
-                fontSize = 15.sp,
+                fontSize = 13.2.sp,
                 fontWeight = FontWeight.Black,
                 color = color,
                 maxLines = 1
@@ -1491,7 +1519,7 @@ fun BetaGuardAiImpactTile(
 
             Text(
                 text = "-$penalty pts",
-                fontSize = 8.5.sp,
+                fontSize = 7.5.sp,
                 fontWeight = FontWeight.Bold,
                 color = TextMuted,
                 maxLines = 1
@@ -1511,26 +1539,26 @@ fun BetaGuardMiniTile(
 
     Column(
         modifier = modifier
-            .heightIn(min = 50.dp)
-            .background(Color(0xFF050A13), RoundedCornerShape(8.dp))
-            .border(0.65.dp, color.copy(alpha = 0.38f), RoundedCornerShape(8.dp))
-            .padding(horizontal = 8.dp, vertical = 6.dp),
+            .heightIn(min = 42.dp)
+            .background(Color(0xFF050A13), RoundedCornerShape(7.dp))
+            .border(0.58.dp, color.copy(alpha = 0.34f), RoundedCornerShape(7.dp))
+            .padding(horizontal = 7.dp, vertical = 5.dp),
         verticalArrangement = Arrangement.Center
     ) {
         Text(
             text = label,
-            fontSize = 7.4.sp,
+            fontSize = 6.9.sp,
             fontWeight = FontWeight.Bold,
             color = TextMuted,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
 
-        Spacer(modifier = Modifier.height(3.dp))
+        Spacer(modifier = Modifier.height(2.dp))
 
         Text(
             text = value,
-            fontSize = 9.2.sp,
+            fontSize = 8.4.sp,
             fontWeight = FontWeight.Black,
             color = color,
             maxLines = 1,
@@ -1551,26 +1579,26 @@ fun BetaGuardPenaltyTile(
 
     Column(
         modifier = modifier
-            .heightIn(min = 50.dp)
-            .background(Color(0xFF050A13), RoundedCornerShape(8.dp))
-            .border(0.65.dp, color.copy(alpha = 0.38f), RoundedCornerShape(8.dp))
-            .padding(horizontal = 8.dp, vertical = 6.dp),
+            .heightIn(min = 42.dp)
+            .background(Color(0xFF050A13), RoundedCornerShape(7.dp))
+            .border(0.58.dp, color.copy(alpha = 0.34f), RoundedCornerShape(7.dp))
+            .padding(horizontal = 7.dp, vertical = 5.dp),
         verticalArrangement = Arrangement.Center
     ) {
         Text(
-            text = if (isBengali) "Readiness" else "Readiness",
-            fontSize = 7.2.sp,
+            text = "Readiness",
+            fontSize = 6.9.sp,
             fontWeight = FontWeight.Bold,
             color = TextMuted,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
 
-        Spacer(modifier = Modifier.height(3.dp))
+        Spacer(modifier = Modifier.height(2.dp))
 
         Text(
             text = "$readiness/100 • -$penalty",
-            fontSize = 9.2.sp,
+            fontSize = 8.4.sp,
             fontWeight = FontWeight.Black,
             color = color,
             maxLines = 1,
@@ -1588,30 +1616,38 @@ fun buildLiveRadarMarketSnapshot(
     val ecosystemLeader = resolveEcosystemLeaderName(symbol)
 
     // Real-data-ready binding contract:
-    // Later replace these derived values with Binance Sync / WebSocket / orderbook / OI / funding feeds.
-    val exchangeLatencyMs = 120 + (seed % 1650)
-    val lastTickAgeMs = 80 + ((seed / 2) % 1650)
+    // Replace these deterministic placeholders later with Binance Sync / WebSocket / orderbook / OI / funding feeds.
+    val exchangeLatencyMs = 120 + (seed % 620)
+    val lastTickAgeMs = 80 + ((seed / 2) % 620)
 
-    val btcDelta = (((seed / 3) % 17) - 8) / 10.0
-    val leaderDelta = (((seed / 5) % 19) - 9) / 10.0
+    val rareBlind = seed % 97 == 0
+    val adjustedExchangeLatency = if (rareBlind) 1550 else exchangeLatencyMs
+    val adjustedLastTickAge = if (rareBlind) 1510 else lastTickAgeMs
 
-    val usdtVelocity = (((seed / 7) % 13) - 4) / 10.0
-    val total3Velocity = (((seed / 11) % 15) - 7) / 10.0
+    val btcDelta = (((seed / 3) % 13) - 6) / 12.0
+    val leaderDelta = (((seed / 5) % 13) - 6) / 12.0
 
-    val oiSpike = 2.0 + ((seed / 13) % 32)
-    val fundingBias = (((seed / 17) % 21) - 10) / 100.0
-    val liquidationPressure = ((seed / 19) % 38).toDouble()
+    val rareOutflow = seed % 43 == 0
+    val usdtVelocity = if (rareOutflow) 0.72 else (((seed / 7) % 8) - 2) / 12.0
+    val total3Velocity = if (rareOutflow) -0.58 else (((seed / 11) % 9) - 4) / 12.0
 
-    val spreadBps = 2.0 + ((seed / 23) % 34)
+    val rareDerivativeStress = seed % 47 == 0
+    val oiSpike = if (rareDerivativeStress) 30.0 else 3.0 + ((seed / 13) % 18)
+    val fundingBias = if (rareDerivativeStress) 0.08 else (((seed / 17) % 13) - 6) / 180.0
+    val liquidationPressure = if (rareDerivativeStress) 31.0 else ((seed / 19) % 22).toDouble()
+
+    val rarePoorLiquidity = seed % 53 == 0
+    val spreadBps = if (rarePoorLiquidity) 30.0 else 2.0 + ((seed / 23) % 17)
     val takerFeeBps = 6.0
-    val depthScore = (62 + ((seed / 29) % 37)).coerceIn(0, 100)
+    val depthScore = if (rarePoorLiquidity) 58 else (72 + ((seed / 29) % 24)).coerceIn(0, 100)
 
-    val volumeMultiple = 0.8 + (((seed / 31) % 36) / 10.0)
-    val atrMultiple = 0.8 + (((seed / 37) % 32) / 10.0)
+    val rareAssetShock = seed % 41 == 0
+    val volumeMultiple = if (rareAssetShock) 3.2 else 0.8 + (((seed / 31) % 18) / 10.0)
+    val atrMultiple = if (rareAssetShock) 3.1 else 0.8 + (((seed / 37) % 17) / 10.0)
 
     return LiveRadarMarketSnapshot(
-        exchangeLatencyMs = exchangeLatencyMs,
-        lastTickAgeMs = lastTickAgeMs,
+        exchangeLatencyMs = adjustedExchangeLatency,
+        lastTickAgeMs = adjustedLastTickAge,
         btcDelta5mPct = btcDelta,
         ecosystemLeaderName = ecosystemLeader,
         ecosystemLeaderDelta5mPct = leaderDelta,
@@ -1637,15 +1673,15 @@ fun buildBetaDivergenceGuardState(
     val btcDeltaState = directionalDivergenceState(
         deltaPct = snapshot.btcDelta5mPct,
         isLong = isLong,
-        warningAbs = 0.35,
-        dangerAbs = 0.70
+        warningAbs = 0.42,
+        dangerAbs = 0.78
     )
 
     val ecosystemLeaderState = directionalDivergenceState(
         deltaPct = snapshot.ecosystemLeaderDelta5mPct,
         isLong = isLong,
-        warningAbs = 0.30,
-        dangerAbs = 0.65
+        warningAbs = 0.38,
+        dangerAbs = 0.74
     )
 
     val marketOutflowState = marketOutflowStateFromSnapshot(snapshot)
@@ -1666,16 +1702,16 @@ fun buildBetaDivergenceGuardState(
     val penalty = allStates.sumOf { state ->
         when (state) {
             DivergenceState.STABLE -> 0
-            DivergenceState.WARNING -> 6
-            DivergenceState.DANGER -> 14
-            DivergenceState.BLIND -> 30
+            DivergenceState.WARNING -> 4
+            DivergenceState.DANGER -> 10
+            DivergenceState.BLIND -> 24
         }
-    }.coerceIn(0, 75)
+    }.coerceIn(0, 52)
 
     val finalStatus = when {
         latencyState == DivergenceState.BLIND -> ExecutionGuardStatus.BLIND
         allStates.any { it == DivergenceState.DANGER } -> ExecutionGuardStatus.DANGER
-        penalty >= 18 -> ExecutionGuardStatus.CAUTION
+        penalty >= 16 -> ExecutionGuardStatus.CAUTION
         else -> ExecutionGuardStatus.GO
     }
 
@@ -1683,30 +1719,30 @@ fun buildBetaDivergenceGuardState(
 
     val narrativeEnglish = when (finalStatus) {
         ExecutionGuardStatus.GO ->
-            "Execution guard is clear. Data sync, BTC delta, ecosystem leader, market flow, derivatives, spread and asset-shock layers are aligned enough for short-term validation."
+            "Guard clear. Market, liquidity and asset-shock layers support validation."
 
         ExecutionGuardStatus.CAUTION ->
-            "Caution: one or more safety layers show weakness. AI readiness is reduced by $penalty points; verify entry and use smaller size."
+            "Caution: some safety layers weakened. Verify entry and reduce size."
 
         ExecutionGuardStatus.DANGER ->
-            "Warning: broad market divergence, derivatives stress, poor liquidity or unusual asset velocity shock detected. Execution readiness is materially reduced."
+            "Warning: divergence or execution risk detected. Readiness reduced."
 
         ExecutionGuardStatus.BLIND ->
-            "Synchronization drift detected. Data may be stale, so Live Radar cannot safely validate short-term execution."
+            "Data sync drift detected. Wait for fresh market data."
     }
 
     val narrativeBengali = when (finalStatus) {
         ExecutionGuardStatus.GO ->
-            "Execution guard পরিষ্কার। Data sync, BTC delta, ecosystem leader, market flow, derivatives, spread এবং asset-shock layer short-term validation-এর জন্য যথেষ্ট aligned।"
+            "Guard clear. Market, liquidity এবং asset-shock layer validation support করছে।"
 
         ExecutionGuardStatus.CAUTION ->
-            "সতর্কতা: এক বা একাধিক safety layer দুর্বল। AI readiness $penalty পয়েন্ট কমেছে; entry verify করুন এবং ছোট position size ব্যবহার করুন।"
+            "সতর্কতা: কিছু safety layer দুর্বল। entry verify করুন এবং size কমান।"
 
         ExecutionGuardStatus.DANGER ->
-            "সতর্কতা: broad market divergence, derivatives stress, poor liquidity অথবা অস্বাভাবিক asset velocity shock ধরা পড়েছে। execution readiness উল্লেখযোগ্যভাবে কমেছে।"
+            "সতর্কতা: divergence অথবা execution risk ধরা পড়েছে। readiness কমেছে।"
 
         ExecutionGuardStatus.BLIND ->
-            "ডেটা sync সমস্যা ধরা পড়েছে। তথ্য পুরনো হতে পারে, তাই Live Radar নিরাপদভাবে short-term execution validate করতে পারছে না।"
+            "ডেটা sync drift ধরা পড়েছে। fresh market data অপেক্ষা করুন।"
     }
 
     return BetaDivergenceGuardState(
@@ -1811,19 +1847,19 @@ fun resolveEcosystemLeaderName(symbol: String): String {
 
 fun divergenceStateColor(state: DivergenceState): Color {
     return when (state) {
-        DivergenceState.STABLE -> CryptoGreen
-        DivergenceState.WARNING -> AccentGold
-        DivergenceState.DANGER -> Color(0xFFFF3F60)
-        DivergenceState.BLIND -> Color(0xFFFF6F86)
+        DivergenceState.STABLE -> CryptoGreen.copy(alpha = 0.90f)
+        DivergenceState.WARNING -> AccentGold.copy(alpha = 0.88f)
+        DivergenceState.DANGER -> Color(0xFFE95772)
+        DivergenceState.BLIND -> Color(0xFFE96B82)
     }
 }
 
 fun executionGuardColor(status: ExecutionGuardStatus): Color {
     return when (status) {
-        ExecutionGuardStatus.GO -> CryptoGreen
-        ExecutionGuardStatus.CAUTION -> AccentGold
-        ExecutionGuardStatus.DANGER -> Color(0xFFFF3F60)
-        ExecutionGuardStatus.BLIND -> Color(0xFFFF6F86)
+        ExecutionGuardStatus.GO -> CryptoGreen.copy(alpha = 0.90f)
+        ExecutionGuardStatus.CAUTION -> AccentGold.copy(alpha = 0.88f)
+        ExecutionGuardStatus.DANGER -> Color(0xFFE95772)
+        ExecutionGuardStatus.BLIND -> Color(0xFFE96B82)
     }
 }
 
@@ -1874,8 +1910,8 @@ fun marketFlowStateLabel(
 ): String {
     return when (state) {
         DivergenceState.STABLE -> "Neutral"
-        DivergenceState.WARNING -> "Outflow Risk"
-        DivergenceState.DANGER -> "Capital Drain"
+        DivergenceState.WARNING -> "Outflow"
+        DivergenceState.DANGER -> "Drain"
         DivergenceState.BLIND -> "Blind"
     }
 }
@@ -1888,7 +1924,7 @@ fun derivativesStateLabel(
     return when (state) {
         DivergenceState.STABLE -> "Normal"
         DivergenceState.WARNING -> "Crowded"
-        DivergenceState.DANGER -> "Squeeze Risk"
+        DivergenceState.DANGER -> "Squeeze"
         DivergenceState.BLIND -> "Blind"
     }
 }
@@ -1917,7 +1953,7 @@ fun assetShockStateLabel(
 
     return when (state) {
         DivergenceState.STABLE -> String.format("%.1fx Clear", maxShock)
-        DivergenceState.WARNING -> String.format("%.1fx Velocity", maxShock)
+        DivergenceState.WARNING -> String.format("%.1fx Fast", maxShock)
         DivergenceState.DANGER -> String.format("%.1fx Shock", maxShock)
         DivergenceState.BLIND -> "Blind"
     }
@@ -1928,29 +1964,10 @@ fun readinessActionLabel(
     isBengali: Boolean
 ): String {
     return when (status) {
-        ExecutionGuardStatus.GO -> if (isBengali) {
-            "Entry validation allowed"
-        } else {
-            "Entry validation allowed"
-        }
-
-        ExecutionGuardStatus.CAUTION -> if (isBengali) {
-            "Use smaller size; verify entry"
-        } else {
-            "Use smaller size; verify entry"
-        }
-
-        ExecutionGuardStatus.DANGER -> if (isBengali) {
-            "Avoid chase; wait confirmation"
-        } else {
-            "Avoid chase; wait confirmation"
-        }
-
-        ExecutionGuardStatus.BLIND -> if (isBengali) {
-            "Wait: data sync not reliable"
-        } else {
-            "Wait: data sync not reliable"
-        }
+        ExecutionGuardStatus.GO -> "Validate entry"
+        ExecutionGuardStatus.CAUTION -> "Reduce size; verify"
+        ExecutionGuardStatus.DANGER -> "Avoid chase; wait"
+        ExecutionGuardStatus.BLIND -> "Wait for fresh data"
     }
 }
 
