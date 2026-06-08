@@ -70,7 +70,7 @@ fun MarketRadarScreen(
                         text = "Market Intelligence",
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
-                        color = TextPrimary
+                        color = LiveRadarSoftWhite
                     )
                 }
 
@@ -112,7 +112,7 @@ fun MarketRadarScreen(
                     Box(
                         modifier = Modifier
                             .size(10.dp)
-                            .background(CryptoGreen, CircleShape)
+                            .background(LiveRadarInstitutionalGreen, CircleShape)
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                     Column {
@@ -127,7 +127,7 @@ fun MarketRadarScreen(
                             text = marketRegime,
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
-                            color = CryptoGreen,
+                            color = LiveRadarInstitutionalGreen,
                             fontFamily = FontFamily.Monospace,
                             modifier = Modifier.padding(top = 2.dp)
                         )
@@ -149,7 +149,7 @@ fun MarketRadarScreen(
                     text = if (isBengali) "সংক্ষিপ্ত সময়ের ওরাকল স্ক্যাল্পস" else "SHORT-TERM SCALP ORACLE",
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
-                    color = TextPrimary,
+                    color = LiveRadarSoftWhite,
                     letterSpacing = 1.sp
                 )
                 
@@ -408,7 +408,7 @@ fun ShortTermOpportunisticSignalsSection(timeframe: String, isBengali: Boolean, 
             text = if (isBengali) "🔥 তাত্ক্ষণিক স্পট টার্গেট (সেরা ৩)" else "🔥 HOT SPOT TRIGGERS (TOP 3)",
             fontSize = 11.sp,
             fontWeight = FontWeight.Bold,
-            color = AccentGold,
+            color = LiveRadarInstitutionalYellow,
             letterSpacing = 0.5.sp
         )
 
@@ -424,7 +424,7 @@ fun ShortTermOpportunisticSignalsSection(timeframe: String, isBengali: Boolean, 
                     .background(DarkBackground, RoundedCornerShape(8.dp))
                     .border(
                         1.dp,
-                        if (isExpanded) AccentGold.copy(alpha = 0.6f) else BorderColor,
+                        if (isExpanded) LiveRadarInstitutionalYellow.copy(alpha = 0.6f) else BorderColor,
                         RoundedCornerShape(8.dp)
                     )
                     .clickable {
@@ -441,19 +441,19 @@ fun ShortTermOpportunisticSignalsSection(timeframe: String, isBengali: Boolean, 
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Box(
                             modifier = Modifier
-                                .background(AccentGold.copy(alpha = 0.12f), RoundedCornerShape(6.dp))
+                                .background(LiveRadarInstitutionalYellow.copy(alpha = 0.12f), RoundedCornerShape(6.dp))
                                 .padding(horizontal = 6.dp, vertical = 2.dp)
                         ) {
-                            Text(text = symbol, fontSize = 10.sp, fontWeight = FontWeight.Bold, color = AccentGold)
+                            Text(text = symbol, fontSize = 10.sp, fontWeight = FontWeight.Bold, color = LiveRadarInstitutionalYellow)
                         }
                         Spacer(modifier = Modifier.width(8.dp))
                         Column {
-                            Text(text = name, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
+                            Text(text = name, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = LiveRadarSoftWhite)
                             Text(text = "Live: $${formatPrice(basePrice)}", fontSize = 10.sp, color = TextSecondary)
                             Text(
                                 text = if (isBengali) "বিশ্লেষণ দেখতে ট্যাপ করুন" else "Tap for Deep Quant Info",
                                 fontSize = 8.sp,
-                                color = AccentGold,
+                                color = LiveRadarInstitutionalYellow,
                                 fontWeight = FontWeight.SemiBold
                             )
                         }
@@ -464,7 +464,7 @@ fun ShortTermOpportunisticSignalsSection(timeframe: String, isBengali: Boolean, 
                             text = "Target: $${formatPrice(target)}",
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold,
-                            color = CryptoGreen
+                            color = LiveRadarInstitutionalGreen
                         )
                         Text(
                             text = "+${String.format("%.2f", potential)}% ($timeframe)",
@@ -483,7 +483,7 @@ fun ShortTermOpportunisticSignalsSection(timeframe: String, isBengali: Boolean, 
                         title = if (isBengali) "এআই ওরাকল অ্যানালিটিক্যাল মেটাডাটা" else "AI ORACLE ANALYTICAL METADATA",
                         details = details,
                         isBengali = isBengali,
-                        sectionColor = AccentGold
+                        sectionColor = LiveRadarInstitutionalYellow
                     )
 
                     OpportunisticSignalAdornmentSection(
@@ -492,7 +492,7 @@ fun ShortTermOpportunisticSignalsSection(timeframe: String, isBengali: Boolean, 
                         isLong = true,
                         potential = potential,
                         isBengali = isBengali,
-                        themeColor = CryptoGreen
+                        themeColor = LiveRadarInstitutionalGreen
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))
@@ -523,7 +523,7 @@ fun ShortTermOpportunisticSignalsSection(timeframe: String, isBengali: Boolean, 
             text = if (isBengali) "⚡ ফিউচার লং টার্গেট" else "⚡ FUTURES LONG TRIGGERS (TOP 3)",
             fontSize = 11.sp,
             fontWeight = FontWeight.Bold,
-            color = CryptoGreen,
+            color = LiveRadarInstitutionalGreen,
             letterSpacing = 0.5.sp
         )
 
@@ -539,7 +539,7 @@ fun ShortTermOpportunisticSignalsSection(timeframe: String, isBengali: Boolean, 
                     .background(DarkBackground, RoundedCornerShape(8.dp))
                     .border(
                         1.dp,
-                        if (isExpanded) CryptoGreen.copy(alpha = 0.6f) else BorderColor,
+                        if (isExpanded) LiveRadarInstitutionalGreen.copy(alpha = 0.6f) else BorderColor,
                         RoundedCornerShape(8.dp)
                     )
                     .clickable {
@@ -556,19 +556,19 @@ fun ShortTermOpportunisticSignalsSection(timeframe: String, isBengali: Boolean, 
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Box(
                             modifier = Modifier
-                                .background(CryptoGreen.copy(alpha = 0.12f), RoundedCornerShape(6.dp))
+                                .background(LiveRadarInstitutionalGreen.copy(alpha = 0.12f), RoundedCornerShape(6.dp))
                                 .padding(horizontal = 6.dp, vertical = 2.dp)
                         ) {
-                            Text(text = symbol, fontSize = 10.sp, fontWeight = FontWeight.Bold, color = CryptoGreen)
+                            Text(text = symbol, fontSize = 10.sp, fontWeight = FontWeight.Bold, color = LiveRadarInstitutionalGreen)
                         }
                         Spacer(modifier = Modifier.width(8.dp))
                         Column {
-                            Text(text = name, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
+                            Text(text = name, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = LiveRadarSoftWhite)
                             Text(text = "Live: $${formatPrice(basePrice)}", fontSize = 10.sp, color = TextSecondary)
                             Text(
                                 text = if (isBengali) "বিশ্লেষণ দেখতে ট্যাপ করুন" else "Tap for Deep Quant Info",
                                 fontSize = 8.sp,
-                                color = CryptoGreen,
+                                color = LiveRadarInstitutionalGreen,
                                 fontWeight = FontWeight.SemiBold
                             )
                         }
@@ -579,7 +579,7 @@ fun ShortTermOpportunisticSignalsSection(timeframe: String, isBengali: Boolean, 
                             text = "Target: $${formatPrice(target)}",
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold,
-                            color = CryptoGreen
+                            color = LiveRadarInstitutionalGreen
                         )
                         Text(
                             text = "Leverage: 5x | +${String.format("%.2f", potential)}%",
@@ -598,7 +598,7 @@ fun ShortTermOpportunisticSignalsSection(timeframe: String, isBengali: Boolean, 
                         title = if (isBengali) "এআই ওরাকল ফিউচার লং মেটাডাটা" else "AI ORACLE FUTURES LONG METADATA",
                         details = details,
                         isBengali = isBengali,
-                        sectionColor = CryptoGreen
+                        sectionColor = LiveRadarInstitutionalGreen
                     )
 
                     OpportunisticSignalAdornmentSection(
@@ -638,7 +638,7 @@ fun ShortTermOpportunisticSignalsSection(timeframe: String, isBengali: Boolean, 
             text = if (isBengali) "🔻 ফিউচার শর্ট টার্গেট (সেরা ৩)" else "🔻 FUTURES SHORT TRIGGERS (TOP 3)",
             fontSize = 11.sp,
             fontWeight = FontWeight.Bold,
-            color = Color(0xFFFF3F60),
+            color = LiveRadarDangerRed,
             letterSpacing = 0.5.sp
         )
 
@@ -654,7 +654,7 @@ fun ShortTermOpportunisticSignalsSection(timeframe: String, isBengali: Boolean, 
                     .background(DarkBackground, RoundedCornerShape(8.dp))
                     .border(
                         1.dp,
-                        if (isExpanded) Color(0xFFFF3F60).copy(alpha = 0.6f) else BorderColor,
+                        if (isExpanded) LiveRadarDangerRed.copy(alpha = 0.6f) else BorderColor,
                         RoundedCornerShape(8.dp)
                     )
                     .clickable {
@@ -671,19 +671,19 @@ fun ShortTermOpportunisticSignalsSection(timeframe: String, isBengali: Boolean, 
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Box(
                             modifier = Modifier
-                                .background(Color(0xFFFF3F60).copy(alpha = 0.12f), RoundedCornerShape(6.dp))
+                                .background(LiveRadarDangerRed.copy(alpha = 0.12f), RoundedCornerShape(6.dp))
                                 .padding(horizontal = 6.dp, vertical = 2.dp)
                         ) {
-                            Text(text = symbol, fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFF3F60))
+                            Text(text = symbol, fontSize = 10.sp, fontWeight = FontWeight.Bold, color = LiveRadarDangerRed)
                         }
                         Spacer(modifier = Modifier.width(8.dp))
                         Column {
-                            Text(text = name, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
+                            Text(text = name, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = LiveRadarSoftWhite)
                             Text(text = "Live: $${formatPrice(basePrice)}", fontSize = 10.sp, color = TextSecondary)
                             Text(
                                 text = if (isBengali) "বিশ্লেষণ দেখতে ট্যাপ করুন" else "Tap for Deep Quant Info",
                                 fontSize = 8.sp,
-                                color = Color(0xFFFF3F60),
+                                color = LiveRadarDangerRed,
                                 fontWeight = FontWeight.SemiBold
                             )
                         }
@@ -694,7 +694,7 @@ fun ShortTermOpportunisticSignalsSection(timeframe: String, isBengali: Boolean, 
                             text = "Target: $${formatPrice(target)}",
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFFFF3F60)
+                            color = LiveRadarDangerRed
                         )
                         Text(
                             text = "Leverage: 5x | -${String.format("%.2f", potential)}%",
@@ -713,7 +713,7 @@ fun ShortTermOpportunisticSignalsSection(timeframe: String, isBengali: Boolean, 
                         title = if (isBengali) "এআই ওরাকল ফিউচার শর্ট মেটাডাটা" else "AI ORACLE FUTURES SHORT METADATA",
                         details = details,
                         isBengali = isBengali,
-                        sectionColor = Color(0xFFFF3F60)
+                        sectionColor = LiveRadarDangerRed
                     )
 
                     OpportunisticSignalAdornmentSection(
@@ -722,7 +722,7 @@ fun ShortTermOpportunisticSignalsSection(timeframe: String, isBengali: Boolean, 
                         isLong = false,
                         potential = potential,
                         isBengali = isBengali,
-                        themeColor = Color(0xFFFF3F60)
+                        themeColor = LiveRadarDangerRed
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))
@@ -751,10 +751,10 @@ fun ShortTermOpportunisticSignalsSection(timeframe: String, isBengali: Boolean, 
 @Composable
 fun RadarAlertCard(alert: RadarAlert, isBengali: Boolean) {
     val accentColor = when (alert.eventType) {
-        "VOLUME_EXPLOSION" -> AccentGold
-        "BREAKOUT" -> CryptoGreen
+        "VOLUME_EXPLOSION" -> LiveRadarInstitutionalYellow
+        "BREAKOUT" -> LiveRadarInstitutionalGreen
         "MOMENTUM_SURGE" -> CryptoCyan
-        else -> Color(0xFFFF3F60) // Reddish
+        else -> LiveRadarDangerRed // Reddish
     }
 
     val badgeBg = accentColor.copy(alpha = 0.14f)
@@ -792,7 +792,7 @@ fun RadarAlertCard(alert: RadarAlert, isBengali: Boolean) {
                         text = alert.eventType.replace("_", " "),
                         fontSize = 11.sp,
                         fontWeight = FontWeight.ExtraBold,
-                        color = TextPrimary,
+                        color = LiveRadarSoftWhite,
                         letterSpacing = 0.5.sp
                     )
                 }
@@ -895,6 +895,18 @@ fun OpportunisticSignalAdornmentSection(
     Spacer(modifier = Modifier.height(10.dp))
 
     // 2. Multi-AI Consensus Engines
+    val geminiScore = 94
+    val gptQuantScore = 90
+    val claudeScore = 93
+    val consensusConfidence = remember(geminiScore, gptQuantScore, claudeScore) {
+        ((geminiScore + gptQuantScore + claudeScore) / 3.0).toInt()
+    }
+    val consensusDirection = if (isLong) "BULLISH" else "BEARISH"
+    val consensusRiskProfile = conservativeConsensusRiskProfile(
+        confidence = consensusConfidence,
+        potential = potential
+    )
+
     Text(
         text = if (isBengali) "মাল্টি-এআই কনসেনসাস স্কোর" else "MULTI-AI CONSENSUS ENGINES",
         fontSize = 9.8.sp,
@@ -910,24 +922,33 @@ fun OpportunisticSignalAdornmentSection(
         ConsensusEngineTile(
             name = "Gemini Pro AI",
             accent = themeColor,
-            score = "94/100",
+            score = "$geminiScore/100",
             modifier = Modifier.weight(1f)
         )
 
         ConsensusEngineTile(
             name = "GPT-4Q Quant",
             accent = themeColor,
-            score = "90/100",
+            score = "$gptQuantScore/100",
             modifier = Modifier.weight(1f)
         )
 
         ConsensusEngineTile(
             name = "Claude Sentient",
             accent = themeColor,
-            score = "93/100",
+            score = "$claudeScore/100",
             modifier = Modifier.weight(1f)
         )
     }
+
+    Spacer(modifier = Modifier.height(7.dp))
+
+    ConsensusSummaryStrip(
+        confidence = consensusConfidence,
+        direction = consensusDirection,
+        riskProfile = consensusRiskProfile,
+        accent = themeColor
+    )
 
     Spacer(modifier = Modifier.height(10.dp))
     HorizontalDivider(color = BorderColor.copy(alpha = 0.4f))
@@ -947,21 +968,21 @@ fun OpportunisticSignalAdornmentSection(
         horizontalArrangement = Arrangement.spacedBy(7.dp)
     ) {
         AllocationSizingTile(
-            label = "CONSERVATIVE",
+            label = "Conservative",
             value = "2.0% Cap",
             accent = themeColor,
             modifier = Modifier.weight(1f)
         )
 
         AllocationSizingTile(
-            label = "BALANCED",
+            label = "Balanced",
             value = "5.0% Cap",
             accent = themeColor,
             modifier = Modifier.weight(1f)
         )
 
         AllocationSizingTile(
-            label = "AGGRESSIVE",
+            label = "Aggressive",
             value = "10.0% Max",
             accent = themeColor,
             modifier = Modifier.weight(1f)
@@ -978,7 +999,10 @@ fun OpportunisticSignalAdornmentSection(
 
 private val LiveRadarPanelDark = Color(0xFF050A13)
 private val LiveRadarTileDark = Color(0xFF050A13)
-private val LiveRadarDangerRed = Color(0xFFFF3045)
+private val LiveRadarSoftWhite = Color(0xFFF5F5F5)
+private val LiveRadarInstitutionalGreen = Color(0xFF0ECB81)
+private val LiveRadarInstitutionalYellow = Color(0xFFFFD60A)
+private val LiveRadarDangerRed = Color(0xFFFF453A)
 
 private enum class LiveRadarGuardSeverity {
     CLEAR,
@@ -1064,7 +1088,7 @@ private fun OracleAnalyticMetadataGrid(
                 title = if (isBengali) "প্যাটার্ন" else "PATTERN DETECTED",
                 value = if (isBengali) details["pattern_bn"].orEmpty() else details["pattern"].orEmpty(),
                 titleColor = sectionColor,
-                valueColor = TextPrimary,
+                valueColor = LiveRadarSoftWhite,
                 borderColor = sectionColor,
                 valueSizeSp = 9.6f,
                 modifier = Modifier.weight(1f)
@@ -1074,7 +1098,7 @@ private fun OracleAnalyticMetadataGrid(
                 title = if (isBengali) "অর্ডারবুক রেশিও" else "ORDERBOOK RATIO",
                 value = if (isBengali) details["bid_ask_bn"].orEmpty() else details["bid_ask"].orEmpty(),
                 titleColor = sectionColor,
-                valueColor = TextPrimary,
+                valueColor = LiveRadarSoftWhite,
                 borderColor = sectionColor,
                 valueSizeSp = 9.8f,
                 modifier = Modifier.weight(1f)
@@ -1095,7 +1119,6 @@ private fun OracleAnalyticMetadataGrid(
                 valueColor = LiveRadarDangerRed,
                 borderColor = LiveRadarDangerRed,
                 valueSizeSp = 15.2f,
-                showRiskDot = true,
                 modifier = Modifier.weight(1f)
             )
 
@@ -1126,10 +1149,10 @@ private fun OracleMetadataTile(
 ) {
     Column(
         modifier = modifier
-            .heightIn(min = 58.dp)
+            .heightIn(min = 52.dp)
             .background(LiveRadarTileDark, RoundedCornerShape(10.dp))
-            .border(0.9.dp, borderColor.copy(alpha = 0.76f), RoundedCornerShape(10.dp))
-            .padding(horizontal = 8.dp, vertical = 8.dp),
+            .border(0.9.dp, borderColor, RoundedCornerShape(10.dp))
+            .padding(horizontal = 8.dp, vertical = 6.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Top
     ) {
@@ -1192,7 +1215,7 @@ private fun OracleMetadataDescriptionTile(
             text = text,
             fontSize = 11.sp,
             fontWeight = FontWeight.SemiBold,
-            color = TextPrimary,
+            color = LiveRadarSoftWhite,
             lineHeight = 16.sp
         )
     }
@@ -1261,7 +1284,7 @@ private fun LiveRadarBetaDivergenceGuard(
                     text = "Validity Entry",
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold,
-                    color = TextPrimary,
+                    color = LiveRadarSoftWhite,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -1393,7 +1416,7 @@ private fun BetaGuardMiniTile(
     statColorOverride: Color? = null
 ) {
     val baseColor = if (forceAmberWarning && severity != LiveRadarGuardSeverity.CLEAR) {
-        Color(0xFFFF9F0A)
+        LiveRadarInstitutionalYellow
     } else {
         liveRadarGuardColor(severity)
     }
@@ -1435,7 +1458,7 @@ private fun BetaGuardMiniTile(
             text = value,
             fontSize = 12.8.sp,
             fontWeight = FontWeight.Black,
-            color = TextPrimary,
+            color = LiveRadarSoftWhite,
             textAlign = TextAlign.Center,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
@@ -1464,10 +1487,10 @@ private fun TakeProfitTargetTile(
 ) {
     Column(
         modifier = modifier
-            .heightIn(min = 56.dp)
+            .heightIn(min = 44.dp)
             .background(LiveRadarTileDark, RoundedCornerShape(9.dp))
-            .border(0.8.dp, accent.copy(alpha = 0.46f), RoundedCornerShape(9.dp))
-            .padding(horizontal = 7.dp, vertical = 7.dp),
+            .border(0.8.dp, accent, RoundedCornerShape(9.dp))
+            .padding(horizontal = 7.dp, vertical = 4.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
@@ -1475,7 +1498,7 @@ private fun TakeProfitTargetTile(
             text = label,
             fontSize = 11.4.sp,
             fontWeight = FontWeight.Black,
-            color = CryptoGreen,
+            color = LiveRadarInstitutionalGreen,
             textAlign = TextAlign.Center,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
@@ -1487,7 +1510,7 @@ private fun TakeProfitTargetTile(
             text = value,
             fontSize = 12.sp,
             fontWeight = FontWeight.Black,
-            color = TextPrimary,
+            color = LiveRadarSoftWhite,
             textAlign = TextAlign.Center,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
@@ -1504,10 +1527,10 @@ private fun ConsensusEngineTile(
 ) {
     Column(
         modifier = modifier
-            .heightIn(min = 58.dp)
+            .heightIn(min = 44.dp)
             .background(LiveRadarTileDark, RoundedCornerShape(9.dp))
-            .border(0.75.dp, accent.copy(alpha = 0.46f), RoundedCornerShape(9.dp))
-            .padding(horizontal = 7.dp, vertical = 7.dp),
+            .border(0.75.dp, accent, RoundedCornerShape(9.dp))
+            .padding(horizontal = 7.dp, vertical = 4.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
@@ -1515,7 +1538,7 @@ private fun ConsensusEngineTile(
             text = name,
             fontSize = 9.4.sp,
             fontWeight = FontWeight.Black,
-            color = TextPrimary,
+            color = LiveRadarSoftWhite,
             textAlign = TextAlign.Center,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
@@ -1527,9 +1550,83 @@ private fun ConsensusEngineTile(
             text = score,
             fontSize = 15.sp,
             fontWeight = FontWeight.Black,
-            color = CryptoGreen,
+            color = LiveRadarInstitutionalGreen,
             textAlign = TextAlign.Center,
             maxLines = 1
+        )
+    }
+}
+
+@Composable
+private fun ConsensusSummaryStrip(
+    confidence: Int,
+    direction: String,
+    riskProfile: String,
+    accent: Color,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(LiveRadarTileDark, RoundedCornerShape(10.dp))
+            .border(0.8.dp, accent, RoundedCornerShape(10.dp))
+            .padding(horizontal = 8.dp, vertical = 6.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        ConsensusSummaryMetric(
+            label = "Consensus Confidence",
+            value = "$confidence%",
+            valueColor = probabilityScoreColor("$confidence"),
+            modifier = Modifier.weight(1f)
+        )
+        ConsensusSummaryMetric(
+            label = "Direction",
+            value = direction,
+            valueColor = directionColor(direction),
+            modifier = Modifier.weight(1f)
+        )
+        ConsensusSummaryMetric(
+            label = "Risk Profile",
+            value = riskProfile,
+            valueColor = riskProfileColor(riskProfile),
+            modifier = Modifier.weight(1f)
+        )
+    }
+}
+
+@Composable
+private fun ConsensusSummaryMetric(
+    label: String,
+    value: String,
+    valueColor: Color,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Text(
+            text = label,
+            fontSize = 8.sp,
+            fontWeight = FontWeight.Black,
+            color = TextMuted,
+            textAlign = TextAlign.Center,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+
+        Spacer(modifier = Modifier.height(2.dp))
+
+        Text(
+            text = value,
+            fontSize = 12.2.sp,
+            fontWeight = FontWeight.Black,
+            color = valueColor,
+            textAlign = TextAlign.Center,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
         )
     }
 }
@@ -1543,10 +1640,10 @@ private fun AllocationSizingTile(
 ) {
     Column(
         modifier = modifier
-            .heightIn(min = 44.dp)
+            .heightIn(min = 42.dp)
             .background(LiveRadarTileDark, RoundedCornerShape(9.dp))
-            .border(0.75.dp, accent.copy(alpha = 0.56f), RoundedCornerShape(9.dp))
-            .padding(horizontal = 6.dp, vertical = 4.dp),
+            .border(0.75.dp, accent, RoundedCornerShape(9.dp))
+            .padding(horizontal = 6.dp, vertical = 3.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
@@ -1566,7 +1663,7 @@ private fun AllocationSizingTile(
             text = value,
             fontSize = 11.8.sp,
             fontWeight = FontWeight.Black,
-            color = Color(0xFFFFC247),
+            color = LiveRadarInstitutionalYellow,
             textAlign = TextAlign.Center,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
@@ -1575,11 +1672,38 @@ private fun AllocationSizingTile(
 }
 
 private fun probabilityScoreColor(rawValue: String): Color {
-    val score = rawValue.filter { it.isDigit() }.toIntOrNull() ?: return TextPrimary
+    val score = rawValue.filter { it.isDigit() }.toIntOrNull() ?: return LiveRadarSoftWhite
     return when {
         score <= 60 -> LiveRadarDangerRed
-        score <= 80 -> Color(0xFFFFC247)
-        else -> CryptoGreen
+        score <= 80 -> LiveRadarInstitutionalYellow
+        else -> LiveRadarInstitutionalGreen
+    }
+}
+
+private fun conservativeConsensusRiskProfile(
+    confidence: Int,
+    potential: Double
+): String {
+    return when {
+        confidence >= 88 && potential <= 12.0 -> "LOW"
+        confidence >= 76 && potential <= 18.0 -> "MEDIUM"
+        else -> "HIGH"
+    }
+}
+
+private fun directionColor(direction: String): Color {
+    return when (direction.uppercase()) {
+        "BULLISH", "LONG" -> LiveRadarInstitutionalGreen
+        "BEARISH", "SHORT" -> LiveRadarDangerRed
+        else -> LiveRadarInstitutionalYellow
+    }
+}
+
+private fun riskProfileColor(riskProfile: String): Color {
+    return when (riskProfile.uppercase()) {
+        "LOW" -> LiveRadarInstitutionalGreen
+        "MEDIUM" -> LiveRadarInstitutionalYellow
+        else -> LiveRadarDangerRed
     }
 }
 
@@ -1714,10 +1838,10 @@ private fun ecosystemLeaderNameFor(symbol: String): String {
 
 private fun liveRadarGuardColor(severity: LiveRadarGuardSeverity): Color {
     return when (severity) {
-        LiveRadarGuardSeverity.CLEAR -> CryptoGreen
-        LiveRadarGuardSeverity.WARNING -> Color(0xFFFF9F0A)
-        LiveRadarGuardSeverity.DANGER -> Color(0xFFFF1744)
-        LiveRadarGuardSeverity.BLIND -> Color(0xFFFF1744)
+        LiveRadarGuardSeverity.CLEAR -> LiveRadarInstitutionalGreen
+        LiveRadarGuardSeverity.WARNING -> LiveRadarInstitutionalYellow
+        LiveRadarGuardSeverity.DANGER -> LiveRadarDangerRed
+        LiveRadarGuardSeverity.BLIND -> LiveRadarDangerRed
     }
 }
 
