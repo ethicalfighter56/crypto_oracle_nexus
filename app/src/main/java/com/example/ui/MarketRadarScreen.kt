@@ -37,6 +37,10 @@ fun MarketRadarScreen(
     viewModel: CryptoViewModel,
     modifier: Modifier = Modifier
 ) {
+    LaunchedEffect(Unit) {
+        viewModel.clearRadarSignalBadge()
+    }
+
     val radarAlerts by viewModel.radarAlerts.collectAsState()
     val marketRegime by viewModel.marketRegime.collectAsState()
     val shortTermInterval by viewModel.shortTermTimeframe.collectAsState()

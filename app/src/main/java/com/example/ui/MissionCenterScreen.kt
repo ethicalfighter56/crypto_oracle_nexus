@@ -9,6 +9,8 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -547,7 +549,9 @@ fun RunningMissionsContent(viewModel: CryptoViewModel, isBengali: Boolean) {
                     isNegative = isLoss,
                     isBengali = isBengali,
                     isHistory = false,
-                    onStop = { overrideValue -> viewModel.stopMission(m.id, overrideValue) }
+                    onStop = { overrideValue -> viewModel.stopMission(m.id, overrideValue) },
+                    mission = m,
+                    viewModel = viewModel
                 )
             }
         }
@@ -596,7 +600,9 @@ fun HistoryMissionsContent(viewModel: CryptoViewModel, isBengali: Boolean) {
                     isNegative = isLoss,
                     isBengali = isBengali,
                     isHistory = true,
-                    onStop = {} // No-op in history
+                    onStop = {}, // No-op in history
+                    mission = m,
+                    viewModel = viewModel
                 )
             }
         }
@@ -658,7 +664,9 @@ fun MissionTerminalCard(
     isNegative: Boolean,
     isBengali: Boolean,
     isHistory: Boolean,
-    onStop: (Boolean?) -> Unit
+    onStop: (Boolean?) -> Unit,
+    mission: com.example.model.Mission? = null,
+    viewModel: com.example.viewmodel.CryptoViewModel? = null
 ) {
     val roiColor = if (isNegative) T_Red else T_Green
     val typeColor = if (type.uppercase() == "LONG") T_Green else T_Red
@@ -752,14 +760,40 @@ fun MissionTerminalCard(
             Spacer(modifier = Modifier.height(12.dp))
             
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                TerminalDataField(if (isBengali) "টার্গেট স্তর" else "TARGETS", listOfNotNull(tp1, tp2, tp3).takeIf { it.isNotEmpty() }?.joinToString(" / ") ?: targets, T_TextPrimary)
-                TerminalDataField(if (isBengali) "স্টপ লস" else "STOP LOSS", manualStopLoss ?: stopLoss, T_Gold, alignEnd = true)
+                TerminalDataField("TP1", tp1 ?: "NOT SET", if (tp1 != null) T_Green else T_TextSecondary)
+                TerminalDataField("TP2", tp2 ?: "NOT SET", if (tp2 != null) T_Green else T_TextSecondary, alignEnd = true)
             }
             Spacer(modifier = Modifier.height(12.dp))
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                TerminalDataField("SETUP MODE", setupMode ?: "Pending Manual Setup", T_Cyan)
-                TerminalDataField("LEVERAGE", leverage ?: if (marketType.equals("Spot", ignoreCase = true)) "Spot (1x)" else "Not Set", T_TextSecondary, alignEnd = true)
+                TerminalDataField("TP3", tp3 ?: "NOT SET", if (tp3 != null) T_Green else T_TextSecondary)
+                TerminalDataField("STOP LOSS", manualStopLoss ?: stopLoss, T_Gold, alignEnd = true)
             }
+            Spacer(modifier = Modifier.height(12.dp))
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                TerminalDataField("ENTRY", String.format("%.4f", entryPrice), T_TextPrimary)
+                TerminalDataField("LEVERAGE", leverage?.uppercase() ?: if (marketType.equals("Spot", ignoreCase = true)) "SPOT (1X)" else "NOT SET", T_TextSecondary, alignEnd = true)
+            }
+            Spacer(modifier = Modifier.height(12.dp))
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                TerminalDataField("SETUP USED", setupMode?.uppercase() ?: "PENDING MANUAL SETUP", T_Cyan)
+                TerminalDataField("SETUP STATUS", mission?.setupStatus ?: "UNKNOWN", if (mission?.setupStatus == "READY") T_Green else (if(mission?.setupStatus == "INVALID / HIGH RISK") T_Red else T_Gold), alignEnd = true)
+            }
+            Spacer(modifier = Modifier.height(12.dp))
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                TerminalDataField("RISK : REWARD", mission?.setupRiskReward ?: "N/A", if (mission?.setupRiskReward == "N/A") T_TextSecondary else T_TextPrimary)
+                if (mission?.setupRemark?.isNotBlank() == true) {
+                    TerminalDataField("SETUP REMARK", mission.setupRemark.uppercase(), T_TextPrimary, alignEnd = true)
+                } else {
+                    Spacer(modifier = Modifier.weight(1f))
+                }
+            }
+            Spacer(modifier = Modifier.height(12.dp))
+            val policyText = if (mission?.copilotMode?.contains("EXECUTION") == true) "ASSIST & EXECUTION" else "ASSIST ONLY"
+            TerminalDataField("AI TRADE COPILOT POLICY", policyText, if(policyText == "ASSIST ONLY") T_Cyan else T_Gold)
+            Spacer(modifier = Modifier.height(4.dp))
+            val assistHint = if (policyText == "ASSIST & EXECUTION") "SHADOW EXECUTION ONLY" else "MANUAL APPROVAL REQUIRED"
+            Text(assistHint, color = T_TextSecondary, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
+            Text("REAL MARKET ORDER: NO", color = T_TextMuted, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
         }
         
         Spacer(modifier = Modifier.height(12.dp))
@@ -806,7 +840,11 @@ fun MissionTerminalCard(
                 AlertDialog(
                     onDismissRequest = { showStopConfirm = false },
                     title = { Text(if (isBengali) "মিশন বন্ধ করুন" else "CLOSE MISSION", color = T_TextPrimary, fontFamily = FontFamily.Monospace) },
-                    text = { Text(if (isBengali) "বন্ধ করার কারণ নির্বাচন করুন:" else "SELECT CLOSURE REASON:", color = T_TextSecondary, fontFamily = FontFamily.Monospace) },
+                    text = {
+                        Column {
+                            Text(if (isBengali) "বন্ধ করার কারণ নির্বাচন করুন:" else "SELECT CLOSURE REASON:", color = T_TextSecondary, fontFamily = FontFamily.Monospace)
+                        }
+                    },
                     confirmButton = {
                         Column(modifier = Modifier.fillMaxWidth()) {
                             Button(
@@ -834,13 +872,13 @@ fun MissionTerminalCard(
                             ) {
                                 Text("MANUAL EXIT", color = T_TextPrimary, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
                             }
+                            Spacer(modifier = Modifier.height(8.dp))
+                            TextButton(onClick = { showStopConfirm = false }, modifier = Modifier.fillMaxWidth()) {
+                                Text("CANCEL", color = T_TextSecondary, fontFamily = FontFamily.Monospace)
+                            }
                         }
                     },
-                    dismissButton = {
-                        TextButton(onClick = { showStopConfirm = false }, modifier = Modifier.fillMaxWidth()) {
-                            Text("CANCEL", color = T_TextSecondary, fontFamily = FontFamily.Monospace)
-                        }
-                    },
+                    dismissButton = {},
                     containerColor = T_Bg,
                     titleContentColor = T_TextPrimary,
                     textContentColor = T_TextSecondary,
@@ -848,18 +886,21 @@ fun MissionTerminalCard(
                 )
             }
 
+            var showOverride by remember { mutableStateOf(false) }
+            var showDetails by remember { mutableStateOf(false) }
+
             Row(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Box(
-                    modifier = Modifier.weight(1f).border(1.dp, T_BorderHigh, RoundedCornerShape(4.dp)).padding(vertical = 10.dp),
+                    modifier = Modifier.weight(1f).clickable { showDetails = true }.border(1.dp, T_BorderHigh, RoundedCornerShape(4.dp)).padding(vertical = 10.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(text = "REVIEW", color = T_TextPrimary, fontSize = 10.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
+                    Text(text = "DETAILS", color = T_TextPrimary, fontSize = 10.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
                 }
                 Box(
-                    modifier = Modifier.weight(1f).border(1.dp, T_BorderHigh, RoundedCornerShape(4.dp)).padding(vertical = 10.dp),
+                    modifier = Modifier.weight(1f).clickable { showOverride = true }.border(1.dp, T_BorderHigh, RoundedCornerShape(4.dp)).padding(vertical = 10.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(text = "OVERRIDE", color = T_TextPrimary, fontSize = 10.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
@@ -886,6 +927,218 @@ fun MissionTerminalCard(
                 }
             }
             Spacer(modifier = Modifier.height(12.dp))
+            
+            if (showDetails) {
+                AlertDialog(
+                    onDismissRequest = { showDetails = false },
+                    title = { Text("MISSION DETAILS", color = T_Cyan, fontSize = 16.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace) },
+                    text = {
+                        Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Text("Source Module: Signal Pro", color = T_TextSecondary, fontSize = 11.sp, fontFamily = FontFamily.SansSerif)
+                            Text("Setup Used: ${setupMode ?: "Pending Manual Setup"}", color = T_TextPrimary, fontSize = 11.sp, fontFamily = FontFamily.SansSerif)
+                            Text("Locked Entry: $entryPrice", color = T_TextPrimary, fontSize = 11.sp, fontFamily = FontFamily.SansSerif)
+                            Text("Original Signal Entry: $originalEntry", color = T_TextSecondary, fontSize = 11.sp, fontFamily = FontFamily.SansSerif)
+                            Text("TP1: ${tp1 ?: "Not Set"} | TP2: ${tp2 ?: "Not Set"} | TP3: ${tp3 ?: "Not Set"}", color = T_Green, fontSize = 11.sp, fontFamily = FontFamily.SansSerif)
+                            Text("Stop Loss: ${manualStopLoss ?: stopLoss}", color = T_Red, fontSize = 11.sp, fontFamily = FontFamily.SansSerif)
+                            Text("Leverage: ${leverage ?: if (marketType.equals("Spot", ignoreCase = true)) "Spot (1x)" else "Not Set"}", color = T_TextPrimary, fontSize = 11.sp, fontFamily = FontFamily.SansSerif)
+                            Text("Time in Trade: $timeElapsed", color = T_TextSecondary, fontSize = 11.sp, fontFamily = FontFamily.SansSerif)
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text("AI Policy: $aiStatus", color = T_Cyan, fontSize = 11.sp, fontFamily = FontFamily.SansSerif)
+                            Text("Auto-Execute: OFF", color = T_TextMuted, fontSize = 11.sp, fontFamily = FontFamily.SansSerif)
+                            if (mission?.copilotMode?.contains("Shadow") == true) {
+                                Text("Shadow Execution: Dry-run only", color = T_Gold, fontSize = 11.sp, fontFamily = FontFamily.SansSerif)
+                            }
+                            Text("Real Market Order: No", color = T_TextMuted, fontSize = 11.sp, fontFamily = FontFamily.SansSerif)
+                            
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text("MISSION EVENT LOG", color = T_Cyan, fontSize = 12.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
+                            Spacer(modifier = Modifier.height(8.dp))
+                            
+                            val logs = mission?.missionHistoryLog ?: emptyList()
+                            if (logs.isEmpty()) {
+                                Text("NO MISSION EVENTS RECORDED", color = T_TextMuted, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
+                            } else {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .heightIn(max = 150.dp)
+                                        .background(T_Surface, RoundedCornerShape(4.dp))
+                                        .border(1.dp, T_BorderHigh, RoundedCornerShape(4.dp))
+                                        .padding(8.dp)
+                                ) {
+                                    Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                                        logs.takeLast(20).forEach { logMsg ->
+                                            Text("> ${logMsg.uppercase()}", color = T_TextPrimary, fontSize = 10.sp, fontFamily = FontFamily.Monospace, lineHeight = 14.sp)
+                                            Spacer(modifier = Modifier.height(4.dp))
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    confirmButton = {
+                        TextButton(onClick = { showDetails = false }) {
+                            Text("CLOSE", color = T_TextPrimary, fontFamily = FontFamily.Monospace)
+                        }
+                    },
+                    containerColor = T_Bg,
+                    titleContentColor = T_TextPrimary,
+                    textContentColor = T_TextSecondary,
+                    shape = RoundedCornerShape(8.dp)
+                )
+            }
+
+            if (showOverride && mission != null && viewModel != null) {
+                var selectedSetup by remember { mutableStateOf(mission.setupMode ?: "RECOMMENDED SETUP") }
+                var overrideTp1 by remember { mutableStateOf(mission.tp1 ?: "") }
+                var overrideTp2 by remember { mutableStateOf(mission.tp2 ?: "") }
+                var overrideTp3 by remember { mutableStateOf(mission.tp3 ?: "") }
+                var overrideSl by remember { mutableStateOf(mission.manualStopLoss ?: "") }
+                var overrideLev by remember { mutableStateOf(mission.leverage ?: "") }
+                var overrideRisk by remember { mutableStateOf(mission.riskProfile ?: "") }
+                var overrideAlloc by remember { mutableStateOf(mission.positionSize ?: "") }
+                var overrideRemark by remember { mutableStateOf(mission.setupRemark ?: "") }
+                var aiPolicy by remember { mutableStateOf(mission.copilotMode?.takeIf { it.contains("EXECUTION") }?.let { "ASSIST & EXECUTION" } ?: "ASSIST ONLY") }
+
+                val custom1 by viewModel.customSetup1.collectAsState()
+                val custom2 by viewModel.customSetup2.collectAsState()
+
+                AlertDialog(
+                    onDismissRequest = { showOverride = false },
+                    title = { Text("OVERRIDE SETUP", color = T_Gold, fontSize = 16.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace) },
+                    text = {
+                        Column(modifier = Modifier.fillMaxWidth().heightIn(max = 500.dp)) {
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                val setups = listOf("RECOMMENDED SETUP", "CUSTOM SETUP-1", "CUSTOM SETUP-2")
+                                setups.forEach { setup ->
+                                    Box(
+                                        modifier = Modifier.weight(1f).clickable { 
+                                            selectedSetup = setup
+                                            val profile = when (setup) {
+                                                "CUSTOM SETUP-1" -> custom1
+                                                "CUSTOM SETUP-2" -> custom2
+                                                else -> null
+                                            }
+                                            if (profile != null) {
+                                                overrideTp1 = profile.tp1
+                                                overrideTp2 = profile.tp2
+                                                overrideTp3 = profile.tp3
+                                                overrideSl = profile.stopLoss
+                                                overrideLev = profile.leverage
+                                                overrideRisk = profile.riskProfile
+                                                overrideAlloc = profile.positionSize
+                                                overrideRemark = profile.remark
+                                            } else {
+                                                overrideTp1 = mission.targets
+                                                overrideSl = mission.stopLoss
+                                                overrideLev = ""
+                                                overrideRisk = ""
+                                                overrideAlloc = ""
+                                                overrideRemark = ""
+                                            }
+                                        }
+                                        .background(if (selectedSetup == setup) T_Gold.copy(alpha=0.2f) else Color.Transparent, RoundedCornerShape(4.dp))
+                                        .border(1.dp, if (selectedSetup == setup) T_Gold else T_BorderHigh, RoundedCornerShape(4.dp))
+                                        .padding(vertical = 8.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) { Text(setup.replace("SETUP", "").trim(), color = if (selectedSetup == setup) T_Gold else T_TextSecondary, fontSize = 9.sp, fontWeight = FontWeight.Bold) }
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(12.dp))
+                            
+                            val textFieldColors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = T_Cyan, unfocusedBorderColor = T_BorderHigh,
+                                focusedTextColor = T_TextPrimary, unfocusedTextColor = T_TextPrimary
+                            )
+                            
+                            LazyColumn(modifier = Modifier.fillMaxWidth().weight(1f, false), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                item { androidx.compose.material3.OutlinedTextField(value = overrideTp1, onValueChange = { overrideTp1 = it }, label = { Text("TP1", fontSize = 10.sp) }, modifier = Modifier.fillMaxWidth(), singleLine = true, colors = textFieldColors) }
+                                item { androidx.compose.material3.OutlinedTextField(value = overrideTp2, onValueChange = { overrideTp2 = it }, label = { Text("TP2", fontSize = 10.sp) }, modifier = Modifier.fillMaxWidth(), singleLine = true, colors = textFieldColors) }
+                                item { androidx.compose.material3.OutlinedTextField(value = overrideTp3, onValueChange = { overrideTp3 = it }, label = { Text("TP3", fontSize = 10.sp) }, modifier = Modifier.fillMaxWidth(), singleLine = true, colors = textFieldColors) }
+                                item { androidx.compose.material3.OutlinedTextField(value = overrideSl, onValueChange = { overrideSl = it }, label = { Text("Stop Loss", fontSize = 10.sp) }, modifier = Modifier.fillMaxWidth(), singleLine = true, colors = textFieldColors) }
+                                item { androidx.compose.material3.OutlinedTextField(value = overrideLev, onValueChange = { overrideLev = it }, label = { Text("Leverage", fontSize = 10.sp) }, modifier = Modifier.fillMaxWidth(), singleLine = true, colors = textFieldColors) }
+                                item { androidx.compose.material3.OutlinedTextField(value = overrideRisk, onValueChange = { overrideRisk = it }, label = { Text("Risk Profile", fontSize = 10.sp) }, modifier = Modifier.fillMaxWidth(), singleLine = true, colors = textFieldColors) }
+                                item { androidx.compose.material3.OutlinedTextField(value = overrideAlloc, onValueChange = { overrideAlloc = it }, label = { Text("Allocation", fontSize = 10.sp) }, modifier = Modifier.fillMaxWidth(), singleLine = true, colors = textFieldColors) }
+                                item { androidx.compose.material3.OutlinedTextField(value = overrideRemark, onValueChange = { overrideRemark = it }, label = { Text("Remark", fontSize = 10.sp) }, modifier = Modifier.fillMaxWidth(), singleLine = true, colors = textFieldColors) }
+                                item { 
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                    Text("AI Policy", color = T_TextPrimary, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                        Box(
+                                            modifier = Modifier.weight(1f).clickable { aiPolicy = "ASSIST ONLY" }
+                                                .background(if (aiPolicy == "ASSIST ONLY") T_Cyan.copy(alpha = 0.2f) else Color.Transparent, RoundedCornerShape(4.dp))
+                                                .border(1.dp, if (aiPolicy == "ASSIST ONLY") T_Cyan else T_BorderHigh, RoundedCornerShape(4.dp))
+                                                .padding(vertical = 8.dp),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Text("ASSIST ONLY", color = if (aiPolicy == "ASSIST ONLY") T_Cyan else T_TextSecondary, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                                        }
+                                        Box(
+                                            modifier = Modifier.weight(1f).clickable { aiPolicy = "ASSIST & EXECUTION" }
+                                                .background(if (aiPolicy == "ASSIST & EXECUTION") T_Gold.copy(alpha = 0.2f) else Color.Transparent, RoundedCornerShape(4.dp))
+                                                .border(1.dp, if (aiPolicy == "ASSIST & EXECUTION") T_Gold else T_BorderHigh, RoundedCornerShape(4.dp))
+                                                .padding(vertical = 8.dp),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Text("EXECUTION", color = if (aiPolicy == "ASSIST & EXECUTION") T_Gold else T_TextSecondary, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                                        }
+                                    }
+                                }
+                                if (aiPolicy == "ASSIST & EXECUTION") {
+                                    item {
+                                        Text("SHADOW EXECUTION. NO REAL MARKET ORDER.", color = T_Gold, fontSize = 10.sp, lineHeight = 14.sp)
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    confirmButton = {
+                        Button(onClick = {
+                            val newLogs = mutableListOf<String>()
+                            newLogs.add("OVERRIDE APPLIED")
+                            newLogs.add("SETUP UPDATED: $selectedSetup")
+                            if (mission.copilotMode != aiPolicy) {
+                                newLogs.add("AI POLICY UPDATED: $aiPolicy")
+                                if (aiPolicy.contains("EXECUTION")) {
+                                    newLogs.add("SHADOW EXECUTION ENABLED")
+                                } else {
+                                    newLogs.add("MANUAL APPROVAL REQUIRED")
+                                }
+                            }
+                            
+                            val updatedLog = mission.missionHistoryLog + newLogs
+
+                            val updatedMission = mission.copy(
+                                setupMode = "Overridden ($selectedSetup)",
+                                setupRemark = overrideRemark.ifBlank { null },
+                                tp1 = overrideTp1.ifBlank { null },
+                                tp2 = overrideTp2.ifBlank { null },
+                                tp3 = overrideTp3.ifBlank { null },
+                                manualStopLoss = overrideSl.ifBlank { null },
+                                leverage = overrideLev.ifBlank { null },
+                                riskProfile = overrideRisk.ifBlank { null },
+                                positionSize = overrideAlloc.ifBlank { null },
+                                copilotMode = aiPolicy,
+                                missionHistoryLog = updatedLog
+                            )
+                            viewModel.updateMission(updatedMission)
+                            showOverride = false
+                        }, colors = ButtonDefaults.buttonColors(containerColor = T_Gold)) {
+                            Text("Apply Override", color = T_Bg, fontWeight = FontWeight.Bold)
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showOverride = false }) {
+                            Text("Cancel", color = T_TextSecondary)
+                        }
+                    },
+                    containerColor = T_Bg,
+                    titleContentColor = T_TextPrimary,
+                    textContentColor = T_TextSecondary,
+                    shape = RoundedCornerShape(8.dp)
+                )
+            }
         }
     }
 }
