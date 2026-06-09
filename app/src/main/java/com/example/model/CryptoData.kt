@@ -146,14 +146,21 @@ data class Mission(
     val finalAnalysisEnglish: String? = null,
     val finalAnalysisBengali: String? = null,
     val lastUpdated: Long = System.currentTimeMillis(),
+    val target: String? = null,
     val tp1: String? = null,
     val tp2: String? = null,
     val tp3: String? = null,
-    val manualStopLoss: String? = null,
+    val manualStopLoss: String? = null, // Used as SL1
+    val sl2: String? = null,
     val leverage: String? = null,
     val positionSize: String? = null,
     val riskProfile: String? = null,
     val copilotMode: String? = null,
+    val executionMode: String? = null,
+    val autoCloseEnabled: Boolean = false,
+    val autoCloseConditions: List<String> = emptyList(),
+    val conditionValidity: String? = null,
+    val conditionInvalidReason: String? = null,
     val setupMode: String? = null, // "RECOMMENDED SETUP", "CUSTOM SETUP-1", "CUSTOM SETUP-2"
     val setupRemark: String? = null,
     val setupStatus: String? = null,
@@ -259,12 +266,15 @@ data class Mission(
 }
 
 data class CustomSetupProfile(
+    val target: String = "",
     val tp1: String = "",
     val tp2: String = "",
     val tp3: String = "",
-    val stopLoss: String = "",
+    val stopLoss: String = "", // SL1
+    val sl2: String = "",
     val leverage: String = "",
     val positionSize: String = "",
     val riskProfile: String = "",
-    val remark: String = ""
+    val remark: String = "",
+    val autoCloseConditions: List<String> = emptyList()
 )

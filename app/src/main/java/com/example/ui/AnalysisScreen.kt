@@ -929,11 +929,53 @@ fun StartTradeFlow(viewModel: CryptoViewModel, mission: com.example.model.Missio
     val custom2 by viewModel.customSetup2.collectAsState()
     val defaultName by viewModel.defaultSetupName.collectAsState()
     val defaultPolicy by viewModel.defaultAiPolicy.collectAsState()
+    val recAutoCloseFlow by viewModel.recommendedAutoCloseConditions.collectAsState()
 
     if (step == 1) {
         val verifiedEntryLocked = remember { livePrice }
         var selectedSetup by remember { mutableStateOf(defaultName) }
         var aiPolicy by remember { mutableStateOf(defaultPolicy) }
+
+        val activeProfile = when (selectedSetup) {
+            "CUSTOM SETUP-1", "SETUP-1" -> custom1
+            "CUSTOM SETUP-2", "SETUP-2" -> custom2
+            else -> null
+        }
+        
+        val isRecommended = selectedSetup == "RECOMMENDED SETUP"
+        
+        // User profile values (what's shown in the summary for the profile)
+        val profileTarget = if (isRecommended) mission.targets else activeProfile?.target?.ifBlank { null }
+        val profileTp1 = if (isRecommended) mission.targets else activeProfile?.tp1?.ifBlank { null }
+        val profileTp2 = if (isRecommended) null else activeProfile?.tp2?.ifBlank { null }
+        val profileTp3 = if (isRecommended) null else activeProfile?.tp3?.ifBlank { null }
+        val profileSl1 = if (isRecommended) mission.stopLoss else activeProfile?.stopLoss?.ifBlank { null }
+        val profileSl2 = activeProfile?.sl2?.ifBlank { null }
+        val profileLev = if (isRecommended) "SPOT (1X)" else activeProfile?.leverage?.ifBlank { null }
+        val profileAlloc = activeProfile?.positionSize?.ifBlank { null }
+        val profileRemark = activeProfile?.remark?.ifBlank { null }
+        val profileRisk = activeProfile?.riskProfile?.ifBlank { null }
+
+        // Effective mission values (used for calculations and mission creation)
+        val effectiveTarget = profileTarget ?: mission.targets
+        val effectiveTp1 = profileTp1 ?: mission.targets
+        val effectiveTp2 = profileTp2
+        val effectiveTp3 = profileTp3
+        val effectiveSl1 = profileSl1 ?: mission.stopLoss
+        val effectiveSl2 = profileSl2
+        val effectiveLev = profileLev
+
+        val numberRegex = Regex("[0-9]*\\.?[0-9]+")
+        val parsedTarget = effectiveTarget?.replace(",", "")?.let { numberRegex.find(it)?.value?.toDoubleOrNull() }
+        val parsedTp1 = effectiveTp1?.replace(",", "")?.let { numberRegex.find(it)?.value?.toDoubleOrNull() }
+        val parsedTp2 = effectiveTp2?.replace(",", "")?.let { numberRegex.find(it)?.value?.toDoubleOrNull() }
+        val parsedTp3 = effectiveTp3?.replace(",", "")?.let { numberRegex.find(it)?.value?.toDoubleOrNull() }
+        val parsedSl1 = effectiveSl1?.replace(",", "")?.let { numberRegex.find(it)?.value?.toDoubleOrNull() }
+        val parsedSl2 = effectiveSl2?.replace(",", "")?.let { numberRegex.find(it)?.value?.toDoubleOrNull() }
+        
+        val autoCloseOptions = if (isRecommended) recAutoCloseFlow else activeProfile?.autoCloseConditions ?: emptyList()
+        val isLong = mission.type.uppercase() == "LONG" || mission.type.uppercase() == "BUY"
+        val (acValid, acReason) = validateAutoClose(isLong, verifiedEntryLocked, parsedTarget, parsedTp1, parsedTp2, parsedTp3, parsedSl1, parsedSl2, autoCloseOptions, verifiedEntryLocked)
 
         AlertDialog(
             onDismissRequest = { step = 0 },
@@ -946,7 +988,7 @@ fun StartTradeFlow(viewModel: CryptoViewModel, mission: com.example.model.Missio
                     Text("SELECT SETUP:", color = TextSecondary, fontSize = 10.sp)
                     Spacer(modifier = Modifier.height(6.dp))
                     
-                    val setups = listOf("RECOMMENDED SETUP", "CUSTOM SETUP-1", "CUSTOM SETUP-2")
+                    val setups = listOf("RECOMMENDED SETUP", "SETUP-1", "SETUP-2")
                     setups.forEach { setup ->
                         Box(
                             modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp).clickable { selectedSetup = setup }
@@ -959,24 +1001,6 @@ fun StartTradeFlow(viewModel: CryptoViewModel, mission: com.example.model.Missio
                     }
                     
                     Spacer(modifier = Modifier.height(16.dp))
-                    
-                    val activeProfile = when (selectedSetup) {
-                        "CUSTOM SETUP-1" -> custom1
-                        "CUSTOM SETUP-2" -> custom2
-                        else -> null
-                    }
-                    val activeTpRaw = activeProfile?.tp1?.ifBlank { null } ?: mission.targets
-                    val activeTp2Raw = activeProfile?.tp2?.ifBlank { null }
-                    val activeSlRaw = activeProfile?.stopLoss?.ifBlank { null } ?: mission.stopLoss
-                    
-                    val numberRegex = Regex("[0-9]*\\.?[0-9]+")
-                    val parsedTp = activeTpRaw?.let { numberRegex.find(it)?.value?.toDoubleOrNull() }
-                    val parsedTp2 = activeTp2Raw?.let { numberRegex.find(it)?.value?.toDoubleOrNull() }
-                    val parsedSl = activeSlRaw?.let { numberRegex.find(it)?.value?.toDoubleOrNull() }
-                    
-                    val activeTp3Raw = activeProfile?.tp3?.ifBlank { null }
-                    val activeLevRaw = activeProfile?.leverage?.ifBlank { null } ?: "NOT SET"
-
                     Text("SETUP SUMMARY", color = TextSecondary, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
                     Spacer(modifier = Modifier.height(6.dp))
                     Box(
@@ -987,45 +1011,99 @@ fun StartTradeFlow(viewModel: CryptoViewModel, mission: com.example.model.Missio
                     ) {
                         Column {
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                Text("SETUP", color = TextSecondary, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
+                                Text("SETUP USED", color = TextSecondary, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
                                 Text(selectedSetup, color = CryptoCyan, fontSize = 9.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
                             }
                             Spacer(modifier = Modifier.height(4.dp))
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                Text("ENTRY", color = TextSecondary, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
-                                Text(String.format("%.4f", verifiedEntryLocked), color = TextPrimary, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
+                                Text("TARGET", color = TextSecondary, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
+                                val tgText = if (isRecommended) "${mission.targets} / SYSTEM RECOMMENDED" else (profileTarget ?: "NOT SET")
+                                Text(tgText, color = if (profileTarget != null || isRecommended) Color(0xFF34C759) else TextSecondary, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
                             }
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                Text("STOP LOSS", color = TextSecondary, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
-                                Text(activeSlRaw ?: "NOT SET", color = if (activeSlRaw != null) Color(0xFFFF3B30) else TextSecondary, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
+                            if (!isRecommended && profileTarget == null && mission.targets != null) {
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                    Text("EFFECTIVE TARGET", color = TextSecondary, fontSize = 8.sp, fontFamily = FontFamily.Monospace)
+                                    Text("${mission.targets} / SIGNAL FALLBACK", color = Color(0xFF34C759), fontSize = 8.sp, fontFamily = FontFamily.Monospace)
+                                }
                             }
                             Spacer(modifier = Modifier.height(4.dp))
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                                 Text("TP1", color = TextSecondary, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
-                                Text(activeTpRaw ?: "NOT SET", color = if (activeTpRaw != null) Color(0xFF34C759) else TextSecondary, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
+                                val tpText = if (isRecommended) "${mission.targets} / SYSTEM RECOMMENDED" else (profileTp1 ?: "NOT SET")
+                                Text(tpText, color = if (profileTp1 != null || isRecommended) Color(0xFF34C759) else TextSecondary, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
+                            }
+                            if (!isRecommended && profileTp1 == null && mission.targets != null) {
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                    Text("EFFECTIVE TP1", color = TextSecondary, fontSize = 8.sp, fontFamily = FontFamily.Monospace)
+                                    Text("${mission.targets} / SIGNAL FALLBACK", color = Color(0xFF34C759), fontSize = 8.sp, fontFamily = FontFamily.Monospace)
+                                }
                             }
                             Spacer(modifier = Modifier.height(4.dp))
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                                 Text("TP2", color = TextSecondary, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
-                                Text(activeTp2Raw ?: "NOT SET", color = if (activeTp2Raw != null) Color(0xFF34C759) else TextSecondary, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
+                                Text(profileTp2 ?: "NOT SET", color = if (profileTp2 != null) Color(0xFF34C759) else TextSecondary, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
                             }
                             Spacer(modifier = Modifier.height(4.dp))
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                                 Text("TP3", color = TextSecondary, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
-                                Text(activeTp3Raw ?: "NOT SET", color = if (activeTp3Raw != null) Color(0xFF34C759) else TextSecondary, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
+                                Text(profileTp3 ?: "NOT SET", color = if (profileTp3 != null) Color(0xFF34C759) else TextSecondary, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
+                            }
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                Text("SL1 (STOP LOSS)", color = TextSecondary, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
+                                val slText = if (isRecommended) "${mission.stopLoss} / SYSTEM RECOMMENDED" else (profileSl1 ?: "NOT SET")
+                                Text(slText, color = if (profileSl1 != null || isRecommended) Color(0xFFFF3B30) else TextSecondary, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
+                            }
+                            if (!isRecommended && profileSl1 == null && mission.stopLoss != null) {
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                    Text("EFFECTIVE SL1", color = TextSecondary, fontSize = 8.sp, fontFamily = FontFamily.Monospace)
+                                    Text("${mission.stopLoss} / SIGNAL FALLBACK", color = Color(0xFFFF3B30), fontSize = 8.sp, fontFamily = FontFamily.Monospace)
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                Text("SL2", color = TextSecondary, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
+                                Text(profileSl2 ?: "NOT SET", color = if (profileSl2 != null) Color(0xFFFF3B30) else TextSecondary, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
                             }
                             Spacer(modifier = Modifier.height(4.dp))
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                                 Text("LEVERAGE", color = TextSecondary, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
-                                Text(activeLevRaw, color = TextPrimary, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
+                                val levText = if (isRecommended) "SPOT (1X) / SYSTEM RECOMMENDED" else (profileLev ?: "NOT SET")
+                                Text(levText, color = if (profileLev != null || isRecommended) TextPrimary else TextSecondary, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
+                            }
+                            if (!isRecommended && profileLev == null) {
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                    Text("EFFECTIVE LEV", color = TextSecondary, fontSize = 8.sp, fontFamily = FontFamily.Monospace)
+                                    Text(if (mission.marketType.equals("Spot", ignoreCase = true)) "SPOT (1X) / SIGNAL FALLBACK" else "NOT SET", color = TextPrimary, fontSize = 8.sp, fontFamily = FontFamily.Monospace)
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                Text("ALLOCATION", color = TextSecondary, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
+                                Text(profileAlloc?.uppercase() ?: "NOT SET", color = TextPrimary, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
+                            }
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                Text("RISK PROFILE", color = TextSecondary, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
+                                Text(profileRisk?.uppercase() ?: "NOT SET", color = TextPrimary, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
+                            }
+                            if (profileRemark != null) {
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                    Text("REMARK", color = TextSecondary, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
+                                    Text(profileRemark.uppercase(), color = TextPrimary, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
+                                }
                             }
                             
                             Spacer(modifier = Modifier.height(12.dp))
                             
-                            if (parsedTp != null && parsedSl != null && verifiedEntryLocked > 0.0) {
-                                val risk = kotlin.math.abs(verifiedEntryLocked - parsedSl)
-                                val reward = kotlin.math.abs(parsedTp - verifiedEntryLocked)
+                            if (parsedTp1 != null && parsedSl1 != null && verifiedEntryLocked > 0.0) {
+                                val risk = kotlin.math.abs(verifiedEntryLocked - parsedSl1)
+                                val reward = kotlin.math.abs(parsedTp1 - verifiedEntryLocked)
                                 if (risk > 0.0 && reward > 0.0) {
                                     val ratio = reward / risk
                                     val ratioColor = if (ratio >= 2.0) Color(0xFF34C759) else if (ratio >= 1.0) AccentGold else Color(0xFFFF3B30)
@@ -1037,7 +1115,7 @@ fun StartTradeFlow(viewModel: CryptoViewModel, mission: com.example.model.Missio
                                     Spacer(modifier = Modifier.height(4.dp))
                                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                                         Text("STATUS", color = TextSecondary, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
-                                        Text("READY", color = Color(0xFF34C759), fontSize = 9.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
+                                        Text("READY", color = setupStatusColor("READY"), fontSize = 9.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
                                     }
                                     
                                     Spacer(modifier = Modifier.height(8.dp))
@@ -1064,7 +1142,7 @@ fun StartTradeFlow(viewModel: CryptoViewModel, mission: com.example.model.Missio
                                     Spacer(modifier = Modifier.height(4.dp))
                                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                                         Text("STATUS", color = TextSecondary, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
-                                        Text("INVALID / HIGH RISK", color = Color(0xFFFF3B30), fontSize = 9.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
+                                        Text("INVALID / HIGH RISK", color = setupStatusColor("INVALID / HIGH RISK"), fontSize = 9.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
                                     }
                                 }
                             } else {
@@ -1075,8 +1153,46 @@ fun StartTradeFlow(viewModel: CryptoViewModel, mission: com.example.model.Missio
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                                     Text("STATUS", color = TextSecondary, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
-                                    Text("INCOMPLETE SETUP", color = AccentGold, fontSize = 9.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
+                                    Text("INCOMPLETE SETUP", color = setupStatusColor("INCOMPLETE SETUP"), fontSize = 9.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
                                 }
+                            }
+                        }
+                    }
+                    
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text("AUTO-CLOSE TRADING SETUP", color = TextSecondary, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Box(
+                        modifier = Modifier.fillMaxWidth()
+                            .background(DarkSurface, RoundedCornerShape(4.dp))
+                            .border(1.dp, BorderColor, RoundedCornerShape(4.dp))
+                            .padding(12.dp)
+                    ) {
+                        Column {
+                            val isAutoActive = autoCloseOptions.isNotEmpty()
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                Text("AUTO TRADING ACTIVE", color = TextSecondary, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
+                                Text(if (isAutoActive) "YES" else "NO", color = if (isAutoActive) CryptoCyan else TextSecondary, fontSize = 9.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
+                            }
+                            if (isAutoActive) {
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                    Text("AUTO-CLOSE CONDITIONS", color = TextSecondary, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
+                                    Text(autoCloseOptions.joinToString(" / "), color = TextPrimary, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
+                                }
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                    Text("CONDITION VALIDITY", color = TextSecondary, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
+                                    Text(if (acValid) "VALID" else "INVALID", color = if (acValid) Color(0xFF34C759) else Color(0xFFFF3B30), fontSize = 9.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
+                                }
+                                if (!acValid && acReason != null) {
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text("REASON: $acReason", color = Color(0xFFFF3B30), fontSize = 8.sp, fontFamily = FontFamily.Monospace)
+                                    Text("AUTO-CLOSE DISABLED UNTIL FIXED", color = Color(0xFFFF3B30), fontSize = 8.sp, fontFamily = FontFamily.Monospace)
+                                }
+                            } else {
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text("MANUAL APPROVAL REQUIRED", color = TextSecondary, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
                             }
                         }
                     }
@@ -1129,25 +1245,12 @@ fun StartTradeFlow(viewModel: CryptoViewModel, mission: com.example.model.Missio
             },
             confirmButton = {
                 Button(onClick = {
-                    val activeProfile = when (selectedSetup) {
-                        "CUSTOM SETUP-1" -> custom1
-                        "CUSTOM SETUP-2" -> custom2
-                        else -> null 
-                    }
-                    
-                    val activeTpRaw = activeProfile?.tp1?.ifBlank { null } ?: mission.targets
-                    val activeSlRaw = activeProfile?.stopLoss?.ifBlank { null } ?: mission.stopLoss
-                    
-                    val numberRegex = Regex("[0-9]*\\.?[0-9]+")
-                    val parsedTp = activeTpRaw?.let { numberRegex.find(it)?.value?.toDoubleOrNull() }
-                    val parsedSl = activeSlRaw?.let { numberRegex.find(it)?.value?.toDoubleOrNull() }
-                    
                     var calculatedStatus = "INCOMPLETE SETUP"
                     var calculatedRR = "N/A"
                     
-                    if (parsedTp != null && parsedSl != null && verifiedEntryLocked > 0.0) {
-                        val risk = kotlin.math.abs(verifiedEntryLocked - parsedSl)
-                        val reward = kotlin.math.abs(parsedTp - verifiedEntryLocked)
+                    if (parsedTp1 != null && parsedSl1 != null && verifiedEntryLocked > 0.0) {
+                        val risk = kotlin.math.abs(verifiedEntryLocked - parsedSl1)
+                        val reward = kotlin.math.abs(parsedTp1 - verifiedEntryLocked)
                         if (risk > 0.0 && reward > 0.0) {
                             val ratio = reward / risk
                             calculatedRR = "1 : ${String.format("%.1f", ratio)}"
@@ -1157,31 +1260,46 @@ fun StartTradeFlow(viewModel: CryptoViewModel, mission: com.example.model.Missio
                         }
                     }
                     
-                    val initialLogs = listOf(
+                    val initialLogs = mutableListOf(
                         "MISSION CREATED",
                         "SETUP SELECTED: $selectedSetup",
-                        "AI POLICY SELECTED: $aiPolicy",
-                        if (aiPolicy.contains("EXECUTION")) "AI TRADE GUARDIAN MONITORING ACTIVE" else "WAITING FOR APPROVAL"
+                        "AI POLICY SELECTED: AI TRADE COPILOT $aiPolicy",
+                        if (autoCloseOptions.isNotEmpty()) "AUTO-CLOSE CONDITIONS: ${autoCloseOptions.joinToString(" / ")}" else "AUTO-CLOSE CONDITIONS: NONE",
+                        "CONDITION VALIDITY: ${if (acValid) "VALID" else "INVALID"}",
+                        "REAL MARKET ORDER: NO",
+                        "MISSION MONITORING ACTIVE"
                     )
-                    
+
+                    val finalTarget = effectiveTarget?.let { if (profileTarget == null && !isRecommended) "$it / SIGNAL FALLBACK" else it }
+                    val finalTp1 = effectiveTp1?.let { if (profileTp1 == null && !isRecommended) "$it / SIGNAL FALLBACK" else it }
+                    val finalSl = effectiveSl1?.let { if (profileSl1 == null && !isRecommended) "$it / SIGNAL FALLBACK" else it }
+                    val finalLev = effectiveLev?.let { if (profileLev == null && !isRecommended) (if (mission.marketType.equals("Spot", ignoreCase = true)) "SPOT (1X) / SIGNAL FALLBACK" else "NOT SET") else it }
+
                     viewModel.startMission(mission.copy(
                         id = java.util.UUID.randomUUID().toString(),
                         entryPrice = verifiedEntryLocked,
                         originalSignalEntry = mission.entryPrice,
                         startTime = System.currentTimeMillis(),
                         setupMode = selectedSetup,
-                        setupRemark = activeProfile?.remark?.ifBlank { null } ?: (if (selectedSetup == "RECOMMENDED SETUP") "AUTO-GENERATED" else null),
-                        tp1 = activeProfile?.tp1?.ifBlank { null } ?: mission.targets,
-                        tp2 = activeProfile?.tp2?.ifBlank { null },
-                        tp3 = activeProfile?.tp3?.ifBlank { null },
-                        manualStopLoss = activeProfile?.stopLoss?.ifBlank { null } ?: mission.stopLoss,
-                        leverage = activeProfile?.leverage?.ifBlank { null },
-                        riskProfile = activeProfile?.riskProfile?.ifBlank { null },
-                        positionSize = activeProfile?.positionSize?.ifBlank { null },
+                        setupRemark = profileRemark ?: (if (isRecommended) "AUTO-GENERATED" else null),
+                        target = finalTarget,
+                        tp1 = finalTp1,
+                        tp2 = effectiveTp2,
+                        tp3 = effectiveTp3,
+                        manualStopLoss = finalSl,
+                        sl2 = effectiveSl2,
+                        leverage = finalLev,
+                        riskProfile = profileRisk,
+                        positionSize = profileAlloc,
                         copilotMode = aiPolicy,
+                        executionMode = aiPolicy,
                         setupStatus = calculatedStatus,
                         setupRiskReward = calculatedRR,
-                        missionHistoryLog = initialLogs
+                        autoCloseEnabled = autoCloseOptions.isNotEmpty() && acValid,
+                        autoCloseConditions = autoCloseOptions,
+                        conditionValidity = if (acValid) "VALID" else "INVALID",
+                        conditionInvalidReason = acReason,
+                        missionHistoryLog = initialLogs.toList()
                     ))
                     viewModel.sendLocalAlert("Mission Started", "AI intelligence system successfully started monitoring ${mission.coinSymbol}")
                     step = 0
@@ -1205,29 +1323,39 @@ fun StartTradeFlow(viewModel: CryptoViewModel, mission: com.example.model.Missio
         var localSetup2 by remember { mutableStateOf(custom2) }
         var localDefaultName by remember { mutableStateOf(defaultName) }
         var localDefaultPolicy by remember { mutableStateOf(defaultPolicy) }
-        var selectedTab by remember { mutableStateOf("CUSTOM SETUP-1") }
+        val recAutoCloseFlow by viewModel.recommendedAutoCloseConditions.collectAsState()
+        var localRecAutoClose by remember { mutableStateOf(recAutoCloseFlow) }
+        var selectedTab by remember { mutableStateOf("RECOMMENDED SETUP") }
         
         AlertDialog(
             onDismissRequest = { step = 0 },
             title = { Text("Signal Setup Configuration", color = AccentGold, fontSize = 16.sp, fontWeight = FontWeight.Bold) },
             text = {
                 Column(modifier = Modifier.fillMaxWidth().heightIn(max = 500.dp)) {
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                         Box(
-                            modifier = Modifier.weight(1f).clickable { selectedTab = "CUSTOM SETUP-1" }
-                                .background(if (selectedTab == "CUSTOM SETUP-1") AccentGold.copy(alpha=0.2f) else Color.Transparent, RoundedCornerShape(4.dp))
-                                .border(1.dp, if (selectedTab == "CUSTOM SETUP-1") AccentGold else BorderColor, RoundedCornerShape(4.dp))
+                            modifier = Modifier.weight(1f).clickable { selectedTab = "RECOMMENDED SETUP" }
+                                .background(if (selectedTab == "RECOMMENDED SETUP") AccentGold.copy(alpha=0.2f) else Color.Transparent, RoundedCornerShape(4.dp))
+                                .border(1.dp, if (selectedTab == "RECOMMENDED SETUP") AccentGold else BorderColor, RoundedCornerShape(4.dp))
                                 .padding(vertical = 8.dp),
                             contentAlignment = Alignment.Center
-                        ) { Text("SETUP-1", color = if (selectedTab=="CUSTOM SETUP-1") AccentGold else TextSecondary, fontSize = 10.sp, fontWeight = FontWeight.Bold) }
+                        ) { Text("REC", color = if (selectedTab=="RECOMMENDED SETUP") AccentGold else TextSecondary, fontSize = 10.sp, fontWeight = FontWeight.Bold) }
                         
                         Box(
-                            modifier = Modifier.weight(1f).clickable { selectedTab = "CUSTOM SETUP-2" }
-                                .background(if (selectedTab == "CUSTOM SETUP-2") AccentGold.copy(alpha=0.2f) else Color.Transparent, RoundedCornerShape(4.dp))
-                                .border(1.dp, if (selectedTab == "CUSTOM SETUP-2") AccentGold else BorderColor, RoundedCornerShape(4.dp))
+                            modifier = Modifier.weight(1f).clickable { selectedTab = "SETUP-1" }
+                                .background(if (selectedTab == "SETUP-1") AccentGold.copy(alpha=0.2f) else Color.Transparent, RoundedCornerShape(4.dp))
+                                .border(1.dp, if (selectedTab == "SETUP-1") AccentGold else BorderColor, RoundedCornerShape(4.dp))
                                 .padding(vertical = 8.dp),
                             contentAlignment = Alignment.Center
-                        ) { Text("SETUP-2", color = if (selectedTab=="CUSTOM SETUP-2") AccentGold else TextSecondary, fontSize = 10.sp, fontWeight = FontWeight.Bold) }
+                        ) { Text("SETUP-1", color = if (selectedTab=="SETUP-1") AccentGold else TextSecondary, fontSize = 10.sp, fontWeight = FontWeight.Bold) }
+                        
+                        Box(
+                            modifier = Modifier.weight(1f).clickable { selectedTab = "SETUP-2" }
+                                .background(if (selectedTab == "SETUP-2") AccentGold.copy(alpha=0.2f) else Color.Transparent, RoundedCornerShape(4.dp))
+                                .border(1.dp, if (selectedTab == "SETUP-2") AccentGold else BorderColor, RoundedCornerShape(4.dp))
+                                .padding(vertical = 8.dp),
+                            contentAlignment = Alignment.Center
+                        ) { Text("SETUP-2", color = if (selectedTab=="SETUP-2") AccentGold else TextSecondary, fontSize = 10.sp, fontWeight = FontWeight.Bold) }
                     }
                     Spacer(modifier = Modifier.height(12.dp))
                     
@@ -1237,19 +1365,69 @@ fun StartTradeFlow(viewModel: CryptoViewModel, mission: com.example.model.Missio
                     )
                     
                     LazyColumn(modifier = Modifier.fillMaxWidth().weight(1f, false), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        val currentSetup = if (selectedTab == "CUSTOM SETUP-1") localSetup1 else localSetup2
-                        val updateSetup = { newSetup: com.example.model.CustomSetupProfile -> 
-                            if (selectedTab == "CUSTOM SETUP-1") localSetup1 = newSetup else localSetup2 = newSetup
+                        if (selectedTab == "RECOMMENDED SETUP") {
+                            item { Text("AUTO-CLOSE TRADING SETUP", color = TextPrimary, fontSize = 12.sp, fontWeight = FontWeight.Bold) }
+                            item { Text("Select conditions to enable auto-close for recommended values.", color = TextSecondary, fontSize = 10.sp) }
+                            item { Spacer(modifier = Modifier.height(4.dp)) }
+                            
+                            val options = listOf("TARGET", "TP1", "TP2", "TP3", "STOP LOSS")
+                            options.forEach { opt ->
+                                item {
+                                    Row(modifier = Modifier.fillMaxWidth().clickable {
+                                        localRecAutoClose = if (localRecAutoClose.contains(opt)) localRecAutoClose - opt else localRecAutoClose + opt
+                                    }.padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                                        Checkbox(checked = localRecAutoClose.contains(opt), onCheckedChange = null)
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text(opt, color = TextPrimary, fontSize = 11.sp)
+                                    }
+                                }
+                            }
+                        } else {
+                            val currentSetup = if (selectedTab == "SETUP-1") localSetup1 else localSetup2
+                            val updateSetup = { newSetup: com.example.model.CustomSetupProfile -> 
+                                if (selectedTab == "SETUP-1") localSetup1 = newSetup else localSetup2 = newSetup
+                            }
+                            
+                            item { OutlinedTextField(value = currentSetup.target, onValueChange = { updateSetup(currentSetup.copy(target=it)) }, label = { Text("TARGET") }, modifier = Modifier.fillMaxWidth(), singleLine = true, colors = textFieldColors) }
+                            item { OutlinedTextField(value = currentSetup.tp1, onValueChange = { updateSetup(currentSetup.copy(tp1=it)) }, label = { Text("TP1") }, modifier = Modifier.fillMaxWidth(), singleLine = true, colors = textFieldColors) }
+                            item { OutlinedTextField(value = currentSetup.tp2, onValueChange = { updateSetup(currentSetup.copy(tp2=it)) }, label = { Text("TP2") }, modifier = Modifier.fillMaxWidth(), singleLine = true, colors = textFieldColors) }
+                            item { OutlinedTextField(value = currentSetup.tp3, onValueChange = { updateSetup(currentSetup.copy(tp3=it)) }, label = { Text("TP3") }, modifier = Modifier.fillMaxWidth(), singleLine = true, colors = textFieldColors) }
+                            item { OutlinedTextField(value = currentSetup.stopLoss, onValueChange = { updateSetup(currentSetup.copy(stopLoss=it)) }, label = { Text("SL1 / STOP LOSS 1") }, modifier = Modifier.fillMaxWidth(), singleLine = true, colors = textFieldColors) }
+                            item { OutlinedTextField(value = currentSetup.sl2, onValueChange = { updateSetup(currentSetup.copy(sl2=it)) }, label = { Text("SL2 / STOP LOSS 2") }, modifier = Modifier.fillMaxWidth(), singleLine = true, colors = textFieldColors) }
+                            item { OutlinedTextField(value = currentSetup.leverage, onValueChange = { updateSetup(currentSetup.copy(leverage=it)) }, label = { Text("LEVERAGE") }, modifier = Modifier.fillMaxWidth(), singleLine = true, colors = textFieldColors) }
+                            
+                            item { 
+                                Text("RISK PROFILE", color = TextSecondary, fontSize = 10.sp)
+                                val riskOptions = listOf("CONSERVATIVE", "BALANCED", "AGGRESSIVE", "CUSTOM")
+                                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                    riskOptions.forEach { opt ->
+                                        Box(modifier = Modifier.clickable { updateSetup(currentSetup.copy(riskProfile=opt)) }.background(if (currentSetup.riskProfile == opt) CryptoCyan else Color.Transparent, RoundedCornerShape(4.dp)).border(1.dp, if (currentSetup.riskProfile == opt) CryptoCyan else BorderColor, RoundedCornerShape(4.dp)).padding(8.dp)) {
+                                            Text(opt, color = if (currentSetup.riskProfile == opt) DarkBackground else TextSecondary, fontSize = 8.sp)
+                                        }
+                                    }
+                                }
+                            }
+                            
+                            item { OutlinedTextField(value = currentSetup.positionSize, onValueChange = { updateSetup(currentSetup.copy(positionSize=it)) }, label = { Text("ALLOCATION") }, modifier = Modifier.fillMaxWidth(), singleLine = true, colors = textFieldColors) }
+                            item { OutlinedTextField(value = currentSetup.remark, onValueChange = { updateSetup(currentSetup.copy(remark=it)) }, label = { Text("REMARK") }, modifier = Modifier.fillMaxWidth(), singleLine = true, colors = textFieldColors) }
+                            
+                            item { Spacer(modifier = Modifier.height(16.dp)) }
+                            item { Text("AUTO-CLOSE TRADING SETUP", color = TextPrimary, fontSize = 12.sp, fontWeight = FontWeight.Bold) }
+                            val options = listOf("TARGET", "TP1", "TP2", "TP3", "STOP LOSS")
+                            options.forEach { opt ->
+                                item {
+                                    Row(modifier = Modifier.fillMaxWidth().clickable {
+                                        val currentOptions = currentSetup.autoCloseConditions
+                                        val newOptions = if (currentOptions.contains(opt)) currentOptions - opt else currentOptions + opt
+                                        updateSetup(currentSetup.copy(autoCloseConditions = newOptions))
+                                    }.padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                                        Checkbox(checked = currentSetup.autoCloseConditions.contains(opt), onCheckedChange = null)
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text(opt, color = TextPrimary, fontSize = 11.sp)
+                                    }
+                                }
+                            }
                         }
-                        
-                        item { OutlinedTextField(value = currentSetup.tp1, onValueChange = { updateSetup(currentSetup.copy(tp1=it)) }, label = { Text("TP1") }, modifier = Modifier.fillMaxWidth(), singleLine = true, colors = textFieldColors) }
-                        item { OutlinedTextField(value = currentSetup.tp2, onValueChange = { updateSetup(currentSetup.copy(tp2=it)) }, label = { Text("TP2") }, modifier = Modifier.fillMaxWidth(), singleLine = true, colors = textFieldColors) }
-                        item { OutlinedTextField(value = currentSetup.tp3, onValueChange = { updateSetup(currentSetup.copy(tp3=it)) }, label = { Text("TP3") }, modifier = Modifier.fillMaxWidth(), singleLine = true, colors = textFieldColors) }
-                        item { OutlinedTextField(value = currentSetup.stopLoss, onValueChange = { updateSetup(currentSetup.copy(stopLoss=it)) }, label = { Text("Stop Loss") }, modifier = Modifier.fillMaxWidth(), singleLine = true, colors = textFieldColors) }
-                        item { OutlinedTextField(value = currentSetup.leverage, onValueChange = { updateSetup(currentSetup.copy(leverage=it)) }, label = { Text("Leverage") }, modifier = Modifier.fillMaxWidth(), singleLine = true, colors = textFieldColors) }
-                        item { OutlinedTextField(value = currentSetup.riskProfile, onValueChange = { updateSetup(currentSetup.copy(riskProfile=it)) }, label = { Text("Risk Profile") }, modifier = Modifier.fillMaxWidth(), singleLine = true, colors = textFieldColors) }
-                        item { OutlinedTextField(value = currentSetup.positionSize, onValueChange = { updateSetup(currentSetup.copy(positionSize=it)) }, label = { Text("Allocation") }, modifier = Modifier.fillMaxWidth(), singleLine = true, colors = textFieldColors) }
-                        item { OutlinedTextField(value = currentSetup.remark, onValueChange = { updateSetup(currentSetup.copy(remark=it)) }, label = { Text("Remark") }, modifier = Modifier.fillMaxWidth(), singleLine = true, colors = textFieldColors) }
                         
                         item { Spacer(modifier = Modifier.height(16.dp)) }
                         item { Text("DEFAULT SELECTIONS:", color = TextPrimary, fontSize = 12.sp, fontWeight = FontWeight.Bold) }
@@ -1258,8 +1436,8 @@ fun StartTradeFlow(viewModel: CryptoViewModel, mission: com.example.model.Missio
                                  Text("Default Profile:", color = TextSecondary, fontSize = 11.sp)
                                  Text(localDefaultName, color = CryptoCyan, fontSize = 11.sp, modifier = Modifier.clickable {
                                      localDefaultName = when(localDefaultName) {
-                                         "RECOMMENDED SETUP" -> "CUSTOM SETUP-1"
-                                         "CUSTOM SETUP-1" -> "CUSTOM SETUP-2"
+                                         "RECOMMENDED SETUP" -> "SETUP-1"
+                                         "SETUP-1" -> "SETUP-2"
                                          else -> "RECOMMENDED SETUP"
                                      }
                                  }.padding(4.dp))
@@ -1282,6 +1460,7 @@ fun StartTradeFlow(viewModel: CryptoViewModel, mission: com.example.model.Missio
                     viewModel.customSetup2.value = localSetup2
                     viewModel.defaultSetupName.value = localDefaultName
                     viewModel.defaultAiPolicy.value = localDefaultPolicy
+                    viewModel.recommendedAutoCloseConditions.value = localRecAutoClose
                     step = 0
                 }, colors = ButtonDefaults.buttonColors(containerColor = AccentGold)) {
                     Text("SAVE SETUP", fontWeight = FontWeight.Black, color = DarkBackground)

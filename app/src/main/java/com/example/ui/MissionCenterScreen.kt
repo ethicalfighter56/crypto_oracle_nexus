@@ -760,34 +760,57 @@ fun MissionTerminalCard(
             Spacer(modifier = Modifier.height(12.dp))
             
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                TerminalDataField("TARGET", mission?.target ?: "NOT SET", if (mission?.target != null) T_Green else T_TextSecondary)
+                TerminalDataField("SETUP USED", setupMode?.uppercase() ?: "PENDING MANUAL SETUP", T_Cyan, alignEnd = true)
+            }
+            Spacer(modifier = Modifier.height(12.dp))
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 TerminalDataField("TP1", tp1 ?: "NOT SET", if (tp1 != null) T_Green else T_TextSecondary)
                 TerminalDataField("TP2", tp2 ?: "NOT SET", if (tp2 != null) T_Green else T_TextSecondary, alignEnd = true)
             }
             Spacer(modifier = Modifier.height(12.dp))
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 TerminalDataField("TP3", tp3 ?: "NOT SET", if (tp3 != null) T_Green else T_TextSecondary)
-                TerminalDataField("STOP LOSS", manualStopLoss ?: stopLoss, T_Gold, alignEnd = true)
+                TerminalDataField("SL1", manualStopLoss ?: stopLoss, T_Gold, alignEnd = true)
             }
             Spacer(modifier = Modifier.height(12.dp))
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                TerminalDataField("ENTRY", String.format("%.4f", entryPrice), T_TextPrimary)
+                TerminalDataField("ENTRY", String.format("%.4f", entryPrice.replace("$","").toDoubleOrNull() ?: 0.0), T_TextPrimary)
+                TerminalDataField("SL2", mission?.sl2 ?: "NOT SET", if (mission?.sl2 != null) T_Gold else T_TextSecondary, alignEnd = true)
+            }
+            Spacer(modifier = Modifier.height(12.dp))
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                TerminalDataField("ALLOCATION", mission?.positionSize?.uppercase() ?: "NOT SET", T_TextPrimary)
                 TerminalDataField("LEVERAGE", leverage?.uppercase() ?: if (marketType.equals("Spot", ignoreCase = true)) "SPOT (1X)" else "NOT SET", T_TextSecondary, alignEnd = true)
             }
             Spacer(modifier = Modifier.height(12.dp))
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                TerminalDataField("SETUP USED", setupMode?.uppercase() ?: "PENDING MANUAL SETUP", T_Cyan)
-                TerminalDataField("SETUP STATUS", mission?.setupStatus ?: "UNKNOWN", if (mission?.setupStatus == "READY") T_Green else (if(mission?.setupStatus == "INVALID / HIGH RISK") T_Red else T_Gold), alignEnd = true)
-            }
-            Spacer(modifier = Modifier.height(12.dp))
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                TerminalDataField("RISK : REWARD", mission?.setupRiskReward ?: "N/A", if (mission?.setupRiskReward == "N/A") T_TextSecondary else T_TextPrimary)
+                TerminalDataField("RISK PROFILE", mission?.riskProfile?.uppercase() ?: "NOT SET", T_TextPrimary)
                 if (mission?.setupRemark?.isNotBlank() == true) {
-                    TerminalDataField("SETUP REMARK", mission.setupRemark.uppercase(), T_TextPrimary, alignEnd = true)
+                    TerminalDataField("REMARK", mission.setupRemark.uppercase(), T_TextPrimary, alignEnd = true)
                 } else {
                     Spacer(modifier = Modifier.weight(1f))
                 }
             }
+            
             Spacer(modifier = Modifier.height(12.dp))
+            HorizontalDivider(color = T_BorderHigh, thickness = 0.5.dp)
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                val isAutoActive = mission?.autoCloseEnabled == true
+                TerminalDataField("AUTO TRADING", if (isAutoActive) "ACTIVE" else "INACTIVE", if (isAutoActive) T_Cyan else T_TextSecondary)
+                TerminalDataField("CONDITION", mission?.conditionValidity ?: "N/A", if (mission?.conditionValidity == "VALID") T_Green else if (mission?.conditionValidity == "INVALID") T_Red else T_TextSecondary, alignEnd = true)
+            }
+            if (mission?.autoCloseEnabled == true && !mission.autoCloseConditions.isNullOrEmpty()) {
+                Spacer(modifier = Modifier.height(12.dp))
+                TerminalDataField("AUTO-CLOSE", mission.autoCloseConditions.joinToString(" / "), T_TextPrimary)
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+            HorizontalDivider(color = T_BorderHigh, thickness = 0.5.dp)
+            Spacer(modifier = Modifier.height(12.dp))
+
             val policyText = if (mission?.copilotMode?.contains("EXECUTION") == true) "ASSIST & EXECUTION" else "ASSIST ONLY"
             TerminalDataField("AI TRADE COPILOT POLICY", policyText, if(policyText == "ASSIST ONLY") T_Cyan else T_Gold)
             Spacer(modifier = Modifier.height(4.dp))
@@ -990,11 +1013,11 @@ fun MissionTerminalCard(
 
             if (showOverride && mission != null && viewModel != null) {
                 var selectedSetup by remember { mutableStateOf(mission.setupMode ?: "RECOMMENDED SETUP") }
-                var overrideTp1 by remember { mutableStateOf(mission.tp1 ?: "") }
+                var overrideTp1 by remember { mutableStateOf(mission.tp1?.replace(" / SIGNAL FALLBACK", "") ?: "") }
                 var overrideTp2 by remember { mutableStateOf(mission.tp2 ?: "") }
                 var overrideTp3 by remember { mutableStateOf(mission.tp3 ?: "") }
-                var overrideSl by remember { mutableStateOf(mission.manualStopLoss ?: "") }
-                var overrideLev by remember { mutableStateOf(mission.leverage ?: "") }
+                var overrideSl by remember { mutableStateOf(mission.manualStopLoss?.replace(" / SIGNAL FALLBACK", "") ?: "") }
+                var overrideLev by remember { mutableStateOf(mission.leverage?.replace(" / SIGNAL FALLBACK", "") ?: "") }
                 var overrideRisk by remember { mutableStateOf(mission.riskProfile ?: "") }
                 var overrideAlloc by remember { mutableStateOf(mission.positionSize ?: "") }
                 var overrideRemark by remember { mutableStateOf(mission.setupRemark ?: "") }
@@ -1107,7 +1130,7 @@ fun MissionTerminalCard(
                                 }
                             }
                             
-                            val updatedLog = mission.missionHistoryLog + newLogs
+                            val updatedLog = (mission.missionHistoryLog + newLogs).takeLast(20)
 
                             val updatedMission = mission.copy(
                                 setupMode = "Overridden ($selectedSetup)",

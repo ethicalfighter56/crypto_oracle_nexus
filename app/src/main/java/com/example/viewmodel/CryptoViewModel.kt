@@ -166,6 +166,7 @@ class CryptoViewModel(application: Application) : AndroidViewModel(application) 
     var customSetup2 = MutableStateFlow(com.example.model.CustomSetupProfile())
     var defaultSetupName = MutableStateFlow("RECOMMENDED SETUP")
     var defaultAiPolicy = MutableStateFlow("ASSIST ONLY")
+    var recommendedAutoCloseConditions = MutableStateFlow<List<String>>(emptyList())
 
     fun startMission(mission: com.example.model.Mission) {
         _activeMissions.value = _activeMissions.value + mission
@@ -186,7 +187,7 @@ class CryptoViewModel(application: Application) : AndroidViewModel(application) 
         val isLogicallyNegative = isNegativeOverride ?: (if (mission.type == "LONG") currentPrice < mission.entryPrice else currentPrice > mission.entryPrice)
         _activeMissions.value = _activeMissions.value.filter { it.id != missionId }
         
-        val updatedLog = mission.missionHistoryLog + listOf("CLOSE REQUESTED", "MISSION CLOSED BY USER")
+        val updatedLog = (mission.missionHistoryLog + listOf("CLOSE REQUESTED", "MISSION CLOSED BY USER")).takeLast(20)
         
         _missionHistory.value = _missionHistory.value + mission.copy(isNegative = isLogicallyNegative, missionHistoryLog = updatedLog)
     }
