@@ -44,6 +44,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             val viewModel: CryptoViewModel = viewModel()
             val currentScreen by viewModel.currentScreen.collectAsState()
+            val hasBadge by viewModel.hasFreshRadarSignalBadge.collectAsState()
             
             Scaffold(
                 modifier = Modifier.fillMaxSize(),
@@ -114,7 +115,17 @@ class MainActivity : ComponentActivity() {
                         NavigationBarItem(
                             selected = currentScreen is AppScreen.MarketRadar,
                             onClick = { viewModel.navigateTo(AppScreen.MarketRadar) },
-                            icon = { Icon(imageVector = Icons.Default.Refresh, contentDescription = "Live indicators radar") },
+                            icon = { 
+                                BadgedBox(
+                                    badge = {
+                                        if (hasBadge) {
+                                            Badge(containerColor = Color.Red, modifier = Modifier.size(8.dp))
+                                        }
+                                    }
+                                ) {
+                                    Icon(imageVector = Icons.Default.Refresh, contentDescription = "Live indicators radar") 
+                                }
+                            },
                             label = { 
                                 Text(
                                     text = "Live Radar", 

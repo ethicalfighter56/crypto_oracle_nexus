@@ -94,6 +94,13 @@ class CryptoViewModel(application: Application) : AndroidViewModel(application) 
     private val _radarAlerts = MutableStateFlow<List<RadarAlert>>(emptyList())
     val radarAlerts: StateFlow<List<RadarAlert>> = _radarAlerts.asStateFlow()
 
+    private val _hasFreshRadarSignalBadge = MutableStateFlow(false)
+    val hasFreshRadarSignalBadge: StateFlow<Boolean> = _hasFreshRadarSignalBadge.asStateFlow()
+
+    fun clearRadarSignalBadge() {
+        _hasFreshRadarSignalBadge.value = false
+    }
+
     // Current general market regime conditions (Bull, Bear, Sideways, High Volatility, Low Liquidity)
     private val _marketRegime = MutableStateFlow("BULLISH TREND (STABLE VOLATILITY)")
     val marketRegime: StateFlow<String> = _marketRegime.asStateFlow()
@@ -154,8 +161,23 @@ class CryptoViewModel(application: Application) : AndroidViewModel(application) 
     private val _missionHistory = MutableStateFlow<List<com.example.model.Mission>>(emptyList())
     val missionHistory: StateFlow<List<com.example.model.Mission>> = _missionHistory.asStateFlow()
 
+    // Signal Setup Preferences
+    var customSetup1 = MutableStateFlow(com.example.model.CustomSetupProfile())
+    var customSetup2 = MutableStateFlow(com.example.model.CustomSetupProfile())
+    var defaultSetupName = MutableStateFlow("RECOMMENDED SETUP")
+    var defaultAiPolicy = MutableStateFlow("ASSIST ONLY")
+
     fun startMission(mission: com.example.model.Mission) {
         _activeMissions.value = _activeMissions.value + mission
+    }
+
+    fun updateMission(mission: com.example.model.Mission) {
+        val currentList = _activeMissions.value.toMutableList()
+        val index = currentList.indexOfFirst { it.id == mission.id }
+        if (index != -1) {
+            currentList[index] = mission
+            _activeMissions.value = currentList
+        }
     }
 
     fun stopMission(missionId: String, isNegativeOverride: Boolean? = null) {
@@ -163,7 +185,10 @@ class CryptoViewModel(application: Application) : AndroidViewModel(application) 
         val currentPrice = mission.currentPrice // Simulated exit
         val isLogicallyNegative = isNegativeOverride ?: (if (mission.type == "LONG") currentPrice < mission.entryPrice else currentPrice > mission.entryPrice)
         _activeMissions.value = _activeMissions.value.filter { it.id != missionId }
-        _missionHistory.value = _missionHistory.value + mission.copy(isNegative = isLogicallyNegative)
+        
+        val updatedLog = mission.missionHistoryLog + listOf("CLOSE REQUESTED", "MISSION CLOSED BY USER")
+        
+        _missionHistory.value = _missionHistory.value + mission.copy(isNegative = isLogicallyNegative, missionHistoryLog = updatedLog)
     }
 
     // Active scan coroutine job reference to prevent race conditions
@@ -401,6 +426,7 @@ class CryptoViewModel(application: Application) : AndroidViewModel(application) 
                         currentList.removeAt(currentList.lastIndex)
                     }
                     _radarAlerts.value = currentList
+                    _hasFreshRadarSignalBadge.value = true
 
                 } catch (e: Exception) {
                     Log.e("CryptoViewModel", "Error in Live Radar generator", e)

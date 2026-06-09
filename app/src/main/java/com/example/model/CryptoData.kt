@@ -154,7 +154,11 @@ data class Mission(
     val positionSize: String? = null,
     val riskProfile: String? = null,
     val copilotMode: String? = null,
-    val setupMode: String? = null // "Default Setup" or "Custom Setup"
+    val setupMode: String? = null, // "RECOMMENDED SETUP", "CUSTOM SETUP-1", "CUSTOM SETUP-2"
+    val setupRemark: String? = null,
+    val setupStatus: String? = null,
+    val setupRiskReward: String? = null,
+    val missionHistoryLog: List<String> = emptyList()
 ) {
     val userLockedEntry: Double
         get() = entryPrice
@@ -253,3 +257,14 @@ data class Mission(
         )
     }
 }
+
+data class CustomSetupProfile(
+    val tp1: String = "",
+    val tp2: String = "",
+    val tp3: String = "",
+    val stopLoss: String = "",
+    val leverage: String = "",
+    val positionSize: String = "",
+    val riskProfile: String = "",
+    val remark: String = ""
+)
