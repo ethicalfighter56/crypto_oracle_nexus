@@ -13,7 +13,9 @@ on:
           - clean assembleDebug
   push:
     branches:
+      - phase1-oracle-nexus-upgrade-safety
       - phase1-oracle-nexus-upgrade
+      - main
 
 permissions:
   contents: read
