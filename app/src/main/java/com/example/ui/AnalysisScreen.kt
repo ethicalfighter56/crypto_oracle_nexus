@@ -944,17 +944,22 @@ fun StartTradeFlow(viewModel: CryptoViewModel, mission: com.example.model.Missio
         
         val isRecommended = selectedSetup == "RECOMMENDED SETUP"
         
+        val parsedTargets = mission.targets.split("/").map { it.trim() }.filter { it.isNotEmpty() }
+        val pTp1 = parsedTargets.getOrNull(0) ?: mission.targets
+        val pTp2 = parsedTargets.getOrNull(1)
+        val pTp3 = parsedTargets.getOrNull(2)
+        
         // User profile values (what's shown in the summary for the profile)
         val profileTarget = if (isRecommended) mission.targets else activeProfile?.target?.ifBlank { null }
-        val profileTp1 = if (isRecommended) mission.targets else activeProfile?.tp1?.ifBlank { null }
-        val profileTp2 = if (isRecommended) null else activeProfile?.tp2?.ifBlank { null }
-        val profileTp3 = if (isRecommended) null else activeProfile?.tp3?.ifBlank { null }
+        val profileTp1 = if (isRecommended) pTp1 else activeProfile?.tp1?.ifBlank { null }
+        val profileTp2 = if (isRecommended) pTp2 else activeProfile?.tp2?.ifBlank { null }
+        val profileTp3 = if (isRecommended) pTp3 else activeProfile?.tp3?.ifBlank { null }
         val profileSl1 = if (isRecommended) mission.stopLoss else activeProfile?.stopLoss?.ifBlank { null }
         val profileSl2 = activeProfile?.sl2?.ifBlank { null }
-        val profileLev = if (isRecommended) "SPOT (1X)" else activeProfile?.leverage?.ifBlank { null }
-        val profileAlloc = activeProfile?.positionSize?.ifBlank { null }
+        val profileLev = if (isRecommended) (if (mission.marketType.equals("Futures", ignoreCase = true)) "5X" else "SPOT (1X)") else activeProfile?.leverage?.ifBlank { null }
+        val profileAlloc = if (isRecommended) "5%" else activeProfile?.positionSize?.ifBlank { null }
         val profileRemark = activeProfile?.remark?.ifBlank { null }
-        val profileRisk = activeProfile?.riskProfile?.ifBlank { null }
+        val profileRisk = if (isRecommended) "BALANCED" else activeProfile?.riskProfile?.ifBlank { null }
 
         // Effective mission values (used for calculations and mission creation)
         val effectiveTarget = profileTarget ?: mission.targets
