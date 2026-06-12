@@ -1496,59 +1496,6 @@ fun StartTradeFlow(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(40.dp)
-                .clip(RoundedCornerShape(10.dp))
-                .background(
-                    brush = Brush.linearGradient(
-                        colors = listOf(
-                            Color(0xFF02050D),
-                            Color(0xFF0B1220),
-                            Color(0xFF02050D)
-                        )
-                    )
-                )
-                .background(
-                    brush = Brush.horizontalGradient(
-                        colors = listOf(
-                            CryptoCyan.copy(alpha = 0.10f),
-                            CryptoGreen.copy(alpha = 0.08f),
-                            CryptoCyan.copy(alpha = 0.10f)
-                        )
-                    )
-                )
-                .background(
-                    brush = Brush.horizontalGradient(
-                        colors = listOf(
-                            Color.Transparent,
-                            CryptoCyan.copy(alpha = 0.42f),
-                            Color.White.copy(alpha = 0.12f),
-                            CryptoGreen.copy(alpha = 0.26f),
-                            Color.Transparent
-                        ),
-                        startX = recoSweepX,
-                        endX = recoSweepX + 520f
-                    )
-                )
-                .border(0.8.dp, CryptoCyan.copy(alpha = 0.66f), RoundedCornerShape(10.dp))
-                .clickable { showDecisionBrief = true }
-                .padding(horizontal = 8.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = recommendationText,
-                fontSize = 10.sp,
-                fontWeight = FontWeight.Black,
-                color = Color(0xFFF4F8FF),
-                textAlign = TextAlign.Center,
-                maxLines = 2,
-                lineHeight = 12.sp,
-                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
-            )
-        }
-
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -1559,21 +1506,51 @@ fun StartTradeFlow(
                     .weight(1f)
                     .height(40.dp)
                     .clip(RoundedCornerShape(10.dp))
-                    .background(Color(0xFF02050D), RoundedCornerShape(10.dp))
-                    .border(0.8.dp, CryptoCyan.copy(alpha = 0.72f), RoundedCornerShape(10.dp))
-                    .clickable { step = 2 }
+                    .background(
+                        brush = Brush.linearGradient(
+                            colors = listOf(
+                                Color(0xFF02050D),
+                                Color(0xFF0B1220),
+                                Color(0xFF02050D)
+                            )
+                        )
+                    )
+                    .background(
+                        brush = Brush.horizontalGradient(
+                            colors = listOf(
+                                CryptoCyan.copy(alpha = 0.10f),
+                                CryptoGreen.copy(alpha = 0.08f),
+                                CryptoCyan.copy(alpha = 0.10f)
+                            )
+                        )
+                    )
+                    .background(
+                        brush = Brush.horizontalGradient(
+                            colors = listOf(
+                                Color.Transparent,
+                                CryptoCyan.copy(alpha = 0.42f),
+                                Color.White.copy(alpha = 0.12f),
+                                CryptoGreen.copy(alpha = 0.26f),
+                                Color.Transparent
+                            ),
+                            startX = recoSweepX,
+                            endX = recoSweepX + 520f
+                        )
+                    )
+                    .border(0.8.dp, CryptoCyan.copy(alpha = 0.66f), RoundedCornerShape(10.dp))
+                    .clickable { showDecisionBrief = true }
                     .padding(horizontal = 8.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = if (highConfidence) "HIGH CONFIDENCE\n| VERIFY ENTRY |" else "REVIEW CAREFULLY\n| VERIFY ENTRY |",
+                    text = recommendationText,
+                    fontSize = 10.sp,
                     fontWeight = FontWeight.Black,
-                    fontSize = 11.sp,
-                    lineHeight = 12.5.sp,
-                    color = CryptoCyan,
-                    letterSpacing = 0.8.sp,
+                    color = Color(0xFFF4F8FF),
+                    textAlign = TextAlign.Center,
                     maxLines = 2,
-                    softWrap = true
+                    lineHeight = 12.sp,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                 )
             }
 
