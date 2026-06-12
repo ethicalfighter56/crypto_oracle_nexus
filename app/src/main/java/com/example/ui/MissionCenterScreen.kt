@@ -142,7 +142,7 @@ private fun mcSignedPct(value: Double): String {
 
 private fun mcCleanPriceText(value: String?): String {
     return value
-        ?.replace("(?i)\s*/\s*SIGNAL FALLBACK".toRegex(), "")
+        ?.replace("(?i)\\s*/\\s*SIGNAL FALLBACK".toRegex(), "")
         ?.trim()
         .orEmpty()
 }
