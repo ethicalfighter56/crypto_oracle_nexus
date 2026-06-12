@@ -1542,16 +1542,30 @@ fun StartTradeFlow(
                     .padding(horizontal = 8.dp),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = recommendationText,
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.Black,
-                    color = Color(0xFFF4F8FF),
-                    textAlign = TextAlign.Center,
-                    maxLines = 2,
-                    lineHeight = 12.sp,
-                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
-                )
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = if (highConfidence) "HIGH CONFIDENCE" else "REVIEW CAREFULLY",
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Black,
+                        color = Color(0xFFF4F8FF),
+                        textAlign = TextAlign.Center,
+                        maxLines = 1,
+                        softWrap = false
+                    )
+                    Text(
+                        text = "| VERIFY ENTRY |",
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Black,
+                        color = Color(0xFFF4F8FF),
+                        textAlign = TextAlign.Center,
+                        maxLines = 1,
+                        softWrap = false
+                    )
+                }
             }
 
             Box(
