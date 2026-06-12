@@ -83,6 +83,53 @@ private fun mcFormatUsd(value: Double): String {
     return "$" + String.format(java.util.Locale.US, "%,.2f", value)
 }
 
+private fun mcFormatMissionPriceText(value: String?): String {
+    val clean = value
+        ?.replace("(?i)\\s*/\\s*SIGNAL FALLBACK".toRegex(), "")
+        ?.replace("$", "")
+        ?.replace(",", "")
+        ?.trim()
+        .orEmpty()
+    if (clean.isBlank() || clean.equals("N/A", ignoreCase = true) || clean.equals("NOT SET", ignoreCase = true)) return "NOT SET"
+    val numeric = clean.toDoubleOrNull() ?: return value.orEmpty().ifBlank { "NOT SET" }
+    return mcFormatUsd(numeric)
+}
+
+private fun mcDisplayLeverage(value: String?, isFutures: Boolean): String {
+    val normalized = value.orEmpty().trim().uppercase()
+    return when {
+        normalized.isBlank() && isFutures -> "NOT SET"
+        normalized.isBlank() -> "1X"
+        normalized == "SPOT" -> "1X"
+        normalized == "SPOT / 1X" -> "1X"
+        normalized == "SPOT/1X" -> "1X"
+        else -> normalized
+    }
+}
+
+private fun mcSetupModeColor(value: String): Color {
+    val normalized = value.uppercase()
+    return when {
+        normalized.contains("RECOMMENDED") -> T_Green
+        normalized.contains("CUSTOM") || normalized.contains("OVERRIDDEN") -> T_Gold
+        normalized.contains("PENDING") || normalized.contains("INCOMPLETE") -> T_TextSecondary
+        else -> T_Cyan
+    }
+}
+
+private fun mcRiskProfileColor(value: String): Color {
+    val normalized = value.uppercase()
+    return when {
+        normalized.contains("CONSERVATIVE") || normalized.contains("SAFE") || normalized.contains("LOW") -> T_Cyan
+        normalized.contains("BALANCED") -> T_Green
+        normalized.contains("MEDIUM") || normalized.contains("MODERATE") -> T_Gold
+        normalized.contains("AGGRESSIVE") || normalized.contains("ELEVATED") || normalized.contains("HIGH") || normalized.contains("CUSTOM") -> T_Gold
+        normalized.contains("CRITICAL") || normalized.contains("EXTREME") || normalized.contains("INVALID") -> T_Red
+        normalized.contains("DEFAULT") -> T_Cyan
+        else -> T_TextPrimary
+    }
+}
+
 private fun mcSignedUsd(value: Double): String {
     val sign = if (value < 0.0) "-" else "+"
     return sign + "$" + String.format(java.util.Locale.US, "%,.2f", kotlin.math.abs(value))
@@ -488,8 +535,13 @@ fun HeaderSummaryDashboard(viewModel: CryptoViewModel, isBengali: Boolean) {
             Column(modifier = Modifier.weight(1.5f)) {
                 Text("AGGREGATE PnL", color = T_TextMuted, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
                 Spacer(modifier = Modifier.height(2.dp))
-                val pnlValText = if (missions.isEmpty()) "+$0.00 (+0.00%)" else "$dollrString (${mcSignedPct(aggregatePct)})"
-                Text(pnlValText, color = pnlColor, fontSize = 14.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
+                val pnlUsdText = if (missions.isEmpty()) "+$0.00" else dollrString
+                val pnlRoiText = if (missions.isEmpty()) "(+0.00%)" else "(${mcSignedPct(aggregatePct)})"
+                Row(verticalAlignment = Alignment.Bottom) {
+                    Text(pnlUsdText, color = pnlColor, fontSize = 14.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold, maxLines = 1)
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(pnlRoiText, color = pnlColor.copy(alpha = 0.86f), fontSize = 10.5.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold, maxLines = 1)
+                }
             }
             Column(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
                 Text("WARNING", color = T_TextMuted, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
@@ -1060,14 +1112,7 @@ fun MissionTerminalCard(
                 CompactDataRow("ALLOCATION", mission?.positionSize?.uppercase() ?: "NOT SET", T_TextPrimary)
                 Spacer(modifier = Modifier.height(SpacingCompact))
                 val profUpper = mission?.riskProfile?.uppercase() ?: "NOT SET"
-                val profColor = when {
-                    profUpper.contains("CONSERVATIVE") -> T_Cyan
-                    profUpper.contains("BALANCED") -> T_Green
-                    profUpper.contains("AGGRESSIVE") || profUpper.contains("CUSTOM") -> T_Gold
-                    profUpper.contains("INVALID") -> T_Red
-                    profUpper.contains("DEFAULT") -> T_Cyan
-                    else -> T_TextPrimary
-                }
+                val profColor = mcRiskProfileColor(profUpper)
                 CompactDataRow("RISK PROFILE", profUpper, profColor)
                 Spacer(modifier = Modifier.height(SpacingCompact))
                 val isAutoActive = mission?.autoCloseEnabled == true

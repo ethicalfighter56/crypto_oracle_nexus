@@ -94,7 +94,7 @@ fun MarketRadarScreen(
         modifier = modifier
             .fillMaxSize()
             .background(DarkBackground)
-            .padding(horizontal = 16.dp),
+            .padding(horizontal = 12.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
         contentPadding = PaddingValues(top = 16.dp, bottom = 24.dp)
     ) {
@@ -451,12 +451,9 @@ fun ShortTermOpportunisticSignalsSection(timeframe: String, isBengali: Boolean, 
 
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         // --- 1. SPOT SECTIONS ---
-        Text(
-            text = if (isBengali) "🔥 তাত্ক্ষণিক স্পট টার্গেট (সেরা ৩)" else "🔥 HOT SPOT TRIGGERS (TOP 3)",
-            fontSize = 11.sp,
-            fontWeight = FontWeight.Bold,
-            color = LiveRadarInstitutionalYellow,
-            letterSpacing = 0.5.sp
+        RadarTriggerSectionHeader(
+            title = if (isBengali) "🔥 তাত্ক্ষণিক স্পট টার্গেট (সেরা ৩)" else "🔥 HOT SPOT TRIGGERS (TOP 3)",
+            accentColor = LiveRadarInstitutionalYellow
         )
 
         spotScalps.forEachIndexed { index, (name, symbol, basePrice) ->
@@ -544,7 +541,7 @@ fun ShortTermOpportunisticSignalsSection(timeframe: String, isBengali: Boolean, 
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    val mission = remember(symbol, target) {
+                    val mission = remember(symbol, target, timeframe) {
                         com.example.model.Mission(
                             coinSymbol = symbol,
                             type = "LONG",
@@ -567,12 +564,9 @@ fun ShortTermOpportunisticSignalsSection(timeframe: String, isBengali: Boolean, 
         Spacer(modifier = Modifier.height(4.dp))
 
         // --- 2. FUTURES LONG SECTIONS ---
-        Text(
-            text = if (isBengali) "⚡ ফিউচার লং টার্গেট" else "⚡ FUTURES LONG TRIGGERS (TOP 3)",
-            fontSize = 11.sp,
-            fontWeight = FontWeight.Bold,
-            color = LiveRadarInstitutionalGreen,
-            letterSpacing = 0.5.sp
+        RadarTriggerSectionHeader(
+            title = if (isBengali) "⚡ ফিউচার লং টার্গেট" else "⚡ FUTURES LONG TRIGGERS (TOP 3)",
+            accentColor = LiveRadarInstitutionalGreen
         )
 
         longScalps.forEachIndexed { index, (name, symbol, basePrice) ->
@@ -660,7 +654,7 @@ fun ShortTermOpportunisticSignalsSection(timeframe: String, isBengali: Boolean, 
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    val mission = remember(symbol, target) {
+                    val mission = remember(symbol, target, timeframe) {
                         com.example.model.Mission(
                             coinSymbol = symbol,
                             type = "LONG",
@@ -683,12 +677,9 @@ fun ShortTermOpportunisticSignalsSection(timeframe: String, isBengali: Boolean, 
         Spacer(modifier = Modifier.height(4.dp))
 
         // --- 3. FUTURES SHORT SECTIONS ---
-        Text(
-            text = if (isBengali) "🔻 ফিউচার শর্ট টার্গেট (সেরা ৩)" else "🔻 FUTURES SHORT TRIGGERS (TOP 3)",
-            fontSize = 11.sp,
-            fontWeight = FontWeight.Bold,
-            color = LiveRadarDangerRed,
-            letterSpacing = 0.5.sp
+        RadarTriggerSectionHeader(
+            title = if (isBengali) "🔻 ফিউচার শর্ট টার্গেট (সেরা ৩)" else "🔻 FUTURES SHORT TRIGGERS (TOP 3)",
+            accentColor = LiveRadarDangerRed
         )
 
         shortScalps.forEachIndexed { index, (name, symbol, basePrice) ->
@@ -776,7 +767,7 @@ fun ShortTermOpportunisticSignalsSection(timeframe: String, isBengali: Boolean, 
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    val mission = remember(symbol, target) {
+                    val mission = remember(symbol, target, timeframe) {
                         com.example.model.Mission(
                             coinSymbol = symbol,
                             type = "SHORT",
@@ -1155,7 +1146,7 @@ private fun OracleAnalyticMetadataGrid(
             )
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(6.dp))
 
         Row(
             modifier = Modifier.fillMaxWidth(),

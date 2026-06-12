@@ -438,7 +438,7 @@ fun PredictionDashboard(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f)
-                .padding(horizontal = 16.dp)
+                .padding(horizontal = 12.dp)
         ) {
             when (selectedIndex) {
                 0 -> {
@@ -1089,8 +1089,8 @@ fun StartTradeFlow(
         isBengali && highConfidence && isLong -> "উচ্চ আস্থা | এন্ট্রি যাচাই"
         isBengali && highConfidence && !isLong -> "উচ্চ আস্থা | শর্ট যাচাই"
         isBengali && !highConfidence -> "সতর্কভাবে যাচাই করুন"
-        !isBengali && highConfidence -> "HIGH CONFIDENCE | VERIFY ENTRY"
-        else -> "REVIEW CAREFULLY | VERIFY ENTRY"
+        !isBengali && highConfidence -> "HIGH CONFIDENCE | VERIFY ENTRY |"
+        else -> "REVIEW CAREFULLY | VERIFY ENTRY |"
     }
 
     val verdictText = when {
@@ -1139,7 +1139,7 @@ fun StartTradeFlow(
     val defaultTp3 = parsedSignalTargets.getOrNull(2).orEmpty()
     val defaultTarget = parsedSignalTargets.lastOrNull().orEmpty()
     val defaultStopLoss = mission.stopLoss.takeIf { it.isNotBlank() && !it.equals("N/A", ignoreCase = true) && !it.equals("NOT SET", ignoreCase = true) }.orEmpty()
-    val defaultLeverage = if (mission.marketType.contains("Futures", ignoreCase = true)) "NOT SET" else "SPOT / 1X"
+    val defaultLeverage = if (mission.marketType.contains("Futures", ignoreCase = true)) "NOT SET" else "1X"
 
     var setupTarget by remember(mission.id, mission.targets, mission.stopLoss) { mutableStateOf(defaultTarget) }
     var setupTp1 by remember(mission.id, mission.targets, mission.stopLoss) { mutableStateOf(defaultTp1) }
@@ -1492,14 +1492,13 @@ fun StartTradeFlow(
         label = "RecommendationSweepX"
     )
 
-    Row(
+    Column(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Box(
             modifier = Modifier
-                .weight(1f)
+                .fillMaxWidth()
                 .height(40.dp)
                 .clip(RoundedCornerShape(10.dp))
                 .background(
@@ -1550,48 +1549,76 @@ fun StartTradeFlow(
             )
         }
 
-        Box(
-            modifier = Modifier
-                .scale(scale)
-                .height(40.dp)
-                .widthIn(min = 128.dp, max = 164.dp)
-                .background(
-                    brush = Brush.linearGradient(
-                        colors = listOf(
-                            CryptoCyan.copy(alpha = pulseAlpha),
-                            CryptoGreen.copy(alpha = pulseAlpha)
-                        )
-                    ),
-                    shape = RoundedCornerShape(10.dp)
-                )
-                .border(0.8.dp, Color.White.copy(alpha = 0.28f), RoundedCornerShape(10.dp))
-                .clickable(
-                    interactionSource = interactionSource,
-                    indication = LocalIndication.current,
-                    onClick = { step = 1 }
-                )
-                .padding(horizontal = 10.dp),
-            contentAlignment = Alignment.Center
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = Icons.Default.PlayArrow,
-                    contentDescription = "Start Trade",
-                    tint = Color.White,
-                    modifier = Modifier.size(15.dp)
-                )
-
-                Spacer(modifier = Modifier.width(5.dp))
-
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(40.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(Color(0xFF02050D), RoundedCornerShape(10.dp))
+                    .border(0.8.dp, CryptoCyan.copy(alpha = 0.72f), RoundedCornerShape(10.dp))
+                    .clickable { step = 2 }
+                    .padding(horizontal = 8.dp),
+                contentAlignment = Alignment.Center
+            ) {
                 Text(
-                    text = "ACCEPT SIGNAL",
+                    text = "SIGNAL SETUP",
                     fontWeight = FontWeight.Black,
                     fontSize = 11.sp,
-                    color = Color.White,
-                    letterSpacing = 1.sp,
+                    color = CryptoCyan,
+                    letterSpacing = 0.8.sp,
                     maxLines = 1,
                     softWrap = false
                 )
+            }
+
+            Box(
+                modifier = Modifier
+                    .scale(scale)
+                    .weight(1f)
+                    .height(40.dp)
+                    .background(
+                        brush = Brush.linearGradient(
+                            colors = listOf(
+                                CryptoCyan.copy(alpha = pulseAlpha),
+                                CryptoGreen.copy(alpha = pulseAlpha)
+                            )
+                        ),
+                        shape = RoundedCornerShape(10.dp)
+                    )
+                    .border(0.8.dp, Color.White.copy(alpha = 0.28f), RoundedCornerShape(10.dp))
+                    .clickable(
+                        interactionSource = interactionSource,
+                        indication = LocalIndication.current,
+                        onClick = { step = 1 }
+                    )
+                    .padding(horizontal = 10.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.PlayArrow,
+                        contentDescription = "Start Trade",
+                        tint = Color.White,
+                        modifier = Modifier.size(15.dp)
+                    )
+
+                    Spacer(modifier = Modifier.width(5.dp))
+
+                    Text(
+                        text = "ACCEPT SIGNAL",
+                        fontWeight = FontWeight.Black,
+                        fontSize = 11.sp,
+                        color = Color.White,
+                        letterSpacing = 0.8.sp,
+                        maxLines = 1,
+                        softWrap = false
+                    )
+                }
             }
         }
     }
@@ -2737,7 +2764,7 @@ fun ConsensusMetricColumn(
             overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
         )
 
-        Spacer(modifier = Modifier.height(3.dp))
+        Spacer(modifier = Modifier.height(2.dp))
 
         Text(
             text = value,
@@ -3527,7 +3554,7 @@ fun QualityMetricColumn(
     modifier: Modifier = Modifier
 ) {
     Column(
-        modifier = modifier.heightIn(min = 42.dp),
+        modifier = modifier.heightIn(min = 36.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
@@ -3602,7 +3629,7 @@ fun SignalQualitySystemBlock(
             .border(0.95.dp, CryptoCyan.copy(alpha = 0.62f), RoundedCornerShape(12.dp)),
         shape = RoundedCornerShape(12.dp)
     ) {
-        Column(modifier = Modifier.padding(14.dp)) {
+        Column(modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)) {
             Text(
                 text = if (isBengali) "সিগন্যাল মান যাচাই সূচক" else "SIGNAL QUALITY ENGINE INDEX",
                 fontSize = 10.sp,
@@ -3653,9 +3680,9 @@ fun SignalQualitySystemBlock(
                 }
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(6.dp))
             HorizontalDivider(color = BorderColor.copy(alpha = 0.4f))
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(6.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
