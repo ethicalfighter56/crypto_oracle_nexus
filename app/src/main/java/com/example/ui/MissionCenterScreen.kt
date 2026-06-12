@@ -117,14 +117,14 @@ private fun mcSetupModeColor(value: String): Color {
     }
 }
 
-private fun mcRiskProfileColor(value: String): Color {
-    val normalized = value.uppercase()
+
+private fun mcRiskProfileColor(value: String?): Color {
+    val normalized = value?.uppercase().orEmpty()
     return when {
         normalized.contains("CONSERVATIVE") || normalized.contains("SAFE") || normalized.contains("LOW") -> T_Cyan
-        normalized.contains("BALANCED") -> T_Green
-        normalized.contains("MEDIUM") || normalized.contains("MODERATE") -> T_Gold
-        normalized.contains("AGGRESSIVE") || normalized.contains("ELEVATED") || normalized.contains("HIGH") || normalized.contains("CUSTOM") -> T_Gold
-        normalized.contains("CRITICAL") || normalized.contains("EXTREME") || normalized.contains("INVALID") -> T_Red
+        normalized.contains("BALANCED") || normalized.contains("MEDIUM") || normalized.contains("MODERATE") -> T_Green
+        normalized.contains("AGGRESSIVE") || normalized.contains("ELEVATED") || normalized.contains("CUSTOM") -> T_Gold
+        normalized.contains("HIGH") || normalized.contains("CRITICAL") || normalized.contains("EXTREME") || normalized.contains("INVALID") -> T_Red
         normalized.contains("DEFAULT") -> T_Cyan
         else -> T_TextPrimary
     }
@@ -152,17 +152,6 @@ private fun mcFormatDisplayPrice(value: String?): String {
     if (cleaned.isBlank() || cleaned.equals("NOT SET", ignoreCase = true) || cleaned.equals("N/A", ignoreCase = true)) return if (cleaned.isBlank()) "NOT SET" else cleaned.uppercase()
     val numeric = cleaned.replace("$", "").replace(",", "").toDoubleOrNull()
     return if (numeric != null) mcFormatUsd(numeric) else cleaned
-}
-
-private fun mcRiskProfileColor(value: String?): Color {
-    val v = value?.uppercase().orEmpty()
-    return when {
-        v.contains("CONSERVATIVE") || v.contains("LOW") || v.contains("SAFE") -> T_Cyan
-        v.contains("BALANCED") || v.contains("MEDIUM") || v.contains("MODERATE") -> T_Green
-        v.contains("AGGRESSIVE") || v.contains("ELEVATED") || v.contains("CUSTOM") -> T_Gold
-        v.contains("HIGH") || v.contains("INVALID") || v.contains("CRITICAL") -> T_Red
-        else -> T_TextPrimary
-    }
 }
 
 private fun mcValidateAutoTrading(
