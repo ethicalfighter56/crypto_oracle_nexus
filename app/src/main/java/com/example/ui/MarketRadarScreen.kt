@@ -37,10 +37,6 @@ fun MarketRadarScreen(
     viewModel: CryptoViewModel,
     modifier: Modifier = Modifier
 ) {
-    LaunchedEffect(Unit) {
-        viewModel.clearRadarSignalBadge()
-    }
-
     val radarAlerts by viewModel.radarAlerts.collectAsState()
     val marketRegime by viewModel.marketRegime.collectAsState()
     val shortTermInterval by viewModel.shortTermTimeframe.collectAsState()
@@ -515,7 +511,7 @@ fun ShortTermOpportunisticSignalsSection(timeframe: String, isBengali: Boolean, 
                             aiStatusBengali = "রাডার স্পট সেটআপ সক্রিয়।"
                         )
                     }
-                    com.example.ui.StartTradeFlow(viewModel = viewModel, mission = mission, livePrice = livePrices["${symbol}USDT"] ?: basePrice)
+                    com.example.ui.StartTradeFlow(viewModel = viewModel, mission = mission)
                 }
             }
         }
@@ -630,7 +626,7 @@ fun ShortTermOpportunisticSignalsSection(timeframe: String, isBengali: Boolean, 
                             aiStatusBengali = "রাডার লং সেটআপ সক্রিয়।"
                         )
                     }
-                    com.example.ui.StartTradeFlow(viewModel = viewModel, mission = mission, livePrice = livePrices["${symbol}USDT"] ?: basePrice)
+                    com.example.ui.StartTradeFlow(viewModel = viewModel, mission = mission)
                 }
             }
         }
@@ -745,7 +741,7 @@ fun ShortTermOpportunisticSignalsSection(timeframe: String, isBengali: Boolean, 
                             aiStatusBengali = "রাডার শর্ট সেটআপ সক্রিয়।"
                         )
                     }
-                    com.example.ui.StartTradeFlow(viewModel = viewModel, mission = mission, livePrice = livePrices["${symbol}USDT"] ?: basePrice)
+                    com.example.ui.StartTradeFlow(viewModel = viewModel, mission = mission)
                 }
             }
         }
