@@ -62,6 +62,9 @@ import com.example.viewmodel.AppScreen
 import com.example.viewmodel.CryptoViewModel
 import kotlinx.coroutines.delay
 import kotlin.math.absoluteValue
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.navigationBarsPadding
 
 @Composable
 fun AnalysisScreen(
@@ -163,7 +166,7 @@ fun AnalyzingTelemetryScreen(stepMessage: String) {
             modifier = Modifier
                 .fillMaxWidth(0.9f)
                 .background(DarkSurface, RoundedCornerShape(12.dp))
-                .border(1.dp, BorderColor, RoundedCornerShape(12.dp))
+                .border(0.95.dp, CryptoCyan.copy(alpha = 0.62f), RoundedCornerShape(12.dp))
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
@@ -183,6 +186,51 @@ fun AnalyzingTelemetryScreen(stepMessage: String) {
     }
 }
 
+private fun signalProTimeframeLabel(index: Int): String = when (index) {
+    0 -> "6H"
+    1 -> "12H"
+    2 -> "24H"
+    3 -> "3D"
+    else -> "7D"
+}
+
+private fun signalProfileConfidenceColor(score: Int): Color = when {
+    score >= 80 -> CryptoGreen
+    score >= 60 -> AccentGold
+    else -> CryptoRedText
+}
+
+private fun signalProfileRiskColor(value: String): Color {
+    val normalized = value.uppercase()
+    return when {
+        normalized.contains("LOW") || normalized.contains("SAFE") || normalized.contains("CONSERVATIVE") -> CryptoGreen
+        normalized.contains("MEDIUM") || normalized.contains("MODERATE") || normalized.contains("BALANCED") -> AccentGold
+        normalized.contains("HIGH") || normalized.contains("ELEVATED") || normalized.contains("AGGRESSIVE") -> Color(0xFFFF9F0A)
+        normalized.contains("CRITICAL") || normalized.contains("EXTREME") || normalized.contains("INVALID") -> CryptoRedText
+        else -> TextSecondary
+    }
+}
+
+private fun signalProfileAllocationColor(value: String): Color {
+    val normalized = value.uppercase()
+    return when {
+        normalized.contains("CONSERVATIVE") -> CryptoCyan
+        normalized.contains("BALANCED") -> CryptoGreen
+        normalized.contains("AGGRESSIVE") -> AccentGold
+        normalized.contains("HIGH") || normalized.contains("MAX") -> CryptoRedText
+        else -> TextSecondary
+    }
+}
+
+private fun signalProfileDirectionColor(value: String): Color {
+    val normalized = value.uppercase()
+    return when {
+        normalized.contains("BEAR") || normalized.contains("SHORT") || normalized.contains("কমছে") -> CryptoRedText
+        normalized.contains("BULL") || normalized.contains("LONG") || normalized.contains("বাড়ছে") -> CryptoGreen
+        else -> CryptoCyan
+    }
+}
+
 @Composable
 fun PredictionDashboard(
     data: OracleAnalysisResponse,
@@ -192,6 +240,7 @@ fun PredictionDashboard(
     var futuresSubTab by remember { mutableStateOf(0) }
     var spotTimeframe by remember { mutableStateOf(0) }
     var futuresTimeframe by remember { mutableStateOf(0) }
+    val isBengali by viewModel.isBengali.collectAsState()
 
     Column(modifier = Modifier.fillMaxSize()) {
         // App Custom Toolbar
@@ -213,8 +262,8 @@ fun PredictionDashboard(
                     tint = TextPrimary
                 )
             }
-            Spacer(modifier = Modifier.width(16.dp))
-            Column {
+            Spacer(modifier = Modifier.width(10.dp))
+            Column(modifier = Modifier.weight(1f).padding(end = 12.dp)) {
                 Text(
                     text = "PREDICTIONS",
                     fontSize = 11.sp,
@@ -229,19 +278,40 @@ fun PredictionDashboard(
                     color = TextPrimary
                 )
             }
-            Spacer(modifier = Modifier.weight(1f))
             
-            // Re-run scanner
-            IconButton(
-                onClick = { viewModel.runScanner() },
-                modifier = Modifier
-                    .background(DarkSurface, CircleShape)
-                    .border(1.dp, BorderColor, CircleShape)
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(0.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.wrapContentWidth()
             ) {
-                Icon(
-                    imageVector = Icons.Default.Refresh,
-                    contentDescription = "Re-run scanner",
-                    tint = CryptoCyan
+                IconButton(
+                    onClick = { viewModel.runScanner() },
+                    modifier = Modifier
+                        .size(36.dp)
+                        .background(
+                            brush = Brush.radialGradient(
+                                colors = listOf(
+                                    CryptoCyan.copy(alpha = 0.18f),
+                                    Color(0xFF050A13)
+                                )
+                            ),
+                            shape = CircleShape
+                        )
+                        .border(1.dp, BorderColor, CircleShape)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Refresh,
+                        contentDescription = "Re-run scanner",
+                        tint = CryptoCyan,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(16.dp))
+
+                SignalProLanguageSwitchButton(
+                    isBengali = isBengali,
+                    onClick = { viewModel.toggleLanguage() }
                 )
             }
         }
@@ -346,7 +416,7 @@ fun PredictionDashboard(
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 8.dp)
                 .background(DarkSurface, RoundedCornerShape(12.dp))
-                .border(1.dp, BorderColor, RoundedCornerShape(12.dp))
+                .border(0.95.dp, CryptoCyan.copy(alpha = 0.62f), RoundedCornerShape(12.dp))
                 .padding(4.dp)
         ) {
             TabButton(
@@ -368,7 +438,7 @@ fun PredictionDashboard(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f)
-                .padding(horizontal = 16.dp)
+                .padding(horizontal = 12.dp)
         ) {
             when (selectedIndex) {
                 0 -> {
@@ -448,6 +518,37 @@ fun PredictionDashboard(
         }
     }
 }
+
+
+@Composable
+fun SignalProLanguageSwitchButton(
+    isBengali: Boolean,
+    onClick: () -> Unit
+) {
+    Button(
+        onClick = onClick,
+        colors = ButtonDefaults.buttonColors(
+            containerColor = DarkSurface,
+            contentColor = CryptoCyan
+        ),
+        shape = RoundedCornerShape(8.dp),
+        border = BorderStroke(1.dp, BorderColor),
+        modifier = Modifier
+            .height(36.dp)
+            .width(82.dp),
+        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
+    ) {
+        Text(
+            text = if (isBengali) "English" else "বাংলা",
+            fontWeight = FontWeight.Bold,
+            fontSize = 11.sp,
+            maxLines = 1,
+            softWrap = false,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Clip
+        )
+    }
+}
+
 
 @Composable
 fun TabButton(
@@ -606,7 +707,7 @@ fun SpotItemCard(coin: SpotSignal, timeframeIndex: Int, viewModel: CryptoViewMod
     }
 
     Card(
-        colors = CardDefaults.cardColors(containerColor = DarkSurface),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF030712)),
         shape = RoundedCornerShape(16.dp),
         modifier = Modifier
             .fillMaxWidth()
@@ -830,7 +931,7 @@ fun SpotItemCard(coin: SpotSignal, timeframeIndex: Int, viewModel: CryptoViewMod
                         3 -> 72
                         else -> 168
                     }
-                    RealTimeCountdown(coin.coinSymbol, hours)
+                    RealTimeCountdown(coin.coinSymbol, hours, isBengali)
                     
                     Spacer(modifier = Modifier.height(16.dp))
                     
@@ -848,7 +949,8 @@ fun SpotItemCard(coin: SpotSignal, timeframeIndex: Int, viewModel: CryptoViewMod
                         confidence = confidence,
                         probability = (confidence - 4).coerceIn(40, 99),
                         riskGrade = if (coin.oracleScore >= 85) "LOW" else "MEDIUM"
-                    )
+                    ,
+                        isBengali = isBengali)
 
                     Spacer(modifier = Modifier.height(16.dp))
 
@@ -858,15 +960,17 @@ fun SpotItemCard(coin: SpotSignal, timeframeIndex: Int, viewModel: CryptoViewMod
                         momentumConfirmed = coin.momentumStrength != "WEAK",
                         liquidityConfirmed = coin.liquidityStrength != "WEAK",
                         riskEvaluated = true
-                    )
+                    ,
+                        isBengali = isBengali)
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    MarketRegimeTraceModule(coin.coinSymbol)
+                    MarketRegimeTraceModule(coin.coinSymbol,
+                        isBengali = isBengali)
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    MultiAiConsensusModule(coin.coinSymbol, coin.oracleScore, true)
+                    MultiAiConsensusModule(coin.coinSymbol, coin.oracleScore, true, isBengali)
 
                     Spacer(modifier = Modifier.height(16.dp))
 
@@ -893,6 +997,7 @@ fun SpotItemCard(coin: SpotSignal, timeframeIndex: Int, viewModel: CryptoViewMod
                             coinSymbol = coin.coinSymbol,
                             type = "LONG",
                             marketType = "Spot",
+                            signalTimeframe = signalProTimeframeLabel(timeframeIndex),
                             entryPrice = coin.currentPrice,
                             currentPrice = coin.currentPrice,
                             targets = formatPrice(projectedPrice),
@@ -922,652 +1027,590 @@ fun SpotItemCard(coin: SpotSignal, timeframeIndex: Int, viewModel: CryptoViewMod
 }
 
 @Composable
-fun StartTradeFlow(viewModel: CryptoViewModel, mission: com.example.model.Mission, livePrice: Double) {
-    var step by remember { mutableStateOf(0) }
-
-    val custom1 by viewModel.customSetup1.collectAsState()
-    val custom2 by viewModel.customSetup2.collectAsState()
-    val defaultName by viewModel.defaultSetupName.collectAsState()
-    val defaultPolicy by viewModel.defaultAiPolicy.collectAsState()
-    val recAutoCloseFlow by viewModel.recommendedAutoCloseConditions.collectAsState()
-
-    if (step == 1) {
-        val verifiedEntryLocked = remember { livePrice }
-        var selectedSetup by remember { mutableStateOf(defaultName) }
-        var aiPolicy by remember { mutableStateOf(defaultPolicy) }
-
-        val activeProfile = when (selectedSetup) {
-            "CUSTOM SETUP-1", "SETUP-1" -> custom1
-            "CUSTOM SETUP-2", "SETUP-2" -> custom2
-            else -> null
-        }
-        
-        val isRecommended = selectedSetup == "RECOMMENDED SETUP"
-        
-        val parsedTargets = mission.targets.split("/").map { it.trim() }.filter { it.isNotEmpty() }
-        val pTp1 = parsedTargets.getOrNull(0) ?: mission.targets
-        val pTp2 = parsedTargets.getOrNull(1)
-        val pTp3 = parsedTargets.getOrNull(2)
-        
-        // User profile values (what's shown in the summary for the profile)
-        val profileTarget = if (isRecommended) mission.targets else activeProfile?.target?.ifBlank { null }
-        val profileTp1 = if (isRecommended) pTp1 else activeProfile?.tp1?.ifBlank { null }
-        val profileTp2 = if (isRecommended) pTp2 else activeProfile?.tp2?.ifBlank { null }
-        val profileTp3 = if (isRecommended) pTp3 else activeProfile?.tp3?.ifBlank { null }
-        val profileSl1 = if (isRecommended) mission.stopLoss else activeProfile?.stopLoss?.ifBlank { null }
-        val profileSl2 = activeProfile?.sl2?.ifBlank { null }
-        val profileLev = if (isRecommended) (if (mission.marketType.equals("Futures", ignoreCase = true)) "5X" else "SPOT (1X)") else activeProfile?.leverage?.ifBlank { null }
-        val profileAlloc = if (isRecommended) "5%" else activeProfile?.positionSize?.ifBlank { null }
-        val profileRemark = activeProfile?.remark?.ifBlank { null }
-        val profileRisk = if (isRecommended) "BALANCED" else activeProfile?.riskProfile?.ifBlank { null }
-
-        // Effective mission values (used for calculations and mission creation)
-        val effectiveTarget = profileTarget ?: mission.targets
-        val effectiveTp1 = profileTp1 ?: mission.targets
-        val effectiveTp2 = profileTp2
-        val effectiveTp3 = profileTp3
-        val effectiveSl1 = profileSl1 ?: mission.stopLoss
-        val effectiveSl2 = profileSl2
-        val effectiveLev = profileLev
-
-        val numberRegex = Regex("[0-9]*\\.?[0-9]+")
-        val parsedTarget = effectiveTarget?.replace(",", "")?.let { numberRegex.find(it)?.value?.toDoubleOrNull() }
-        val parsedTp1 = effectiveTp1?.replace(",", "")?.let { numberRegex.find(it)?.value?.toDoubleOrNull() }
-        val parsedTp2 = effectiveTp2?.replace(",", "")?.let { numberRegex.find(it)?.value?.toDoubleOrNull() }
-        val parsedTp3 = effectiveTp3?.replace(",", "")?.let { numberRegex.find(it)?.value?.toDoubleOrNull() }
-        val parsedSl1 = effectiveSl1?.replace(",", "")?.let { numberRegex.find(it)?.value?.toDoubleOrNull() }
-        val parsedSl2 = effectiveSl2?.replace(",", "")?.let { numberRegex.find(it)?.value?.toDoubleOrNull() }
-        
-        val autoCloseOptions = if (isRecommended) recAutoCloseFlow else activeProfile?.autoCloseConditions ?: emptyList()
-        val isLong = mission.type.uppercase() == "LONG" || mission.type.uppercase() == "BUY"
-        val (acValid, acReason) = validateAutoClose(isLong, verifiedEntryLocked, parsedTarget, parsedTp1, parsedTp2, parsedTp3, parsedSl1, parsedSl2, autoCloseOptions, verifiedEntryLocked)
-
-        AlertDialog(
-            onDismissRequest = { step = 0 },
-            title = { Text("Confirm Trade Activation", color = CryptoCyan, fontSize = 16.sp, fontWeight = FontWeight.Bold) },
-            text = {
-                Column(modifier = Modifier.fillMaxWidth().heightIn(max = 400.dp)) {
-                    Text("CURRENT MARKET PRICE: ${String.format("%.4f", verifiedEntryLocked)} USDT", color = TextPrimary, fontSize = 12.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
-                    Spacer(modifier = Modifier.height(12.dp))
-                    
-                    Text("SELECT SETUP:", color = TextSecondary, fontSize = 10.sp)
-                    Spacer(modifier = Modifier.height(6.dp))
-                    
-                    val setups = listOf("RECOMMENDED SETUP", "SETUP-1", "SETUP-2")
-                    setups.forEach { setup ->
-                        Box(
-                            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp).clickable { selectedSetup = setup }
-                                .background(if (selectedSetup == setup) CryptoCyan.copy(alpha = 0.2f) else Color.Transparent, RoundedCornerShape(4.dp))
-                                .border(1.dp, if (selectedSetup == setup) CryptoCyan else BorderColor, RoundedCornerShape(4.dp))
-                                .padding(12.dp)
-                        ) {
-                            Text(setup, color = if (selectedSetup == setup) CryptoCyan else TextSecondary, fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                        }
-                    }
-                    
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text("SETUP SUMMARY", color = TextSecondary, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
-                    Spacer(modifier = Modifier.height(6.dp))
-                    Box(
-                        modifier = Modifier.fillMaxWidth()
-                            .background(DarkSurface, RoundedCornerShape(4.dp))
-                            .border(1.dp, BorderColor, RoundedCornerShape(4.dp))
-                            .padding(12.dp)
-                    ) {
-                        Column {
-                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                Text("SETUP USED", color = TextSecondary, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
-                                Text(selectedSetup, color = CryptoCyan, fontSize = 9.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
-                            }
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                Text("TARGET", color = TextSecondary, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
-                                val tgText = if (isRecommended) "${mission.targets} / SYSTEM RECOMMENDED" else (profileTarget ?: "NOT SET")
-                                Text(tgText, color = if (profileTarget != null || isRecommended) Color(0xFF34C759) else TextSecondary, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
-                            }
-                            if (!isRecommended && profileTarget == null && mission.targets != null) {
-                                Spacer(modifier = Modifier.height(2.dp))
-                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                    Text("EFFECTIVE TARGET", color = TextSecondary, fontSize = 8.sp, fontFamily = FontFamily.Monospace)
-                                    Text("${mission.targets} / SIGNAL FALLBACK", color = Color(0xFF34C759), fontSize = 8.sp, fontFamily = FontFamily.Monospace)
-                                }
-                            }
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                Text("TP1", color = TextSecondary, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
-                                val tpText = if (isRecommended) "${mission.targets} / SYSTEM RECOMMENDED" else (profileTp1 ?: "NOT SET")
-                                Text(tpText, color = if (profileTp1 != null || isRecommended) Color(0xFF34C759) else TextSecondary, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
-                            }
-                            if (!isRecommended && profileTp1 == null && mission.targets != null) {
-                                Spacer(modifier = Modifier.height(2.dp))
-                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                    Text("EFFECTIVE TP1", color = TextSecondary, fontSize = 8.sp, fontFamily = FontFamily.Monospace)
-                                    Text("${mission.targets} / SIGNAL FALLBACK", color = Color(0xFF34C759), fontSize = 8.sp, fontFamily = FontFamily.Monospace)
-                                }
-                            }
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                Text("TP2", color = TextSecondary, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
-                                Text(profileTp2 ?: "NOT SET", color = if (profileTp2 != null) Color(0xFF34C759) else TextSecondary, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
-                            }
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                Text("TP3", color = TextSecondary, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
-                                Text(profileTp3 ?: "NOT SET", color = if (profileTp3 != null) Color(0xFF34C759) else TextSecondary, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
-                            }
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                Text("SL1 (STOP LOSS)", color = TextSecondary, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
-                                val slText = if (isRecommended) "${mission.stopLoss} / SYSTEM RECOMMENDED" else (profileSl1 ?: "NOT SET")
-                                Text(slText, color = if (profileSl1 != null || isRecommended) Color(0xFFFF3B30) else TextSecondary, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
-                            }
-                            if (!isRecommended && profileSl1 == null && mission.stopLoss != null) {
-                                Spacer(modifier = Modifier.height(2.dp))
-                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                    Text("EFFECTIVE SL1", color = TextSecondary, fontSize = 8.sp, fontFamily = FontFamily.Monospace)
-                                    Text("${mission.stopLoss} / SIGNAL FALLBACK", color = Color(0xFFFF3B30), fontSize = 8.sp, fontFamily = FontFamily.Monospace)
-                                }
-                            }
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                Text("SL2", color = TextSecondary, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
-                                Text(profileSl2 ?: "NOT SET", color = if (profileSl2 != null) Color(0xFFFF3B30) else TextSecondary, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
-                            }
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                Text("LEVERAGE", color = TextSecondary, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
-                                val levText = if (isRecommended) "SPOT (1X) / SYSTEM RECOMMENDED" else (profileLev ?: "NOT SET")
-                                Text(levText, color = if (profileLev != null || isRecommended) TextPrimary else TextSecondary, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
-                            }
-                            if (!isRecommended && profileLev == null) {
-                                Spacer(modifier = Modifier.height(2.dp))
-                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                    Text("EFFECTIVE LEV", color = TextSecondary, fontSize = 8.sp, fontFamily = FontFamily.Monospace)
-                                    Text(if (mission.marketType.equals("Spot", ignoreCase = true)) "SPOT (1X) / SIGNAL FALLBACK" else "NOT SET", color = TextPrimary, fontSize = 8.sp, fontFamily = FontFamily.Monospace)
-                                }
-                            }
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                Text("ALLOCATION", color = TextSecondary, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
-                                Text(profileAlloc?.uppercase() ?: "NOT SET", color = TextPrimary, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
-                            }
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                Text("RISK PROFILE", color = TextSecondary, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
-                                Text(profileRisk?.uppercase() ?: "NOT SET", color = TextPrimary, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
-                            }
-                            if (profileRemark != null) {
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                    Text("REMARK", color = TextSecondary, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
-                                    Text(profileRemark.uppercase(), color = TextPrimary, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
-                                }
-                            }
-                            
-                            Spacer(modifier = Modifier.height(12.dp))
-                            
-                            if (parsedTp1 != null && parsedSl1 != null && verifiedEntryLocked > 0.0) {
-                                val risk = kotlin.math.abs(verifiedEntryLocked - parsedSl1)
-                                val reward = kotlin.math.abs(parsedTp1 - verifiedEntryLocked)
-                                if (risk > 0.0 && reward > 0.0) {
-                                    val ratio = reward / risk
-                                    val ratioColor = if (ratio >= 2.0) Color(0xFF34C759) else if (ratio >= 1.0) AccentGold else Color(0xFFFF3B30)
-                                    
-                                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                        Text("RISK : REWARD", color = TextSecondary, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
-                                        Text("1 : ${String.format("%.1f", ratio)}", color = ratioColor, fontSize = 9.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
-                                    }
-                                    Spacer(modifier = Modifier.height(4.dp))
-                                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                        Text("STATUS", color = TextSecondary, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
-                                        Text("READY", color = setupStatusColor("READY"), fontSize = 9.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
-                                    }
-                                    
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                    
-                                    val totalSize = risk + reward
-                                    val riskWeight = (risk / totalSize).toFloat().coerceIn(0.15f, 0.85f)
-                                    val rewardWeight = (reward / totalSize).toFloat().coerceIn(0.15f, 0.85f)
-
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .height(6.dp)
-                                            .clip(RoundedCornerShape(3.dp)),
-                                        horizontalArrangement = Arrangement.spacedBy(2.dp)
-                                    ) {
-                                        Box(modifier = Modifier.weight(riskWeight).fillMaxHeight().background(Color(0xFFFF3B30)))
-                                        Box(modifier = Modifier.weight(rewardWeight).fillMaxHeight().background(Color(0xFF34C759)))
-                                    }
-                                } else {
-                                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                        Text("RISK : REWARD", color = TextSecondary, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
-                                        Text("N/A", color = AccentGold, fontSize = 9.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
-                                    }
-                                    Spacer(modifier = Modifier.height(4.dp))
-                                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                        Text("STATUS", color = TextSecondary, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
-                                        Text("INVALID / HIGH RISK", color = setupStatusColor("INVALID / HIGH RISK"), fontSize = 9.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
-                                    }
-                                }
-                            } else {
-                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                    Text("RISK : REWARD", color = TextSecondary, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
-                                    Text("N/A", color = AccentGold, fontSize = 9.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
-                                }
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                    Text("STATUS", color = TextSecondary, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
-                                    Text("INCOMPLETE SETUP", color = setupStatusColor("INCOMPLETE SETUP"), fontSize = 9.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
-                                }
-                            }
-                        }
-                    }
-                    
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Text("AUTO-CLOSE TRADING SETUP", color = TextSecondary, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
-                    Spacer(modifier = Modifier.height(6.dp))
-                    Box(
-                        modifier = Modifier.fillMaxWidth()
-                            .background(DarkSurface, RoundedCornerShape(4.dp))
-                            .border(1.dp, BorderColor, RoundedCornerShape(4.dp))
-                            .padding(12.dp)
-                    ) {
-                        Column {
-                            val isAutoActive = autoCloseOptions.isNotEmpty()
-                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                Text("AUTO TRADING ACTIVE", color = TextSecondary, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
-                                Text(if (isAutoActive) "YES" else "NO", color = if (isAutoActive) CryptoCyan else TextSecondary, fontSize = 9.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
-                            }
-                            if (isAutoActive) {
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                    Text("AUTO-CLOSE CONDITIONS", color = TextSecondary, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
-                                    Text(autoCloseOptions.joinToString(" / "), color = TextPrimary, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
-                                }
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                    Text("CONDITION VALIDITY", color = TextSecondary, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
-                                    Text(if (acValid) "VALID" else "INVALID", color = if (acValid) Color(0xFF34C759) else Color(0xFFFF3B30), fontSize = 9.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
-                                }
-                                if (!acValid && acReason != null) {
-                                    Spacer(modifier = Modifier.height(4.dp))
-                                    Text("REASON: $acReason", color = Color(0xFFFF3B30), fontSize = 8.sp, fontFamily = FontFamily.Monospace)
-                                    Text("AUTO-CLOSE DISABLED UNTIL FIXED", color = Color(0xFFFF3B30), fontSize = 8.sp, fontFamily = FontFamily.Monospace)
-                                }
-                            } else {
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text("MANUAL APPROVAL REQUIRED", color = TextSecondary, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
-                            }
-                        }
-                    }
-                    
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Text("SIGNAL FRESHNESS", color = TextSecondary, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
-                    Spacer(modifier = Modifier.height(6.dp))
-                    Box(
-                        modifier = Modifier.fillMaxWidth()
-                            .background(AccentGold.copy(alpha=0.15f), RoundedCornerShape(4.dp))
-                            .border(1.dp, AccentGold.copy(alpha=0.5f), RoundedCornerShape(4.dp))
-                            .padding(12.dp)
-                    ) {
-                        Column {
-                            Text("EXPIRY UNKNOWN", color = AccentGold, fontSize = 11.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
-                            Text("USE CURRENT MARKET CONFIRMATION", color = TextSecondary, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
-                        }
-                    }
-                    
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text("AI TRADE COPILOT POLICY:", color = TextSecondary, fontSize = 10.sp)
-                    Spacer(modifier = Modifier.height(6.dp))
-                    
-                    Box(
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp).clickable { aiPolicy = "ASSIST ONLY" }
-                            .background(if (aiPolicy == "ASSIST ONLY") CryptoCyan.copy(alpha = 0.2f) else Color.Transparent, RoundedCornerShape(4.dp))
-                            .border(1.dp, if (aiPolicy == "ASSIST ONLY") CryptoCyan else BorderColor, RoundedCornerShape(4.dp))
-                            .padding(12.dp)
-                    ) {
-                        Column {
-                            Text("ASSIST ONLY", color = if (aiPolicy == "ASSIST ONLY") CryptoCyan else TextSecondary, fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                            Text("MANUAL APPROVAL REQUIRED", color = TextSecondary, fontSize = 9.sp)
-                        }
-                    }
-                    
-                    Box(
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp).clickable { aiPolicy = "ASSIST & EXECUTION" }
-                            .background(if (aiPolicy == "ASSIST & EXECUTION") AccentGold.copy(alpha = 0.2f) else Color.Transparent, RoundedCornerShape(4.dp))
-                            .border(1.dp, if (aiPolicy == "ASSIST & EXECUTION") AccentGold else BorderColor, RoundedCornerShape(4.dp))
-                            .padding(12.dp)
-                    ) {
-                        Column {
-                            Text("ASSIST & EXECUTION", color = if (aiPolicy == "ASSIST & EXECUTION") AccentGold else TextSecondary, fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                            Text("SHADOW EXECUTION ONLY", color = AccentGold, fontSize = 9.sp)
-                            Text("NO REAL MARKET ORDER", color = TextSecondary, fontSize = 9.sp)
-                        }
-                    }
-                    
-                }
-            },
-            confirmButton = {
-                Button(onClick = {
-                    var calculatedStatus = "INCOMPLETE SETUP"
-                    var calculatedRR = "N/A"
-                    
-                    if (parsedTp1 != null && parsedSl1 != null && verifiedEntryLocked > 0.0) {
-                        val risk = kotlin.math.abs(verifiedEntryLocked - parsedSl1)
-                        val reward = kotlin.math.abs(parsedTp1 - verifiedEntryLocked)
-                        if (risk > 0.0 && reward > 0.0) {
-                            val ratio = reward / risk
-                            calculatedRR = "1 : ${String.format("%.1f", ratio)}"
-                            calculatedStatus = "READY"
-                        } else {
-                            calculatedStatus = "INVALID / HIGH RISK"
-                        }
-                    }
-                    
-                    val initialLogs = mutableListOf(
-                        "MISSION CREATED",
-                        "SETUP SELECTED: $selectedSetup",
-                        "AI POLICY SELECTED: AI TRADE COPILOT $aiPolicy",
-                        if (autoCloseOptions.isNotEmpty()) "AUTO-CLOSE CONDITIONS: ${autoCloseOptions.joinToString(" / ")}" else "AUTO-CLOSE CONDITIONS: NONE",
-                        "CONDITION VALIDITY: ${if (acValid) "VALID" else "INVALID"}",
-                        "REAL MARKET ORDER: NO",
-                        "MISSION MONITORING ACTIVE"
+fun DecisionBriefBlock(
+    title: String,
+    value: String,
+    accentColor: Color
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(10.dp))
+            .background(
+                Brush.linearGradient(
+                    listOf(
+                        Color(0xFF02050D),
+                        Color(0xFF08111C),
+                        Color(0xFF02050D)
                     )
-
-                    val finalTarget = effectiveTarget?.let { if (profileTarget == null && !isRecommended) "$it / SIGNAL FALLBACK" else it }
-                    val finalTp1 = effectiveTp1?.let { if (profileTp1 == null && !isRecommended) "$it / SIGNAL FALLBACK" else it }
-                    val finalSl = effectiveSl1?.let { if (profileSl1 == null && !isRecommended) "$it / SIGNAL FALLBACK" else it }
-                    val finalLev = effectiveLev?.let { if (profileLev == null && !isRecommended) (if (mission.marketType.equals("Spot", ignoreCase = true)) "SPOT (1X) / SIGNAL FALLBACK" else "NOT SET") else it }
-
-                    viewModel.startMission(mission.copy(
-                        id = java.util.UUID.randomUUID().toString(),
-                        entryPrice = verifiedEntryLocked,
-                        originalSignalEntry = mission.entryPrice,
-                        startTime = System.currentTimeMillis(),
-                        setupMode = selectedSetup,
-                        setupRemark = profileRemark ?: (if (isRecommended) "AUTO-GENERATED" else null),
-                        target = finalTarget,
-                        tp1 = finalTp1,
-                        tp2 = effectiveTp2,
-                        tp3 = effectiveTp3,
-                        manualStopLoss = finalSl,
-                        sl2 = effectiveSl2,
-                        leverage = finalLev,
-                        riskProfile = profileRisk,
-                        positionSize = profileAlloc,
-                        copilotMode = aiPolicy,
-                        executionMode = aiPolicy,
-                        setupStatus = calculatedStatus,
-                        setupRiskReward = calculatedRR,
-                        autoCloseEnabled = autoCloseOptions.isNotEmpty() && acValid,
-                        autoCloseConditions = autoCloseOptions,
-                        conditionValidity = if (acValid) "VALID" else "INVALID",
-                        conditionInvalidReason = acReason,
-                        missionHistoryLog = initialLogs.toList()
-                    ))
-                    viewModel.sendLocalAlert("Mission Started", "AI intelligence system successfully started monitoring ${mission.coinSymbol}")
-                    step = 0
-                }, colors = ButtonDefaults.buttonColors(containerColor = CryptoGreen)) {
-                    Text("CONFIRM", fontWeight = FontWeight.Black, color = DarkBackground)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { step = 0 }) {
-                    Text("CANCEL", color = TextSecondary)
-                }
-            },
-            containerColor = DarkSurface,
-            titleContentColor = TextPrimary,
-            textContentColor = TextSecondary
+                )
+            )
+            .border(0.75.dp, accentColor.copy(alpha = 0.46f), RoundedCornerShape(10.dp))
+            .padding(horizontal = 11.dp, vertical = 9.dp)
+    ) {
+        Text(
+            text = title,
+            fontSize = 11.5.sp,
+            fontWeight = FontWeight.Black,
+            color = accentColor,
+            maxLines = 1,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
         )
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        Text(
+            text = value,
+            fontSize = 13.5.sp,
+            color = TextPrimary,
+            lineHeight = 18.sp
+        )
+    }
+}
+
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun StartTradeFlow(
+    viewModel: CryptoViewModel,
+    mission: com.example.model.Mission,
+    livePrice: Double = mission.entryPrice
+) {
+    var step by remember { mutableStateOf(0) }
+    var showDecisionBrief by remember { mutableStateOf(false) }
+    val isBengali by viewModel.isBengali.collectAsState()
+    val decisionBriefSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val setupSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+    val highConfidence = mission.confidence >= 85
+    val isLong = mission.type.uppercase() == "LONG"
+
+    val recommendationText = when {
+        isBengali && highConfidence && isLong -> "উচ্চ আস্থা | এন্ট্রি যাচাই"
+        isBengali && highConfidence && !isLong -> "উচ্চ আস্থা | শর্ট যাচাই"
+        isBengali && !highConfidence -> "সতর্কভাবে যাচাই করুন"
+        !isBengali && highConfidence -> "HIGH CONFIDENCE | VERIFY ENTRY |"
+        else -> "REVIEW CAREFULLY | VERIFY ENTRY |"
+    }
+
+    val verdictText = when {
+        isBengali && highConfidence -> "সিগন্যাল শক্তিশালী, তবে এন্ট্রি যাচাই করে নিন।"
+        isBengali -> "সিগন্যাল কার্যকর, তবে ঝুঁকি যাচাই করা জরুরি।"
+        highConfidence -> "Signal is strong, but entry confirmation is still required."
+        else -> "Signal is active, but risk review is required before action."
+    }
+
+    val whyText = if (isBengali) {
+        "ট্রেন্ড, মতিগতি, লেনদেন, AI consensus এবং risk profile মিলিয়ে এই setup তৈরি হয়েছে।"
+    } else {
+        "This setup combines trend, momentum, volume, AI consensus, and risk profile signals."
+    }
+
+    val riskText = if (isBengali) {
+        if (highConfidence) "রিস্ক কম থেকে মাঝারি। Stop loss এবং position size মেনে চলুন।"
+        else "রিস্ক মাঝারি। দেরিতে entry নিলে signal quality কমতে পারে।"
+    } else {
+        if (highConfidence) "Risk is low to medium. Follow stop loss and position sizing."
+        else "Risk is medium. Late entry may reduce signal quality."
+    }
+
+    val actionText = if (isBengali) {
+        if (isLong) "এন্ট্রি price, stop loss এবং target মিলিয়ে তারপর Accept Signal করুন।"
+        else "শর্ট এন্ট্রি, stop loss এবং target মিলিয়ে তারপর Accept Signal করুন।"
+    } else {
+        if (isLong) "Verify entry price, stop loss, and target before accepting the signal."
+        else "Verify short entry, stop loss, and target before accepting the signal."
+    }
+
+    val disclaimerText = if (isBengali) {
+        "এআই সিদ্ধান্তে সহায়তা করে; চূড়ান্ত ট্রেডিং সিদ্ধান্ত আপনার।"
+    } else {
+        "AI assists decision-making; the final trading decision is yours."
+    }
+
+    val parsedSignalTargets = remember(mission.targets) {
+        mission.targets
+            .split("/")
+            .map { it.trim() }
+            .filter { it.isNotBlank() && !it.equals("N/A", ignoreCase = true) && !it.equals("NOT SET", ignoreCase = true) }
+    }
+    val defaultTp1 = parsedSignalTargets.getOrNull(0).orEmpty()
+    val defaultTp2 = parsedSignalTargets.getOrNull(1).orEmpty()
+    val defaultTp3 = parsedSignalTargets.getOrNull(2).orEmpty()
+    val defaultTarget = parsedSignalTargets.lastOrNull().orEmpty()
+    val defaultStopLoss = mission.stopLoss.takeIf { it.isNotBlank() && !it.equals("N/A", ignoreCase = true) && !it.equals("NOT SET", ignoreCase = true) }.orEmpty()
+    val defaultLeverage = if (mission.marketType.contains("Futures", ignoreCase = true)) "NOT SET" else "1X"
+
+    var setupTarget by remember(mission.id, mission.targets, mission.stopLoss) { mutableStateOf(defaultTarget) }
+    var setupTp1 by remember(mission.id, mission.targets, mission.stopLoss) { mutableStateOf(defaultTp1) }
+    var setupTp2 by remember(mission.id, mission.targets, mission.stopLoss) { mutableStateOf(defaultTp2) }
+    var setupTp3 by remember(mission.id, mission.targets, mission.stopLoss) { mutableStateOf(defaultTp3) }
+    var setupSl1 by remember(mission.id, mission.targets, mission.stopLoss) { mutableStateOf(defaultStopLoss) }
+    var setupSl2 by remember(mission.id, mission.targets, mission.stopLoss) { mutableStateOf("") }
+    var setupLeverage by remember(mission.id, mission.marketType) { mutableStateOf(defaultLeverage) }
+    var setupAllocation by remember(mission.id) { mutableStateOf("") }
+    var setupRiskProfile by remember(mission.id) { mutableStateOf(if (highConfidence) "BALANCED" else "CONSERVATIVE") }
+    var setupRemark by remember(mission.id) { mutableStateOf("AUTO-FILLED FROM SIGNAL PRO") }
+
+    fun nullableSetupValue(value: String): String? = value.trim().takeIf { it.isNotBlank() }
+    fun setupTargetsText(): String {
+        return listOf(setupTp1, setupTp2, setupTp3, setupTarget)
+            .map { it.trim() }
+            .filter { it.isNotBlank() }
+            .distinct()
+            .joinToString(" / ")
+            .ifBlank { mission.targets }
+    }
+
+    val syncedMission = mission.copy(
+        targets = setupTargetsText(),
+        stopLoss = setupSl1.ifBlank { mission.stopLoss },
+        target = nullableSetupValue(setupTarget),
+        tp1 = nullableSetupValue(setupTp1),
+        tp2 = nullableSetupValue(setupTp2),
+        tp3 = nullableSetupValue(setupTp3),
+        manualStopLoss = nullableSetupValue(setupSl1),
+        sl2 = nullableSetupValue(setupSl2),
+        leverage = nullableSetupValue(setupLeverage),
+        positionSize = nullableSetupValue(setupAllocation),
+        riskProfile = nullableSetupValue(setupRiskProfile),
+        setupRemark = nullableSetupValue(setupRemark),
+        setupMode = if (setupTarget.isNotBlank() || setupTp1.isNotBlank() || setupSl1.isNotBlank()) "RECOMMENDED SETUP" else mission.setupMode,
+        setupStatus = if (setupTarget.isNotBlank() && setupSl1.isNotBlank()) "READY" else "INCOMPLETE SETUP",
+        setupRiskReward = null,
+        copilotMode = "ASSIST ONLY",
+        autoCloseEnabled = false,
+        autoCloseConditions = emptyList(),
+        conditionValidity = "N/A",
+        conditionInvalidReason = "Auto-close disabled by user."
+    )
+
+    if (showDecisionBrief) {
+        ModalBottomSheet(
+            onDismissRequest = { showDecisionBrief = false },
+            sheetState = decisionBriefSheetState,
+            containerColor = Color(0xFF030712),
+            contentColor = TextPrimary
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight(0.92f)
+                    .verticalScroll(rememberScrollState())
+                    .navigationBarsPadding()
+                    .padding(horizontal = 18.dp, vertical = 10.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Text(
+                    text = if (isBengali) "AI সিদ্ধান্ত সংক্ষেপ" else "AI Decision Brief",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Black,
+                    color = CryptoCyan
+                )
+
+                Text(
+                    text = if (isBengali) "দ্রুত সিদ্ধান্ত নেওয়ার জন্য সংক্ষিপ্ত সারাংশ" else "Compact signal summary for faster decision-making",
+                    fontSize = 12.5.sp,
+                    color = TextSecondary
+                )
+
+                DecisionBriefBlock(
+                    title = if (isBengali) "সিগন্যাল রায়" else "Signal Verdict",
+                    value = verdictText,
+                    accentColor = if (highConfidence) CryptoGreen else AccentGold
+                )
+
+                DecisionBriefBlock(
+                    title = if (isBengali) "কেন গুরুত্বপূর্ণ" else "Why It Matters",
+                    value = whyText,
+                    accentColor = CryptoCyan
+                )
+
+                DecisionBriefBlock(
+                    title = if (isBengali) "ঝুঁকির সতর্কতা" else "Risk Warning",
+                    value = riskText,
+                    accentColor = AccentGold
+                )
+
+                DecisionBriefBlock(
+                    title = if (isBengali) "প্রস্তাবিত কাজ" else "Suggested Action",
+                    value = actionText,
+                    accentColor = CryptoGreen
+                )
+
+                Text(
+                    text = disclaimerText,
+                    fontSize = 11.5.sp,
+                    color = TextMuted,
+                    lineHeight = 16.sp
+                )
+
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        OutlinedButton(
+                            onClick = {
+                                showDecisionBrief = false
+                                step = 2
+                            },
+                            border = BorderStroke(1.dp, CryptoCyan.copy(alpha = 0.72f)),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = CryptoCyan),
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.weight(1f).height(46.dp)
+                        ) {
+                            Text(
+                                text = if (isBengali) "সেটআপ সিগন্যাল" else "SIGNAL SETUP",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Black,
+                                maxLines = 1,
+                                softWrap = false,
+                                textAlign = TextAlign.Center
+                            )
+                        }
+
+                        Button(
+                            onClick = {
+                                showDecisionBrief = false
+                                step = 1
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = CryptoGreen, contentColor = DarkBackground),
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.weight(1f).height(46.dp)
+                        ) {
+                            Text(
+                                text = if (isBengali) "সিগন্যাল নিন" else "ACCEPT SIGNAL",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Black,
+                                maxLines = 1,
+                                softWrap = false,
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                    }
+
+                    TextButton(
+                        onClick = { showDecisionBrief = false },
+                        modifier = Modifier.align(Alignment.CenterHorizontally)
+                    ) {
+                        Text(
+                            text = if (isBengali) "বন্ধ করুন" else "CLOSE",
+                            color = TextSecondary,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 0.6.sp
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+            }
+        }
     }
 
     if (step == 2) {
-        var localSetup1 by remember { mutableStateOf(custom1) }
-        var localSetup2 by remember { mutableStateOf(custom2) }
-        var localDefaultName by remember { mutableStateOf(defaultName) }
-        var localDefaultPolicy by remember { mutableStateOf(defaultPolicy) }
-        val recAutoCloseFlow by viewModel.recommendedAutoCloseConditions.collectAsState()
-        var localRecAutoClose by remember { mutableStateOf(recAutoCloseFlow) }
-        var selectedTab by remember { mutableStateOf("RECOMMENDED SETUP") }
-        
+        ModalBottomSheet(
+            onDismissRequest = { step = 0 },
+            sheetState = setupSheetState,
+            containerColor = Color(0xFF030712),
+            contentColor = TextPrimary
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight(0.92f)
+                    .verticalScroll(rememberScrollState())
+                    .navigationBarsPadding()
+                    .padding(horizontal = 18.dp, vertical = 10.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Text(
+                    text = if (isBengali) "সিগন্যাল সেটআপ" else "SIGNAL SETUP",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Black,
+                    color = CryptoCyan
+                )
+                Text(
+                    text = if (isBengali) "বর্তমান সিগন্যাল থেকে Target, TP এবং SL অটো-ফিল করা হয়েছে।" else "Auto-filled from the current signal. Review before accepting.",
+                    fontSize = 12.sp,
+                    color = TextSecondary,
+                    lineHeight = 16.sp
+                )
+
+                OutlinedTextField(value = setupTarget, onValueChange = { setupTarget = it }, label = { Text("TARGET") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
+                OutlinedTextField(value = setupTp1, onValueChange = { setupTp1 = it }, label = { Text("TP1") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
+                OutlinedTextField(value = setupTp2, onValueChange = { setupTp2 = it }, label = { Text("TP2") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
+                OutlinedTextField(value = setupTp3, onValueChange = { setupTp3 = it }, label = { Text("TP3") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
+                OutlinedTextField(value = setupSl1, onValueChange = { setupSl1 = it }, label = { Text("SL1 / STOP LOSS") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
+                OutlinedTextField(value = setupSl2, onValueChange = { setupSl2 = it }, label = { Text("SL2") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
+                OutlinedTextField(value = setupLeverage, onValueChange = { setupLeverage = it }, label = { Text("LEVERAGE") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
+                OutlinedTextField(value = setupAllocation, onValueChange = { setupAllocation = it }, label = { Text("ALLOCATION") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
+                OutlinedTextField(value = setupRiskProfile, onValueChange = { setupRiskProfile = it }, label = { Text("RISK PROFILE") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
+                OutlinedTextField(value = setupRemark, onValueChange = { setupRemark = it }, label = { Text("REMARK") }, modifier = Modifier.fillMaxWidth(), minLines = 2)
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    TextButton(
+                        onClick = { step = 0 },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(if (isBengali) "বন্ধ করুন" else "CLOSE", color = TextSecondary, fontWeight = FontWeight.Bold)
+                    }
+                    Button(
+                        onClick = { step = 1 },
+                        colors = ButtonDefaults.buttonColors(containerColor = CryptoGreen, contentColor = DarkBackground),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.weight(1f).height(46.dp)
+                    ) {
+                        Text(if (isBengali) "সিগন্যাল নিন" else "ACCEPT SIGNAL", fontWeight = FontWeight.Black)
+                    }
+                }
+                Spacer(modifier = Modifier.height(24.dp))
+            }
+        }
+    }
+
+    if (step == 1) {
+        val verifiedEntryLocked = remember { livePrice }
+
         AlertDialog(
             onDismissRequest = { step = 0 },
-            title = { Text("Signal Setup Configuration", color = AccentGold, fontSize = 16.sp, fontWeight = FontWeight.Bold) },
+            title = {
+                Text(
+                    text = if (isBengali) "ট্রেড যাচাই করুন" else "Verify Trade Details",
+                    color = CryptoCyan,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            },
             text = {
-                Column(modifier = Modifier.fillMaxWidth().heightIn(max = 500.dp)) {
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Box(
-                            modifier = Modifier.weight(1f).clickable { selectedTab = "RECOMMENDED SETUP" }
-                                .background(if (selectedTab == "RECOMMENDED SETUP") AccentGold.copy(alpha=0.2f) else Color.Transparent, RoundedCornerShape(4.dp))
-                                .border(1.dp, if (selectedTab == "RECOMMENDED SETUP") AccentGold else BorderColor, RoundedCornerShape(4.dp))
-                                .padding(vertical = 8.dp),
-                            contentAlignment = Alignment.Center
-                        ) { Text("REC", color = if (selectedTab=="RECOMMENDED SETUP") AccentGold else TextSecondary, fontSize = 10.sp, fontWeight = FontWeight.Bold) }
-                        
-                        Box(
-                            modifier = Modifier.weight(1f).clickable { selectedTab = "SETUP-1" }
-                                .background(if (selectedTab == "SETUP-1") AccentGold.copy(alpha=0.2f) else Color.Transparent, RoundedCornerShape(4.dp))
-                                .border(1.dp, if (selectedTab == "SETUP-1") AccentGold else BorderColor, RoundedCornerShape(4.dp))
-                                .padding(vertical = 8.dp),
-                            contentAlignment = Alignment.Center
-                        ) { Text("SETUP-1", color = if (selectedTab=="SETUP-1") AccentGold else TextSecondary, fontSize = 10.sp, fontWeight = FontWeight.Bold) }
-                        
-                        Box(
-                            modifier = Modifier.weight(1f).clickable { selectedTab = "SETUP-2" }
-                                .background(if (selectedTab == "SETUP-2") AccentGold.copy(alpha=0.2f) else Color.Transparent, RoundedCornerShape(4.dp))
-                                .border(1.dp, if (selectedTab == "SETUP-2") AccentGold else BorderColor, RoundedCornerShape(4.dp))
-                                .padding(vertical = 8.dp),
-                            contentAlignment = Alignment.Center
-                        ) { Text("SETUP-2", color = if (selectedTab=="SETUP-2") AccentGold else TextSecondary, fontSize = 10.sp, fontWeight = FontWeight.Bold) }
-                    }
-                    Spacer(modifier = Modifier.height(12.dp))
-                    
-                    val textFieldColors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = CryptoCyan, unfocusedBorderColor = BorderColor,
-                        focusedTextColor = TextPrimary, unfocusedTextColor = TextPrimary
+                Column {
+                    Text(
+                        text = if (isBengali) "দিক: ${mission.type} (${mission.marketType})" else "Direction: ${mission.type} (${mission.marketType})",
+                        color = TextSecondary,
+                        fontSize = 14.sp
                     )
-                    
-                    LazyColumn(modifier = Modifier.fillMaxWidth().weight(1f, false), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        if (selectedTab == "RECOMMENDED SETUP") {
-                            item { Text("AUTO-CLOSE TRADING SETUP", color = TextPrimary, fontSize = 12.sp, fontWeight = FontWeight.Bold) }
-                            item { Text("Select conditions to enable auto-close for recommended values.", color = TextSecondary, fontSize = 10.sp) }
-                            item { Spacer(modifier = Modifier.height(4.dp)) }
-                            
-                            val options = listOf("TARGET", "TP1", "TP2", "TP3", "STOP LOSS")
-                            options.forEach { opt ->
-                                item {
-                                    Row(modifier = Modifier.fillMaxWidth().clickable {
-                                        localRecAutoClose = if (localRecAutoClose.contains(opt)) localRecAutoClose - opt else localRecAutoClose + opt
-                                    }.padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-                                        Checkbox(checked = localRecAutoClose.contains(opt), onCheckedChange = null)
-                                        Spacer(modifier = Modifier.width(8.dp))
-                                        Text(opt, color = TextPrimary, fontSize = 11.sp)
-                                    }
-                                }
-                            }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = if (isBengali) "লকড এন্ট্রি প্রাইস:" else "Locked Entry Price:",
+                        color = TextSecondary,
+                        fontSize = 12.sp
+                    )
+                    Text(
+                        text = String.format("$%.4f", verifiedEntryLocked),
+                        color = TextPrimary,
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Black,
+                        fontFamily = FontFamily.Monospace
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = if (isBengali) {
+                            "Accept করার পর এই entry personal mission হিসেবে track হবে।"
                         } else {
-                            val currentSetup = if (selectedTab == "SETUP-1") localSetup1 else localSetup2
-                            val updateSetup = { newSetup: com.example.model.CustomSetupProfile -> 
-                                if (selectedTab == "SETUP-1") localSetup1 = newSetup else localSetup2 = newSetup
-                            }
-                            
-                            item { OutlinedTextField(value = currentSetup.target, onValueChange = { updateSetup(currentSetup.copy(target=it)) }, label = { Text("TARGET") }, modifier = Modifier.fillMaxWidth(), singleLine = true, colors = textFieldColors) }
-                            item { OutlinedTextField(value = currentSetup.tp1, onValueChange = { updateSetup(currentSetup.copy(tp1=it)) }, label = { Text("TP1") }, modifier = Modifier.fillMaxWidth(), singleLine = true, colors = textFieldColors) }
-                            item { OutlinedTextField(value = currentSetup.tp2, onValueChange = { updateSetup(currentSetup.copy(tp2=it)) }, label = { Text("TP2") }, modifier = Modifier.fillMaxWidth(), singleLine = true, colors = textFieldColors) }
-                            item { OutlinedTextField(value = currentSetup.tp3, onValueChange = { updateSetup(currentSetup.copy(tp3=it)) }, label = { Text("TP3") }, modifier = Modifier.fillMaxWidth(), singleLine = true, colors = textFieldColors) }
-                            item { OutlinedTextField(value = currentSetup.stopLoss, onValueChange = { updateSetup(currentSetup.copy(stopLoss=it)) }, label = { Text("SL1 / STOP LOSS 1") }, modifier = Modifier.fillMaxWidth(), singleLine = true, colors = textFieldColors) }
-                            item { OutlinedTextField(value = currentSetup.sl2, onValueChange = { updateSetup(currentSetup.copy(sl2=it)) }, label = { Text("SL2 / STOP LOSS 2") }, modifier = Modifier.fillMaxWidth(), singleLine = true, colors = textFieldColors) }
-                            item { OutlinedTextField(value = currentSetup.leverage, onValueChange = { updateSetup(currentSetup.copy(leverage=it)) }, label = { Text("LEVERAGE") }, modifier = Modifier.fillMaxWidth(), singleLine = true, colors = textFieldColors) }
-                            
-                            item { 
-                                Text("RISK PROFILE", color = TextSecondary, fontSize = 10.sp)
-                                val riskOptions = listOf("CONSERVATIVE", "BALANCED", "AGGRESSIVE", "CUSTOM")
-                                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                                    riskOptions.forEach { opt ->
-                                        Box(modifier = Modifier.clickable { updateSetup(currentSetup.copy(riskProfile=opt)) }.background(if (currentSetup.riskProfile == opt) CryptoCyan else Color.Transparent, RoundedCornerShape(4.dp)).border(1.dp, if (currentSetup.riskProfile == opt) CryptoCyan else BorderColor, RoundedCornerShape(4.dp)).padding(8.dp)) {
-                                            Text(opt, color = if (currentSetup.riskProfile == opt) DarkBackground else TextSecondary, fontSize = 8.sp)
-                                        }
-                                    }
-                                }
-                            }
-                            
-                            item { OutlinedTextField(value = currentSetup.positionSize, onValueChange = { updateSetup(currentSetup.copy(positionSize=it)) }, label = { Text("ALLOCATION") }, modifier = Modifier.fillMaxWidth(), singleLine = true, colors = textFieldColors) }
-                            item { OutlinedTextField(value = currentSetup.remark, onValueChange = { updateSetup(currentSetup.copy(remark=it)) }, label = { Text("REMARK") }, modifier = Modifier.fillMaxWidth(), singleLine = true, colors = textFieldColors) }
-                            
-                            item { Spacer(modifier = Modifier.height(16.dp)) }
-                            item { Text("AUTO-CLOSE TRADING SETUP", color = TextPrimary, fontSize = 12.sp, fontWeight = FontWeight.Bold) }
-                            val options = listOf("TARGET", "TP1", "TP2", "TP3", "STOP LOSS")
-                            options.forEach { opt ->
-                                item {
-                                    Row(modifier = Modifier.fillMaxWidth().clickable {
-                                        val currentOptions = currentSetup.autoCloseConditions
-                                        val newOptions = if (currentOptions.contains(opt)) currentOptions - opt else currentOptions + opt
-                                        updateSetup(currentSetup.copy(autoCloseConditions = newOptions))
-                                    }.padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-                                        Checkbox(checked = currentSetup.autoCloseConditions.contains(opt), onCheckedChange = null)
-                                        Spacer(modifier = Modifier.width(8.dp))
-                                        Text(opt, color = TextPrimary, fontSize = 11.sp)
-                                    }
-                                }
-                            }
-                        }
-                        
-                        item { Spacer(modifier = Modifier.height(16.dp)) }
-                        item { Text("DEFAULT SELECTIONS:", color = TextPrimary, fontSize = 12.sp, fontWeight = FontWeight.Bold) }
-                        item {
-                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                                 Text("Default Profile:", color = TextSecondary, fontSize = 11.sp)
-                                 Text(localDefaultName, color = CryptoCyan, fontSize = 11.sp, modifier = Modifier.clickable {
-                                     localDefaultName = when(localDefaultName) {
-                                         "RECOMMENDED SETUP" -> "SETUP-1"
-                                         "SETUP-1" -> "SETUP-2"
-                                         else -> "RECOMMENDED SETUP"
-                                     }
-                                 }.padding(4.dp))
-                             }
-                        }
-                        item {
-                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                                 Text("Default Policy:", color = TextSecondary, fontSize = 11.sp)
-                                 Text(localDefaultPolicy, color = AccentGold, fontSize = 11.sp, modifier = Modifier.clickable {
-                                     localDefaultPolicy = if (localDefaultPolicy == "ASSIST ONLY") "ASSIST & EXECUTION" else "ASSIST ONLY"
-                                 }.padding(4.dp))
-                             }
-                        }
-                    }
+                            "Once accepted, this entry will activate personal mission tracking."
+                        },
+                        color = AccentGold,
+                        fontSize = 10.sp
+                    )
                 }
             },
             confirmButton = {
-                Button(onClick = {
-                    viewModel.customSetup1.value = localSetup1
-                    viewModel.customSetup2.value = localSetup2
-                    viewModel.defaultSetupName.value = localDefaultName
-                    viewModel.defaultAiPolicy.value = localDefaultPolicy
-                    viewModel.recommendedAutoCloseConditions.value = localRecAutoClose
-                    step = 0
-                }, colors = ButtonDefaults.buttonColors(containerColor = AccentGold)) {
-                    Text("SAVE SETUP", fontWeight = FontWeight.Black, color = DarkBackground)
+                Button(
+                    onClick = {
+                        viewModel.startMission(
+                            syncedMission.copy(
+                                id = java.util.UUID.randomUUID().toString(),
+                                entryPrice = verifiedEntryLocked,
+                                originalSignalEntry = if (mission.originalSignalEntry > 0.0) mission.originalSignalEntry else mission.entryPrice,
+                                currentPrice = livePrice,
+                                startTime = System.currentTimeMillis(),
+                                lastUpdated = System.currentTimeMillis()
+                            )
+                        )
+                        viewModel.sendLocalAlert("Mission Started", "AI intelligence system successfully started monitoring ${mission.coinSymbol}")
+                        step = 0
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = CryptoGreen)
+                ) {
+                    Text(
+                        text = if (isBengali) "মিশন চালু করুন" else "CONFIRM MISSION",
+                        fontWeight = FontWeight.Black,
+                        color = DarkBackground
+                    )
                 }
             },
             dismissButton = {
                 TextButton(onClick = { step = 0 }) {
-                    Text("CANCEL", color = TextSecondary)
+                    Text(
+                        text = if (isBengali) "বাতিল" else "Cancel",
+                        color = TextSecondary
+                    )
                 }
             },
-            containerColor = DarkSurface,
+            containerColor = Color(0xFF030712),
             titleContentColor = TextPrimary,
             textContentColor = TextSecondary
         )
     }
 
-    Row(
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.97f else 1f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow),
+        label = "ButtonScale"
+    )
+
+    val infiniteTransition = rememberInfiniteTransition(label = "AcceptFlowPulse")
+    val pulseAlpha by infiniteTransition.animateFloat(
+        initialValue = 0.48f,
+        targetValue = 0.84f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1500, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "PulseAlpha"
+    )
+
+    val recoSweepX by infiniteTransition.animateFloat(
+        initialValue = -650f,
+        targetValue = 650f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(7200, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "RecommendationSweepX"
+    )
+
+    Column(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Box(
-            modifier = Modifier
-                .height(36.dp)
-                .border(
-                    width = 1.dp,
-                    color = AccentGold.copy(alpha = 0.5f),
-                    shape = RoundedCornerShape(8.dp)
-                )
-                .clickable(onClick = { step = 2 })
-                .padding(horizontal = 16.dp),
-            contentAlignment = Alignment.Center
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = "SIGNAL SETUP",
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 10.sp,
-                color = AccentGold,
-                letterSpacing = 1.sp
-            )
-        }
-
-        val interactionSource = remember { MutableInteractionSource() }
-        val isPressed by interactionSource.collectIsPressedAsState()
-        val scale by animateFloatAsState(
-            targetValue = if (isPressed) 0.97f else 1f,
-            animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow),
-            label = "ButtonScale"
-        )
-        
-        // Pulse glow
-        val infiniteTransition = rememberInfiniteTransition(label = "Pulse")
-        val pulseAlpha by infiniteTransition.animateFloat(
-            initialValue = 0.5f,
-            targetValue = 0.8f,
-            animationSpec = infiniteRepeatable(
-                animation = tween(1500, easing = LinearEasing),
-                repeatMode = RepeatMode.Reverse
-            ),
-            label = "PulseAlpha"
-        )
-
-        Box(
-            modifier = Modifier
-                .scale(scale)
-                .height(36.dp)
-                .background(
-                    brush = Brush.linearGradient(
-                        colors = listOf(
-                            CryptoCyan.copy(alpha = pulseAlpha), 
-                            CryptoGreen.copy(alpha = pulseAlpha)
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(40.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(
+                        brush = Brush.linearGradient(
+                            colors = listOf(
+                                Color(0xFF02050D),
+                                Color(0xFF0B1220),
+                                Color(0xFF02050D)
+                            )
                         )
-                    ),
-                    shape = RoundedCornerShape(8.dp)
-                )
-                .border(
-                    width = 1.dp,
-                    color = Color.White.copy(alpha = 0.2f),
-                    shape = RoundedCornerShape(8.dp)
-                )
-                .clickable(
-                    interactionSource = interactionSource,
-                    indication = LocalIndication.current,
-                    onClick = { step = 1 }
-                )
-                .padding(horizontal = 16.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = Icons.Default.PlayArrow,
-                    contentDescription = "Start Trade",
-                    tint = Color.White,
-                    modifier = Modifier.size(16.dp)
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(
-                    text = "ACCEPT SIGNAL",
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 11.sp,
-                    color = Color.White,
-                    letterSpacing = 1.2.sp
-                )
+                    )
+                    .background(
+                        brush = Brush.horizontalGradient(
+                            colors = listOf(
+                                CryptoCyan.copy(alpha = 0.10f),
+                                CryptoGreen.copy(alpha = 0.08f),
+                                CryptoCyan.copy(alpha = 0.10f)
+                            )
+                        )
+                    )
+                    .background(
+                        brush = Brush.horizontalGradient(
+                            colors = listOf(
+                                Color.Transparent,
+                                CryptoCyan.copy(alpha = 0.42f),
+                                Color.White.copy(alpha = 0.12f),
+                                CryptoGreen.copy(alpha = 0.26f),
+                                Color.Transparent
+                            ),
+                            startX = recoSweepX,
+                            endX = recoSweepX + 520f
+                        )
+                    )
+                    .border(0.8.dp, CryptoCyan.copy(alpha = 0.66f), RoundedCornerShape(10.dp))
+                    .clickable { showDecisionBrief = true }
+                    .padding(horizontal = 8.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = if (highConfidence) "HIGH CONFIDENCE" else "REVIEW CAREFULLY",
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Black,
+                        color = Color(0xFFF4F8FF),
+                        textAlign = TextAlign.Center,
+                        maxLines = 1,
+                        softWrap = false
+                    )
+                    Text(
+                        text = "| VERIFY ENTRY |",
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Black,
+                        color = Color(0xFFF4F8FF),
+                        textAlign = TextAlign.Center,
+                        maxLines = 1,
+                        softWrap = false
+                    )
+                }
+            }
+
+            Box(
+                modifier = Modifier
+                    .scale(scale)
+                    .weight(1f)
+                    .height(40.dp)
+                    .background(
+                        brush = Brush.linearGradient(
+                            colors = listOf(
+                                CryptoCyan.copy(alpha = pulseAlpha),
+                                CryptoGreen.copy(alpha = pulseAlpha)
+                            )
+                        ),
+                        shape = RoundedCornerShape(10.dp)
+                    )
+                    .border(0.8.dp, Color.White.copy(alpha = 0.28f), RoundedCornerShape(10.dp))
+                    .clickable(
+                        interactionSource = interactionSource,
+                        indication = LocalIndication.current,
+                        onClick = { step = 1 }
+                    )
+                    .padding(horizontal = 10.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.PlayArrow,
+                        contentDescription = "Start Trade",
+                        tint = Color.White,
+                        modifier = Modifier.size(15.dp)
+                    )
+
+                    Spacer(modifier = Modifier.width(5.dp))
+
+                    Text(
+                        text = "ACCEPT SIGNAL",
+                        fontWeight = FontWeight.Black,
+                        fontSize = 11.sp,
+                        color = Color.White,
+                        letterSpacing = 0.8.sp,
+                        maxLines = 1,
+                        softWrap = false
+                    )
+                }
             }
         }
     }
@@ -1868,7 +1911,7 @@ fun FuturesItemCard(coin: FuturesSignal, timeframeIndex: Int, viewModel: CryptoV
                         3 -> 72
                         else -> 168
                     }
-                    RealTimeCountdown(coin.coinSymbol, hours)
+                    RealTimeCountdown(coin.coinSymbol, hours, isBengali)
 
                     Spacer(modifier = Modifier.height(16.dp))
                     RealTimeInvestmentTrackingModule(
@@ -1888,7 +1931,8 @@ fun FuturesItemCard(coin: FuturesSignal, timeframeIndex: Int, viewModel: CryptoV
                         confidence = probability,
                         probability = (probability - 4).coerceIn(40, 99),
                         riskGrade = if (coin.oracleScore >= 83) "LOW" else "MEDIUM"
-                    )
+                    ,
+                        isBengali = isBengali)
 
                     Spacer(modifier = Modifier.height(16.dp))
 
@@ -1898,15 +1942,17 @@ fun FuturesItemCard(coin: FuturesSignal, timeframeIndex: Int, viewModel: CryptoV
                         momentumConfirmed = coin.momentumStrength != "WEAK",
                         liquidityConfirmed = coin.liquidityStrength != "WEAK",
                         riskEvaluated = true
-                    )
+                    ,
+                        isBengali = isBengali)
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    MarketRegimeTraceModule(coin.coinSymbol)
+                    MarketRegimeTraceModule(coin.coinSymbol,
+                        isBengali = isBengali)
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    MultiAiConsensusModule(coin.coinSymbol, coin.oracleScore, isLong)
+                    MultiAiConsensusModule(coin.coinSymbol, coin.oracleScore, isLong, isBengali)
 
                     Spacer(modifier = Modifier.height(16.dp))
 
@@ -1933,13 +1979,14 @@ fun FuturesItemCard(coin: FuturesSignal, timeframeIndex: Int, viewModel: CryptoV
                             coinSymbol = coin.coinSymbol,
                             type = if (isLong) "LONG" else "SHORT",
                             marketType = "Futures",
+                            signalTimeframe = signalProTimeframeLabel(timeframeIndex),
                             entryPrice = coin.currentPrice,
                             currentPrice = coin.currentPrice,
                             targets = formatPrice(targetPrice),
                             stopLoss = formatPrice(coin.invalidationPrice),
                             confidence = probability,
                             aiStatusEnglish = if (isLong) "Bullish convergence intact." else "Bearish momentum building.",
-                            aiStatusBengali = if (isLong) "বুলিশ কনভারজেন্স অটুট রয়েছে।" else "বেয়ারিশ মোমেন্টাম তৈরি হচ্ছে।"
+                            aiStatusBengali = if (isLong) "দাম বাড়ছে কনভারজেন্স অটুট রয়েছে।" else "দাম কমছে মোমেন্টাম তৈরি হচ্ছে।"
                         )
                     }
                     StartTradeFlow(viewModel = viewModel, mission = mission, livePrice = livePrice)
@@ -2025,7 +2072,7 @@ fun OraclePickCard(asset: Any, timeframeIndex: Int, viewModel: CryptoViewModel, 
     }
 
     Card(
-        colors = CardDefaults.cardColors(containerColor = DarkSurface),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF030712)),
         shape = RoundedCornerShape(16.dp),
         modifier = Modifier
             .fillMaxWidth()
@@ -2180,7 +2227,7 @@ fun OraclePickCard(asset: Any, timeframeIndex: Int, viewModel: CryptoViewModel, 
                         3 -> 72
                         else -> 168
                     }
-                    RealTimeCountdown(symbol, hours)
+                    RealTimeCountdown(symbol, hours, isBengali)
 
                     Spacer(modifier = Modifier.height(16.dp))
                     RealTimeInvestmentTrackingModule(entryPrice = entryPrice, projectedPrice = projPrice, isLong = isLong, currentPrice = curPrice)
@@ -2196,7 +2243,7 @@ fun OraclePickCard(asset: Any, timeframeIndex: Int, viewModel: CryptoViewModel, 
                         is SpotSignal -> asset.oracleScore
                         is FuturesSignal -> asset.oracleScore
                         else -> 80
-                    }, isLong)
+                    }, isLong, isBengali)
 
                     Spacer(modifier = Modifier.height(16.dp))
 
@@ -2247,6 +2294,7 @@ fun OraclePickCard(asset: Any, timeframeIndex: Int, viewModel: CryptoViewModel, 
                             coinSymbol = symbol,
                             type = if (isLong) "LONG" else "SHORT",
                             marketType = if (isFutures) "Futures" else "Spot",
+                            signalTimeframe = signalProTimeframeLabel(timeframeIndex),
                             entryPrice = entryPrice,
                             currentPrice = curPrice,
                             targets = formatPrice(projPrice),
@@ -2286,12 +2334,24 @@ fun RealTimeInvestmentTrackingModule(
     val currentRoi = if (entryPrice > 0) ((currentPrice - entryPrice) / entryPrice) * 100 * (if(isLong) 1 else -1) else 0.0
 
     Card(
-        colors = CardDefaults.cardColors(containerColor = DarkSurface),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF030712)),
         shape = RoundedCornerShape(12.dp),
-        border = BorderStroke(1.dp, BorderColor),
+        border = BorderStroke(0.8.dp, CryptoCyan.copy(alpha = 0.62f)),
         modifier = Modifier.fillMaxWidth()
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(
+            modifier = Modifier
+                .background(
+                    Brush.linearGradient(
+                        listOf(
+                            Color(0xFF03111B),
+                            Color(0xFF0B1220),
+                            Color(0xFF02050D)
+                        )
+                    )
+                )
+                .padding(16.dp)
+        ) {
             Text(
                 text = "REAL-TIME INVESTMENT TRACKING",
                 fontSize = 10.sp,
@@ -2347,124 +2407,475 @@ fun RealTimeInvestmentTrackingModule(
 }
 
 @Composable
-fun RealTimeCountdown(coinSymbol: String, totalDurationHours: Int) {
+fun RealTimeCountdown(
+    coinSymbol: String,
+    totalDurationHours: Int,
+    isBengali: Boolean = false
+) {
+    val totalSeconds = (totalDurationHours * 3600).coerceAtLeast(1)
+
     var remainingSeconds by remember(coinSymbol, totalDurationHours) {
-        val stableOffsetSeconds = (coinSymbol.hashCode().absoluteValue % (totalDurationHours * 3600 - 1800)) + 600
-        mutableStateOf(stableOffsetSeconds)
+        val safeRange = (totalSeconds - 900).coerceAtLeast(600)
+        val stableOffsetSeconds = (coinSymbol.hashCode().absoluteValue % safeRange) + 300
+        mutableStateOf(stableOffsetSeconds.coerceIn(0, totalSeconds))
     }
 
-    LaunchedEffect(coinSymbol) {
+    LaunchedEffect(coinSymbol, totalDurationHours) {
         while (remainingSeconds > 0) {
             delay(1000)
             remainingSeconds--
         }
     }
 
+    val sweepTransition = rememberInfiniteTransition(label = "ValidityGradientSweep")
+    val sweepX by sweepTransition.animateFloat(
+        initialValue = -850f,
+        targetValue = 900f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(7500, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "ValiditySweepX"
+    )
+
+    val pulseAlpha by sweepTransition.animateFloat(
+        initialValue = 0.24f,
+        targetValue = 0.56f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(5400, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "ValidityPulseAlpha"
+    )
+
     val hours = remainingSeconds / 3600
     val minutes = (remainingSeconds % 3600) / 60
     val seconds = remainingSeconds % 60
+    val timeText = String.format("%02d:%02d:%02d", hours, minutes, seconds)
 
-    val isLongTerm = totalDurationHours >= 4
-    val timeText = if (isLongTerm) {
-        String.format("%02dh %02dm", hours, minutes)
-    } else {
-        String.format("%02d:%02d", minutes, seconds)
+    val progress = (remainingSeconds.toFloat() / totalSeconds.toFloat()).coerceIn(0f, 1f)
+    val isExpired = remainingSeconds <= 0
+    val isUrgent = progress <= 0.20f && !isExpired
+    val isCaution = progress in 0.21f..0.50f
+
+    val accentColor = when {
+        isExpired -> CryptoRedText
+        isUrgent -> Color(0xFFFF6F86)
+        isCaution -> AccentGold
+        else -> CryptoCyan
     }
-    val pctRemaining = remainingSeconds.toFloat() / (totalDurationHours * 3600f)
 
-    Column {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "VALIDITY WINDOW COUNTDOWN",
-                fontSize = 10.sp,
-                color = TextSecondary,
-                fontWeight = FontWeight.Bold
+    val baseLeft = when {
+        isExpired -> Color(0xFF1A0610)
+        isUrgent -> Color(0xFF1E0712)
+        isCaution -> Color(0xFF1A1304)
+        else -> Color(0xFF03141D)
+    }
+
+    val titleText = if (isBengali) "বৈধতার নির্দিষ্ট মেয়াদ" else "VALIDITY WINDOW"
+    val remainingText = if (isBengali) "বাকি সময়" else "Remaining"
+    val windowText = "Window ${totalDurationHours}H"
+    val activeText = "${(progress * 100).toInt()}% active"
+
+    val stateText = when {
+        isExpired -> if (isBengali) "সিগন্যালের মেয়াদ শেষ" else "Expired"
+        isUrgent -> if (isBengali) "শেষ পর্যায় • দ্রুত যাচাই করুন" else "Critical window • Review quickly"
+        isCaution -> if (isBengali) "সতর্ক পর্যায় • ভালোভাবে নজর রাখুন" else "Caution window • Monitor closely"
+        else -> if (isBengali) "সিগন্যাল সক্রিয় • ঝুঁকির সময় চলছে" else "Signal active • Risk window open"
+    }
+
+    val stateMeaning = when {
+        isExpired -> if (isBengali) "সিগন্যালের সময় শেষ" else "Signal window closed"
+        isUrgent -> if (isBengali) "শেষ পর্যায়ের সিগনাল — আগে যাচাই করুন" else "Late-stage signal — Verify before action"
+        isCaution -> if (isBengali) "দেরি করলে সিগন্যালের মান কমতে পারে" else "Delay may reduce signal quality"
+        else -> if (isBengali) "সক্রিয় — এখনো তাড়াহুড়া নেই" else "Active window — No urgency yet"
+    }
+
+    val titleColor = if (isUrgent || isExpired) Color(0xFFFF91A6) else Color(0xFFF4FAFF)
+    val subtitleColor = if (isUrgent || isExpired) Color(0xFFFFB7C4) else Color(0xFFD6F5FF)
+    val supportColor = Color(0xFFB7C2D4)
+    val trackColor = Color(0xFF111A28)
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(17.dp))
+            .background(
+                brush = Brush.linearGradient(
+                    colors = listOf(
+                        baseLeft,
+                        Color(0xFF090F1C),
+                        Color(0xFF02050D)
+                    )
+                )
             )
-            Text(
-                text = "$timeText Remaining",
-                fontFamily = FontFamily.Monospace,
-                fontSize = 12.sp,
-                fontWeight = FontWeight.ExtraBold,
-                color = if (remainingSeconds < 1800) CryptoRedText else CryptoCyan
+            .background(
+                brush = Brush.horizontalGradient(
+                    colors = listOf(
+                        accentColor.copy(alpha = 0.12f),
+                        Color.Transparent,
+                        accentColor.copy(alpha = 0.075f),
+                        Color.White.copy(alpha = 0.035f),
+                        accentColor.copy(alpha = 0.055f),
+                        Color.Transparent
+                    )
+                )
+            ) // ValidityStaticAccentLayer
+            .background(
+                brush = Brush.horizontalGradient(
+                    colors = listOf(
+                        Color.Transparent,
+                        accentColor.copy(alpha = pulseAlpha),
+                        Color.White.copy(alpha = 0.10f),
+                        accentColor.copy(alpha = 0.16f),
+                        Color.Transparent
+                    ),
+                    startX = sweepX,
+                    endX = sweepX + 620f
+                )
             )
+            .border(
+                width = 1.25.dp,
+                color = accentColor.copy(alpha = 0.88f),
+                shape = RoundedCornerShape(17.dp)
+            )
+            .padding(horizontal = 12.dp, vertical = 10.dp)
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Top
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = titleText,
+                        fontSize = if (isBengali) 12.sp else 9.sp,
+                        fontWeight = FontWeight.Black,
+                        color = titleColor,
+                        letterSpacing = if (isBengali) 0.sp else 1.1.sp,
+                        maxLines = 1,
+                        softWrap = false,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                    )
+
+                    Text(
+                        text = stateText,
+                        fontSize = 9.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = subtitleColor,
+                        modifier = Modifier.padding(top = 1.dp),
+                        maxLines = 1,
+                        softWrap = false,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                    )
+                }
+
+                Column(horizontalAlignment = Alignment.End) {
+                    Text(
+                        text = if (isExpired) {
+                            if (isBengali) "শেষ" else "EXPIRED"
+                        } else {
+                            timeText
+                        },
+                        fontFamily = FontFamily.Monospace,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Black,
+                        color = accentColor,
+                        maxLines = 1,
+                        softWrap = false
+                    )
+
+                    Text(
+                        text = remainingText,
+                        fontSize = 8.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = supportColor,
+                        maxLines = 1,
+                        softWrap = false
+                    )
+                }
+            }
+
+            LinearProgressIndicator(
+                progress = progress,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(5.dp)
+                    .clip(RoundedCornerShape(100.dp)),
+                color = accentColor,
+                trackColor = trackColor
+            )
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(
+                        brush = Brush.horizontalGradient(
+                            colors = listOf(
+                                Color(0xFF02050D),
+                                Color(0xFF0D1422),
+                                Color(0xFF02050D)
+                            )
+                        )
+                    )
+                    .border(
+                        0.8.dp,
+                        accentColor.copy(alpha = 0.50f),
+                        RoundedCornerShape(10.dp)
+                    )
+                    .padding(horizontal = 8.dp, vertical = 5.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Info,
+                    contentDescription = null,
+                    tint = accentColor,
+                    modifier = Modifier.size(14.dp)
+                )
+
+                Spacer(modifier = Modifier.width(6.dp))
+
+                Text(
+                    text = stateMeaning,
+                    fontSize = 9.sp,
+                    fontWeight = FontWeight.Black,
+                    color = Color(0xFFF7FBFF),
+                    textAlign = TextAlign.Center,
+                    maxLines = 1,
+                    softWrap = false,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                )
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = windowText,
+                    fontSize = 8.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = supportColor,
+                    maxLines = 1,
+                    softWrap = false
+                )
+
+                Text(
+                    text = activeText,
+                    fontSize = 8.sp,
+                    fontWeight = FontWeight.Black,
+                    color = accentColor,
+                    maxLines = 1,
+                    softWrap = false
+                )
+            }
         }
-        Spacer(modifier = Modifier.height(6.dp))
-        LinearProgressIndicator(
-            progress = pctRemaining,
-            color = if (remainingSeconds < 1800) CryptoRed else CryptoCyan,
-            trackColor = BorderColor,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(4.dp)
-                .clip(RoundedCornerShape(2.dp))
-        )
     }
 }
 
 
 
 @Composable
-fun MultiAiConsensusModule(coinSymbol: String, oracleScore: Int, isLong: Boolean) {
-    val consensus = getConsensusDetails(coinSymbol, oracleScore, isLong)
+fun AiScoreTile(title: String, score: Int, modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .height(50.dp)
+            .clip(RoundedCornerShape(9.dp))
+            .background(
+                Brush.linearGradient(
+                    listOf(
+                        Color(0xFF02050D),
+                        Color(0xFF080E18),
+                        Color(0xFF02050D)
+                    )
+                )
+            )
+            .border(0.75.dp, CryptoCyan.copy(alpha = 0.34f), RoundedCornerShape(9.dp))
+            .padding(horizontal = 5.dp, vertical = 3.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                text = title,
+                fontSize = 9.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFFDCE5F5),
+                maxLines = 1,
+                textAlign = TextAlign.Center,
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+            )
+
+            Spacer(modifier = Modifier.height(3.dp))
+
+            Text(
+                text = "$score/100",
+                fontSize = 15.sp,
+                fontFamily = FontFamily.Monospace,
+                fontWeight = FontWeight.Black,
+                color = signalProfileConfidenceColor(score),
+                maxLines = 1,
+                softWrap = false,
+                textAlign = TextAlign.Center
+            )
+        }
+    }
+}
+
+
+@Composable
+fun ConsensusMetricColumn(
+    label: String,
+    value: String,
+    valueColor: Color,
+    modifier: Modifier = Modifier
+) {
+    val valueSize = when {
+        value.length >= 9 -> 12.sp
+        value.length >= 6 -> 13.sp
+        else -> 15.sp
+    }
+
+    Column(
+        modifier = modifier
+            .heightIn(min = 44.dp)
+            .padding(horizontal = 2.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Text(
+            text = label,
+            fontSize = 7.5.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color(0xFFD0D8E8),
+            maxLines = 2,
+            lineHeight = 8.5.sp,
+            textAlign = TextAlign.Center,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+        )
+
+        Spacer(modifier = Modifier.height(2.dp))
+
+        Text(
+            text = value,
+            fontSize = valueSize,
+            fontWeight = FontWeight.Black,
+            color = valueColor,
+            maxLines = 1,
+            softWrap = false,
+            textAlign = TextAlign.Center,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+        )
+    }
+}
+
+
+@Composable
+fun MultiAiConsensusModule(
+    coinSymbol: String,
+    oracleScore: Int,
+    isLong: Boolean,
+    isBengali: Boolean = false
+) {
+    val geminiScore = (oracleScore - 4).coerceIn(60, 99)
+    val gptScore = (oracleScore - 8).coerceIn(60, 99)
+    val claudeScore = (oracleScore - 5).coerceIn(60, 99)
+    val consensusScore = ((geminiScore + gptScore + claudeScore) / 3).coerceIn(0, 100)
+
+    val directionText = if (isBengali) {
+        if (isLong) "দাম বাড়ছে" else "দাম কমছে"
+    } else {
+        if (isLong) "BULLISH" else "BEARISH"
+    }
+
+    val riskText = if (isBengali) {
+        if (oracleScore >= 85) "কম" else "মাঝারি"
+    } else {
+        if (oracleScore >= 85) "LOW" else "MEDIUM"
+    }
 
     Card(
-        colors = CardDefaults.cardColors(containerColor = DarkSurfaceVariant),
-        modifier = Modifier.fillMaxWidth().border(1.dp, BorderColor, RoundedCornerShape(12.dp))
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF030712)),
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(0.95.dp, CryptoCyan.copy(alpha = 0.62f), RoundedCornerShape(14.dp))
     ) {
-        Column(modifier = Modifier.padding(14.dp)) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(
+                    Brush.linearGradient(
+                        listOf(
+                            Color(0xFF03111B),
+                            Color(0xFF0B1220),
+                            Color(0xFF02050D)
+                        )
+                    )
+                )
+                .padding(horizontal = 12.dp, vertical = 10.dp)
+        ) {
             Text(
-                text = "MULTI-AI CONSENSUS ENGINES",
-                fontSize = 10.sp,
-                fontWeight = FontWeight.Bold,
+                text = if (isBengali) "মাল্টি-এআই ঐকমত্য ইঞ্জিন" else "MULTI-AI CONSENSUS ENGINES",
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Black,
                 color = CryptoCyan,
-                letterSpacing = 1.sp
+                letterSpacing = if (isBengali) 0.sp else 1.2.sp,
+                maxLines = 1,
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
             )
-            Spacer(modifier = Modifier.height(12.dp))
+
+            Spacer(modifier = Modifier.height(7.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(7.dp)
             ) {
-                AiEngineGauge("Gemini Pro AI", consensus.geminiScore, Modifier.weight(1f))
-                AiEngineGauge("GPT-4o Quant", consensus.gptScore, Modifier.weight(1f))
-                AiEngineGauge("Claude Sentient", consensus.claudeScore, Modifier.weight(1f))
+                AiScoreTile("Gemini Pro AI", geminiScore, Modifier.weight(1f))
+                AiScoreTile("GPT-4o Quant", gptScore, Modifier.weight(1f))
+                AiScoreTile("Claude Sentient", claudeScore, Modifier.weight(1f))
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
-            HorizontalDivider(color = BorderColor.copy(alpha = 0.5f))
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(7.dp))
 
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Column {
-                    Text(text = "CONSENSUS CONFIDENCE", fontSize = 9.sp, color = TextSecondary)
-                    Text(text = "${consensus.confidence}%", fontSize = 15.sp, fontWeight = FontWeight.Black, color = CryptoCyan)
-                }
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(text = "DIRECTION", fontSize = 9.sp, color = TextSecondary)
-                    Text(
-                        text = consensus.direction,
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.Black,
-                        color = if (isLong) CryptoGreen else CryptoRedText
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(
+                        Brush.horizontalGradient(
+                            listOf(
+                                Color(0xFF04111A),
+                                Color(0xFF0B1824),
+                                Color(0xFF04111A)
+                            )
+                        )
                     )
-                }
-                Column(horizontalAlignment = Alignment.End) {
-                    Text(text = "RISK PROFILE", fontSize = 9.sp, color = TextSecondary)
-                    Text(
-                        text = consensus.riskScore,
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.Black,
-                        color = when (consensus.riskScore) {
-                            "LOW" -> CryptoGreen
-                            "MEDIUM" -> AccentGold
-                            else -> CryptoRedText
-                        }
-                    )
-                }
+                    .border(0.8.dp, CryptoCyan.copy(alpha = 0.62f), RoundedCornerShape(10.dp))
+                    .padding(vertical = 6.dp, horizontal = 6.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                ConsensusMetricColumn(
+                    label = if (isBengali) "ঐকমত্যের আস্থা" else "CONSENSUS CONFIDENCE",
+                    value = "$consensusScore%",
+                    valueColor = signalProfileConfidenceColor(consensusScore),
+                    modifier = Modifier.weight(1.25f)
+                )
+
+                ConsensusMetricColumn(
+                    label = if (isBengali) "দিকনির্দেশ" else "DIRECTION",
+                    value = directionText,
+                    valueColor = signalProfileDirectionColor(directionText),
+                    modifier = Modifier.weight(1.05f)
+                )
+
+                ConsensusMetricColumn(
+                    label = if (isBengali) "রিস্ক প্রোফাইল" else "RISK PROFILE",
+                    value = riskText,
+                    valueColor = signalProfileRiskColor(riskText),
+                    modifier = Modifier.weight(1.0f)
+                )
             }
         }
     }
@@ -2474,8 +2885,8 @@ fun MultiAiConsensusModule(coinSymbol: String, oracleScore: Int, isLong: Boolean
 fun AiEngineGauge(name: String, score: Int, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
-            .background(DarkBackground, RoundedCornerShape(8.dp))
-            .border(1.dp, BorderColor, RoundedCornerShape(8.dp))
+            .background(Color(0xFF050812), RoundedCornerShape(8.dp))
+            .border(0.75.dp, CryptoCyan.copy(alpha = 0.42f), RoundedCornerShape(8.dp))
             .padding(8.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -2520,10 +2931,10 @@ fun RiskManagementModule(
     val tp4 = projectedPrice
 
     Card(
-        colors = CardDefaults.cardColors(containerColor = DarkSurfaceVariant),
-        modifier = Modifier.fillMaxWidth().border(1.dp, BorderColor, RoundedCornerShape(12.dp))
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF050A13)),
+        modifier = Modifier.fillMaxWidth().border(0.95.dp, CryptoCyan.copy(alpha = 0.62f), RoundedCornerShape(12.dp))
     ) {
-        Column(modifier = Modifier.padding(14.dp)) {
+        Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp)) {
             Text(
                 text = "RISK ENGINEERING & SIZING CONTROL",
                 fontSize = 10.sp,
@@ -2531,7 +2942,7 @@ fun RiskManagementModule(
                 color = CryptoCyan,
                 letterSpacing = 1.sp
             )
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Column {
@@ -2544,7 +2955,7 @@ fun RiskManagementModule(
                 }
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(8.dp))
             Text(text = "TAKE PROFIT TARGET MATRIX", fontSize = 9.sp, color = TextSecondary, fontWeight = FontWeight.Bold)
             Spacer(modifier = Modifier.height(6.dp))
 
@@ -2555,7 +2966,7 @@ fun RiskManagementModule(
                 TpBadge("TP4 (100%)", tp4, Modifier.weight(1f))
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(8.dp))
             Text(text = "RECOMMENDED POSITION ALLOCATION SIZING", fontSize = 9.sp, color = TextSecondary, fontWeight = FontWeight.Bold)
             Spacer(modifier = Modifier.height(6.dp))
 
@@ -2570,16 +2981,28 @@ fun RiskManagementModule(
 
 @Composable
 fun TpBadge(label: String, price: Double, modifier: Modifier = Modifier) {
+    val formattedPrice = formatPrice(price)
+    val priceFontSize = if (formattedPrice.length >= 10) 7.6.sp else 9.sp
+
     Column(
         modifier = modifier
-            .background(DarkBackground, RoundedCornerShape(6.dp))
-            .border(1.dp, BorderColor, RoundedCornerShape(6.dp))
-            .padding(6.dp),
+            .background(Color(0xFF050812), RoundedCornerShape(6.dp))
+            .border(0.75.dp, CryptoCyan.copy(alpha = 0.36f), RoundedCornerShape(6.dp))
+            .padding(horizontal = 4.dp, vertical = 6.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(text = label, fontSize = 8.sp, color = CryptoGreen, fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(2.dp))
-        Text(text = formatPrice(price), fontSize = 9.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.ExtraBold, color = TextPrimary)
+        Text(
+            text = formattedPrice,
+            fontSize = priceFontSize,
+            fontFamily = FontFamily.Monospace,
+            fontWeight = FontWeight.ExtraBold,
+            color = TextPrimary,
+            maxLines = 1,
+            softWrap = false,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Clip
+        )
     }
 }
 
@@ -2587,12 +3010,30 @@ fun TpBadge(label: String, price: Double, modifier: Modifier = Modifier) {
 fun SizingBox(label: String, size: String, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
-            .background(DarkBackground, RoundedCornerShape(6.dp))
-            .padding(6.dp),
+            .background(Color(0xFF050812), RoundedCornerShape(6.dp))
+            .border(0.75.dp, signalProfileAllocationColor(label).copy(alpha = 0.46f), RoundedCornerShape(6.dp))
+            .padding(horizontal = 6.dp, vertical = 5.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(text = label, fontSize = 8.sp, color = TextSecondary)
-        Text(text = size, fontSize = 9.sp, fontWeight = FontWeight.Bold, color = AccentGold)
+        val profileColor = signalProfileAllocationColor(label)
+        Text(
+            text = label,
+            fontSize = 9.5.sp,
+            color = profileColor.copy(alpha = 0.92f),
+            fontWeight = FontWeight.Bold,
+            maxLines = 1,
+            softWrap = false,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+        )
+        Spacer(modifier = Modifier.height(2.dp))
+        Text(
+            text = size,
+            fontSize = 10.5.sp,
+            fontWeight = FontWeight.Black,
+            color = profileColor,
+            maxLines = 1,
+            softWrap = false
+        )
     }
 }
 
@@ -2601,8 +3042,8 @@ fun MultiTimeframeForecastModule(currentPrice: Double, isLong: Boolean, priceCha
     val forecasts = generateMultiTimeframeForecasts(currentPrice, isLong, priceChangePct)
 
     Card(
-        colors = CardDefaults.cardColors(containerColor = DarkSurfaceVariant),
-        modifier = Modifier.fillMaxWidth().border(1.dp, BorderColor, RoundedCornerShape(12.dp))
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF050A13)),
+        modifier = Modifier.fillMaxWidth().border(0.95.dp, CryptoCyan.copy(alpha = 0.62f), RoundedCornerShape(12.dp))
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
             Text(
@@ -2648,8 +3089,8 @@ fun MultiTimeframeForecastModule(currentPrice: Double, isLong: Boolean, priceCha
 fun ForecastGridItem(forecast: TimeframeForecast, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
-            .background(DarkBackground, RoundedCornerShape(8.dp))
-            .border(1.dp, BorderColor, RoundedCornerShape(8.dp))
+            .background(Color(0xFF050812), RoundedCornerShape(8.dp))
+            .border(0.75.dp, CryptoCyan.copy(alpha = 0.42f), RoundedCornerShape(8.dp))
             .padding(8.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -2713,73 +3154,89 @@ fun generateMultiTimeframeForecasts(currentPrice: Double, isLong: Boolean, price
 }
 
 @Composable
-fun AiExplanationModule(whyEnglish: String, whyBengali: String, coinSymbol: String, isBengali: Boolean, onToggleLanguage: () -> Unit) {
+fun AiExplanationModule(
+    whyEnglish: String,
+    whyBengali: String,
+    coinSymbol: String,
+    isBengali: Boolean,
+    onToggleLanguage: () -> Unit
+) {
     val rotation by animateFloatAsState(
         targetValue = if (isBengali) 180f else 0f,
         animationSpec = spring(stiffness = Spring.StiffnessLow)
     )
 
     Column(modifier = Modifier.fillMaxWidth()) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "AI ORACLE ANALYTIC COGNITION",
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Bold,
-                color = CryptoCyan,
-                letterSpacing = 1.sp
-            )
+        Text(
+            text = if (isBengali) "এআই ওরাকলের বিশ্লেষণমূলক তথ্য" else "AI ORACLE ANALYTICS COGNITION",
+            fontSize = 11.sp,
+            fontWeight = FontWeight.Black,
+            color = CryptoCyan,
+            letterSpacing = if (isBengali) 0.sp else 1.sp,
+            maxLines = 1,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+        )
 
-            TextButton(
-                onClick = onToggleLanguage,
-                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
-                modifier = Modifier.height(28.dp)
-            ) {
-                Text(
-                    text = if (isBengali) "Show English" else "বাংলায় দেখুন ➔",
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = AccentGold
-                )
-            }
-        }
         Spacer(modifier = Modifier.height(8.dp))
 
         Card(
-            colors = CardDefaults.cardColors(containerColor = DarkSurfaceVariant),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF030712)),
             modifier = Modifier
                 .fillMaxWidth()
-                .border(2.dp, BorderColor, RoundedCornerShape(12.dp))
+                .border(0.95.dp, CryptoCyan.copy(alpha = 0.62f), RoundedCornerShape(12.dp))
                 .graphicsLayer {
                     rotationY = rotation
                     cameraDistance = 14 * density
+                    shape = RoundedCornerShape(12.dp)
                 }
         ) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(14.dp)
+                    .background(
+                        Brush.linearGradient(
+                            listOf(
+                                Color(0xFF03111B),
+                                Color(0xFF0B1220),
+                                Color(0xFF02050D)
+                            )
+                        )
+                    )
+                    .padding(horizontal = 10.dp, vertical = 9.dp)
             ) {
                 if (rotation <= 90f) {
                     Column {
                         Text(
                             text = whyEnglish,
                             fontSize = 13.sp,
-                            color = TextPrimary,
+                            color = Color(0xFFF4F8FF),
                             lineHeight = 18.sp
                         )
-                        Spacer(modifier = Modifier.height(10.dp))
-                        
-                        Text(text = "QUANTITATIVE HEATMAP SIGNALS", fontSize = 9.sp, color = CryptoCyan, fontWeight = FontWeight.Bold)
+
                         Spacer(modifier = Modifier.height(6.dp))
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            InsightMetricPill("Trend", "STRONG", CryptoGreen)
-                            InsightMetricPill("Momentum", "HOT", AcceleratorCyanColor(coinSymbol))
-                            InsightMetricPill("Volume", "ACCUMULATING", AccentGold)
-                        }
+
+                        Text(
+                            text = "QUANTITATIVE HEATMAP SIGNALS",
+                            fontSize = 9.sp,
+                            color = CryptoCyan,
+                            fontWeight = FontWeight.Black,
+                            maxLines = 1,
+                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                        )
+
+                        Spacer(modifier = Modifier.height(6.dp))
+
+                        HeatmapSignalsAlignedRow(
+                            firstLabel = "Trend",
+                            firstValue = "STRONG",
+                            firstColor = CryptoGreen,
+                            secondLabel = "Momentum",
+                            secondValue = "HOT",
+                            secondColor = AcceleratorCyanColor(coinSymbol),
+                            thirdLabel = "Volume",
+                            thirdValue = "ACCUMULATING",
+                            thirdColor = AccentGold
+                        )
                     }
                 } else {
                     Column(
@@ -2788,18 +3245,34 @@ fun AiExplanationModule(whyEnglish: String, whyBengali: String, coinSymbol: Stri
                         Text(
                             text = whyBengali,
                             fontSize = 13.sp,
-                            color = TextPrimary,
+                            color = Color(0xFFF4F8FF),
                             lineHeight = 18.sp
                         )
-                        Spacer(modifier = Modifier.height(10.dp))
-                        
-                        Text(text = "রিয়াল-টাইম কোয়ান্ট সংকেতসমূহ", fontSize = 9.sp, color = CryptoCyan, fontWeight = FontWeight.Bold)
+
                         Spacer(modifier = Modifier.height(6.dp))
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            InsightMetricPill("ট্রেন্ড", "শক্তিশালী", CryptoGreen)
-                            InsightMetricPill("মোমেন্টাম", "উচ্চ", AcceleratorCyanColor(coinSymbol))
-                            InsightMetricPill("ভলিউম", "সঞ্চয়কারী", AccentGold)
-                        }
+
+                        Text(
+                            text = "পরিমাণগত হিটম্যাপ সিগন্যাল",
+                            fontSize = 9.sp,
+                            color = CryptoCyan,
+                            fontWeight = FontWeight.Black,
+                            maxLines = 1,
+                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                        )
+
+                        Spacer(modifier = Modifier.height(6.dp))
+
+                        HeatmapSignalsAlignedRow(
+                            firstLabel = "ট্রেন্ড",
+                            firstValue = "শক্তিশালী",
+                            firstColor = CryptoGreen,
+                            secondLabel = "মতিগতি",
+                            secondValue = "তীব্র",
+                            secondColor = AcceleratorCyanColor(coinSymbol),
+                            thirdLabel = "লেনদেন",
+                            thirdValue = "সঞ্চয় হচ্ছে",
+                            thirdColor = AccentGold
+                        )
                     }
                 }
             }
@@ -2808,16 +3281,100 @@ fun AiExplanationModule(whyEnglish: String, whyBengali: String, coinSymbol: Stri
 }
 
 @Composable
-fun InsightMetricPill(label: String, value: String, valueColor: Color) {
+fun HeatmapSignalsAlignedRow(
+    firstLabel: String,
+    firstValue: String,
+    firstColor: Color,
+    secondLabel: String,
+    secondValue: String,
+    secondColor: Color,
+    thirdLabel: String,
+    thirdValue: String,
+    thirdColor: Color
+) {
     Row(
-        modifier = Modifier
-            .background(DarkBackground, RoundedCornerShape(6.dp))
-            .border(0.7.dp, BorderColor, RoundedCornerShape(6.dp))
-            .padding(horizontal = 6.dp, vertical = 4.dp),
-        verticalAlignment = Alignment.CenterVertically
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp)
     ) {
-        Text(text = "$label: ", fontSize = 8.sp, color = TextSecondary)
-        Text(text = value, fontSize = 8.sp, fontWeight = FontWeight.Bold, color = valueColor)
+        InsightMetricPill(
+            label = firstLabel,
+            value = firstValue,
+            valueColor = firstColor,
+            modifier = Modifier.weight(1f)
+        )
+
+        InsightMetricPill(
+            label = secondLabel,
+            value = secondValue,
+            valueColor = secondColor,
+            modifier = Modifier.weight(1f)
+        )
+
+        InsightMetricPill(
+            label = thirdLabel,
+            value = thirdValue,
+            valueColor = thirdColor,
+            modifier = Modifier.weight(1.25f)
+        )
+    }
+}
+
+
+@Composable
+fun InsightMetricPill(
+    label: String,
+    value: String,
+    valueColor: Color,
+    modifier: Modifier = Modifier
+) {
+    val valueSize = when {
+        value.length >= 11 -> 8.4.sp
+        value.length >= 8 -> 9.2.sp
+        else -> 10.5.sp
+    }
+
+    Column(
+        modifier = modifier
+            .height(42.dp)
+            .clip(RoundedCornerShape(8.dp))
+            .background(
+                brush = Brush.linearGradient(
+                    colors = listOf(
+                        Color(0xFF02050D),
+                        Color(0xFF08111C),
+                        Color(0xFF02050D)
+                    )
+                )
+            )
+            .border(0.75.dp, valueColor.copy(alpha = 0.50f), RoundedCornerShape(8.dp))
+            .padding(horizontal = 5.dp, vertical = 4.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Text(
+            text = label,
+            fontSize = 8.5.sp,
+            color = Color(0xFFD3DAE8),
+            fontWeight = FontWeight.Bold,
+            maxLines = 1,
+            softWrap = false,
+            textAlign = TextAlign.Center,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+        )
+
+        Spacer(modifier = Modifier.height(2.dp))
+
+        Text(
+            text = value,
+            fontSize = valueSize,
+            fontWeight = FontWeight.Black,
+            color = valueColor,
+            maxLines = 1,
+            softWrap = false,
+            textAlign = TextAlign.Center,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+        )
     }
 }
 
@@ -2828,10 +3385,10 @@ fun AcceleratorCyanColor(symbol: String): Color {
 @Composable
 fun LeverageIntelligenceModule(coin: FuturesSignal) {
     Card(
-        colors = CardDefaults.cardColors(containerColor = DarkSurfaceVariant),
-        modifier = Modifier.fillMaxWidth().border(1.dp, BorderColor, RoundedCornerShape(12.dp))
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF050A13)),
+        modifier = Modifier.fillMaxWidth().border(0.95.dp, CryptoCyan.copy(alpha = 0.62f), RoundedCornerShape(12.dp))
     ) {
-        Column(modifier = Modifier.padding(14.dp)) {
+        Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp)) {
             Text(
                 text = "LEVERAGE INTELLIGENCE MATRIX",
                 fontSize = 10.sp,
@@ -2839,9 +3396,9 @@ fun LeverageIntelligenceModule(coin: FuturesSignal) {
                 color = CryptoCyan,
                 letterSpacing = 1.sp
             )
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(7.dp)) {
                 LeverageBox("SAFE LEVERAGE", "${coin.leverageConservative}x", "Conservative risk mitigation level", CryptoGreen, Modifier.weight(1f))
                 LeverageBox("MODERATE RISK", "${coin.leverageBalanced}x", "Default recommended balanced index", AccentGold, Modifier.weight(1f))
                 LeverageBox("MAX AGGRESIVE", "${coin.leverageAggressive}x", "Extreme danger volatility thresholds", CryptoRedText, Modifier.weight(1f))
@@ -2854,13 +3411,13 @@ fun LeverageIntelligenceModule(coin: FuturesSignal) {
 fun LeverageBox(title: String, multiplier: String, desc: String, accent: Color, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
-            .background(DarkBackground, RoundedCornerShape(8.dp))
+            .background(Color(0xFF050812), RoundedCornerShape(8.dp))
             .border(1.dp, BorderColor.copy(alpha = 0.5f), RoundedCornerShape(8.dp))
-            .padding(8.dp),
+            .padding(horizontal = 6.dp, vertical = 5.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(text = title, fontSize = 8.sp, color = TextSecondary, fontWeight = FontWeight.Bold)
-        Spacer(modifier = Modifier.height(4.dp))
+        Spacer(modifier = Modifier.height(2.dp))
         Text(text = multiplier, fontSize = 16.sp, fontWeight = FontWeight.Black, color = accent)
         Spacer(modifier = Modifier.height(2.dp))
         Text(text = desc, fontSize = 7.sp, color = TextMuted, textAlign = TextAlign.Center, lineHeight = 9.sp)
@@ -2982,18 +3539,72 @@ fun ScrollableTimeframeRow(
 }
 
 @Composable
+fun QualityMetricColumn(
+    label: String,
+    value: String,
+    valueColor: Color,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier.heightIn(min = 36.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Text(
+            text = label,
+            fontSize = 8.sp,
+            color = TextMuted,
+            fontWeight = FontWeight.Bold,
+            maxLines = 1,
+            textAlign = TextAlign.Center,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+        )
+
+        Spacer(modifier = Modifier.height(3.dp))
+
+        Text(
+            text = value,
+            fontSize = 12.sp,
+            color = valueColor,
+            fontWeight = FontWeight.Bold,
+            fontFamily = FontFamily.Monospace,
+            maxLines = 1,
+            textAlign = TextAlign.Center,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+        )
+    }
+}
+
+
+@Composable
 fun SignalQualitySystemBlock(
     score: Int,
     confidence: Int,
     probability: Int,
-    riskGrade: String
+    riskGrade: String,
+    isBengali: Boolean = false
 ) {
     val indicator = when {
-        score >= 90 -> "Institutional Grade"
-        score >= 82 -> "High Confidence"
-        score >= 70 -> "Strong"
-        score >= 55 -> "Moderate"
-        else -> "Weak"
+        score >= 90 -> if (isBengali) "ইনস্টিটিউশনাল মান" else "Institutional Grade"
+        score >= 82 -> if (isBengali) "উচ্চ আস্থা" else "High Confidence"
+        score >= 70 -> if (isBengali) "শক্তিশালী" else "Strong"
+        score >= 55 -> if (isBengali) "মাঝারি" else "Moderate"
+        else -> if (isBengali) "দুর্বল" else "Weak"
+    }
+
+    val riskText = when (riskGrade.uppercase()) {
+        "LOW" -> if (isBengali) "কম" else "LOW"
+        "MEDIUM" -> if (isBengali) "মাঝারি" else "MEDIUM"
+        "HIGH" -> if (isBengali) "তীব্র" else "HIGH"
+        "EXTREME" -> if (isBengali) "খুব বেশি" else "EXTREME"
+        else -> riskGrade
+    }
+
+    val riskColor = when (riskGrade.uppercase()) {
+        "LOW" -> CryptoGreen
+        "MEDIUM" -> AccentGold
+        "HIGH", "EXTREME" -> Color(0xFFFF3F60)
+        else -> AccentGold
     }
 
     val themeColor = when {
@@ -3004,19 +3615,23 @@ fun SignalQualitySystemBlock(
     }
 
     Card(
-        colors = CardDefaults.cardColors(containerColor = DarkSurfaceVariant),
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        border = BorderStroke(1.dp, BorderColor.copy(alpha = 0.6f))
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF050A13)),
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(0.95.dp, CryptoCyan.copy(alpha = 0.62f), RoundedCornerShape(12.dp)),
+        shape = RoundedCornerShape(12.dp)
     ) {
-        Column(modifier = Modifier.padding(14.dp)) {
+        Column(modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)) {
             Text(
-                text = "SIGNAL QUALITY ENGINE INDEX",
+                text = if (isBengali) "সিগন্যাল মান যাচাই সূচক" else "SIGNAL QUALITY ENGINE INDEX",
                 fontSize = 10.sp,
                 fontWeight = FontWeight.Bold,
                 color = TextSecondary,
-                letterSpacing = 1.sp
+                letterSpacing = if (isBengali) 0.sp else 1.sp,
+                maxLines = 1,
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
             )
+
             Spacer(modifier = Modifier.height(10.dp))
 
             Row(
@@ -3024,13 +3639,21 @@ fun SignalQualitySystemBlock(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column {
-                    Text(text = "CLASSIFICATION", fontSize = 8.sp, color = TextMuted)
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = indicator.uppercase(),
-                        fontSize = 13.sp,
+                        text = if (isBengali) "শ্রেণি" else "CLASSIFICATION",
+                        fontSize = 8.sp,
+                        color = TextMuted,
+                        maxLines = 1
+                    )
+
+                    Text(
+                        text = if (isBengali) indicator else indicator.uppercase(),
+                        fontSize = if (isBengali) 12.sp else 13.sp,
                         fontWeight = FontWeight.Black,
-                        color = themeColor
+                        color = themeColor,
+                        maxLines = 1,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                     )
                 }
 
@@ -3043,28 +3666,40 @@ fun SignalQualitySystemBlock(
                         text = "CQI: $score/100",
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
-                        color = themeColor
+                        color = themeColor,
+                        maxLines = 1
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(6.dp))
             HorizontalDivider(color = BorderColor.copy(alpha = 0.4f))
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(6.dp))
 
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Column {
-                    Text(text = "CONFIDENCE", fontSize = 8.sp, color = TextMuted)
-                    Text(text = "$confidence%", fontSize = 12.sp, color = TextPrimary, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
-                }
-                Column {
-                    Text(text = "PROBABILITY", fontSize = 8.sp, color = TextMuted)
-                    Text(text = "$probability%", fontSize = 12.sp, color = TextPrimary, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
-                }
-                Column(horizontalAlignment = Alignment.End) {
-                    Text(text = "RISK SCORE", fontSize = 8.sp, color = TextMuted)
-                    Text(text = riskGrade, fontSize = 12.sp, color = if (riskGrade == "LOW") CryptoGreen else AccentGold, fontWeight = FontWeight.Bold)
-                }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                QualityMetricColumn(
+                    label = if (isBengali) "আস্থা" else "CONFIDENCE",
+                    value = "$confidence%",
+                    valueColor = TextPrimary,
+                    modifier = Modifier.weight(1f)
+                )
+
+                QualityMetricColumn(
+                    label = if (isBengali) "সম্ভাবনা" else "PROBABILITY",
+                    value = "$probability%",
+                    valueColor = TextPrimary,
+                    modifier = Modifier.weight(1f)
+                )
+
+                QualityMetricColumn(
+                    label = if (isBengali) "রিস্ক" else "RISK SCORE",
+                    value = riskText,
+                    valueColor = riskColor,
+                    modifier = Modifier.weight(1f)
+                )
             }
         }
     }
@@ -3076,30 +3711,35 @@ fun TradeChecklistBlock(
     volumeConfirmed: Boolean,
     momentumConfirmed: Boolean,
     liquidityConfirmed: Boolean,
-    riskEvaluated: Boolean
+    riskEvaluated: Boolean,
+    isBengali: Boolean = false
 ) {
     Card(
-        colors = CardDefaults.cardColors(containerColor = DarkSurfaceVariant),
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        border = BorderStroke(1.dp, BorderColor.copy(alpha = 0.6f))
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF050A13)),
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(0.95.dp, CryptoCyan.copy(alpha = 0.62f), RoundedCornerShape(12.dp)),
+        shape = RoundedCornerShape(12.dp)
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
             Text(
-                text = "INSTITUTIONAL CONFIRMATION CHECKLIST",
+                text = if (isBengali) "ইনস্টিটিউশনাল নিশ্চিতকরণ তালিকা" else "INSTITUTIONAL CONFIRMATION CHECKLIST",
                 fontSize = 10.sp,
                 fontWeight = FontWeight.Bold,
                 color = TextSecondary,
-                letterSpacing = 1.sp
+                letterSpacing = if (isBengali) 0.sp else 1.sp,
+                maxLines = 1,
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
             )
+
             Spacer(modifier = Modifier.height(10.dp))
 
             val items = listOf(
-                "Trend Confirmed" to trendConfirmed,
-                "Volume Confirmed" to volumeConfirmed,
-                "Momentum Confirmed" to momentumConfirmed,
-                "Liquidity Confirmed" to liquidityConfirmed,
-                "Risk Evaluated" to riskEvaluated
+                (if (isBengali) "বাজারের দিক নিশ্চিত" else "Trend Confirmed") to trendConfirmed,
+                (if (isBengali) "লেনদেন নিশ্চিত" else "Volume Confirmed") to volumeConfirmed,
+                (if (isBengali) "মতিগতির জোর নিশ্চিত" else "Momentum Confirmed") to momentumConfirmed,
+                (if (isBengali) "নিরাপদ তহবিল নিশ্চিত" else "Liquidity Confirmed") to liquidityConfirmed,
+                (if (isBengali) "ঝুঁকি যাচাইকৃত" else "Risk Evaluated") to riskEvaluated
             )
 
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -3127,12 +3767,16 @@ fun TradeChecklistBlock(
                                 Box(modifier = Modifier.size(4.dp).background(Color(0xFFFF3F60), CircleShape))
                             }
                         }
+
                         Spacer(modifier = Modifier.width(8.dp))
+
                         Text(
                             text = label,
-                            fontSize = 11.sp,
+                            fontSize = if (isBengali) 11.5.sp else 11.sp,
                             fontWeight = FontWeight.Medium,
-                            color = if (checked) TextPrimary else TextMuted
+                            color = if (checked) TextPrimary else TextMuted,
+                            maxLines = 1,
+                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                         )
                     }
                 }
@@ -3142,18 +3786,54 @@ fun TradeChecklistBlock(
 }
 
 @Composable
-fun MarketRegimeTraceModule(coinSymbol: String) {
-    // Generate a beautiful, stable, hash-based market regime state for this asset
+fun MarketRegimeTraceModule(
+    coinSymbol: String,
+    isBengali: Boolean = false
+) {
     val seed = coinSymbol.hashCode().absoluteValue
     val regimes = listOf("BULLISH", "BEARISH", "SIDEWAYS", "ACCUMULATION", "DISTRIBUTION")
     val regime = regimes[seed % regimes.size]
 
+    val regimeText = when (regime) {
+        "BULLISH" -> if (isBengali) "দাম বাড়ার ভাব" else "BULLISH"
+        "BEARISH" -> if (isBengali) "মন্দা ভাব" else "BEARISH"
+        "SIDEWAYS" -> if (isBengali) "দাম স্থির ভাব" else "SIDEWAYS"
+        "ACCUMULATION" -> if (isBengali) "সঞ্চয় হচ্ছে" else "ACCUMULATION"
+        else -> if (isBengali) "বিক্রির চাপ" else "DISTRIBUTION"
+    }
+
+    val statusText = if (isBengali) "বর্তমানে সক্রিয়" else "ACTIVE DURING INSIGHT"
+
     val description = when(regime) {
-        "BULLISH" -> "High liquidity markup phase driven by strong smart money orders."
-        "BEARISH" -> "Markdown liquidations under persistent offer pressure."
-        "SIDEWAYS" -> "Range bound bracket with low volatility waiting for core breaks."
-        "ACCUMULATION" -> "Institutional accumulation in value brackets."
-        else -> "Smart money distribution at premium resistance heights."
+        "BULLISH" -> if (isBengali) {
+            "বাজারে ক্রেতার চাপ বেশি, দাম উপরে যাওয়ার সম্ভাবনা আছে।"
+        } else {
+            "High liquidity markup phase driven by strong smart money orders."
+        }
+
+        "BEARISH" -> if (isBengali) {
+            "বাজারে বিক্রির চাপ বেশি, দাম নিচে যাওয়ার ঝুঁকি আছে।"
+        } else {
+            "Markdown liquidations under persistent offer pressure."
+        }
+
+        "SIDEWAYS" -> if (isBengali) {
+            "দাম নির্দিষ্ট রেঞ্জে ঘুরছে, বড় ব্রেকের জন্য অপেক্ষা করছে।"
+        } else {
+            "Range bound bracket with low volatility waiting for core breaks."
+        }
+
+        "ACCUMULATION" -> if (isBengali) {
+            "বড় ক্রেতারা ধীরে ধীরে পজিশন তৈরি করছে।"
+        } else {
+            "Institutional accumulation in value brackets."
+        }
+
+        else -> if (isBengali) {
+            "উচ্চ দামে বিক্রির চাপ তৈরি হচ্ছে।"
+        } else {
+            "Smart money distribution at premium resistance heights."
+        }
     }
 
     val tint = when(regime) {
@@ -3165,19 +3845,23 @@ fun MarketRegimeTraceModule(coinSymbol: String) {
     }
 
     Card(
-        colors = CardDefaults.cardColors(containerColor = DarkSurfaceVariant),
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        border = BorderStroke(1.dp, BorderColor.copy(alpha = 0.6f))
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF050A13)),
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(0.95.dp, CryptoCyan.copy(alpha = 0.62f), RoundedCornerShape(12.dp)),
+        shape = RoundedCornerShape(12.dp)
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
             Text(
-                text = "PERSISTED REGIME TRACE",
+                text = if (isBengali) "চলতি বাজারের মতিগতি" else "PERSISTED REGIME TRACE",
                 fontSize = 10.sp,
                 fontWeight = FontWeight.Bold,
                 color = TextSecondary,
-                letterSpacing = 1.sp
+                letterSpacing = if (isBengali) 0.sp else 1.sp,
+                maxLines = 1,
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
             )
+
             Spacer(modifier = Modifier.height(10.dp))
 
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -3187,21 +3871,37 @@ fun MarketRegimeTraceModule(coinSymbol: String) {
                         .padding(horizontal = 8.dp, vertical = 3.dp)
                 ) {
                     Text(
-                        text = regime,
+                        text = regimeText,
                         fontSize = 11.sp,
                         fontWeight = FontWeight.ExtraBold,
-                        color = tint
+                        color = tint,
+                        maxLines = 1
                     )
                 }
-                Spacer(modifier = Modifier.width(10.dp))
+
+                Spacer(modifier = Modifier.width(8.dp))
+
                 Text(
-                    text = "ACTIVE DURING INSIGHT",
-                    fontSize = 8.sp,
+                    text = "|",
+                    fontSize = 10.sp,
                     color = TextMuted,
                     fontWeight = FontWeight.Bold
                 )
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                Text(
+                    text = statusText,
+                    fontSize = if (isBengali) 10.sp else 8.sp,
+                    color = TextMuted,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                )
             }
+
             Spacer(modifier = Modifier.height(8.dp))
+
             Text(
                 text = description,
                 fontSize = 11.sp,

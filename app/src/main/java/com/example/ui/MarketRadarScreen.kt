@@ -32,15 +32,58 @@ import com.example.ui.theme.*
 import com.example.viewmodel.CryptoViewModel
 import kotlin.random.Random
 
+
+private fun liveRadarConfidenceColor(value: String): Color {
+    val numeric = value.replace("%", "").trim().toIntOrNull() ?: return TextSecondary
+    return when {
+        numeric >= 80 -> CryptoGreen
+        numeric >= 60 -> AccentGold
+        else -> CryptoRedText
+    }
+}
+
+private fun liveRadarRiskColor(value: String): Color {
+    val normalized = value.uppercase()
+    return when {
+        normalized.contains("LOW") || normalized.contains("SAFE") || normalized.contains("CONSERVATIVE") -> CryptoGreen
+        normalized.contains("MEDIUM") || normalized.contains("MODERATE") || normalized.contains("BALANCED") -> AccentGold
+        normalized.contains("HIGH") || normalized.contains("ELEVATED") || normalized.contains("AGGRESSIVE") -> Color(0xFFFF9F0A)
+        normalized.contains("CRITICAL") || normalized.contains("EXTREME") || normalized.contains("INVALID") -> CryptoRedText
+        else -> TextSecondary
+    }
+}
+
+@Composable
+private fun RadarTriggerSectionHeader(
+    title: String,
+    accentColor: Color,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(accentColor.copy(alpha = 0.055f), RoundedCornerShape(9.dp))
+            .border(0.85.dp, accentColor.copy(alpha = 0.58f), RoundedCornerShape(9.dp))
+            .padding(start = 10.dp, end = 10.dp, top = 7.dp, bottom = 7.dp),
+        contentAlignment = Alignment.CenterStart
+    ) {
+        Text(
+            text = title,
+            fontSize = 11.sp,
+            fontWeight = FontWeight.Bold,
+            color = accentColor,
+            letterSpacing = 0.5.sp,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+    }
+}
+
 @Composable
 fun MarketRadarScreen(
     viewModel: CryptoViewModel,
     modifier: Modifier = Modifier
 ) {
-    LaunchedEffect(Unit) {
-        viewModel.clearRadarSignalBadge()
-    }
-
     val radarAlerts by viewModel.radarAlerts.collectAsState()
     val marketRegime by viewModel.marketRegime.collectAsState()
     val shortTermInterval by viewModel.shortTermTimeframe.collectAsState()
@@ -51,7 +94,7 @@ fun MarketRadarScreen(
         modifier = modifier
             .fillMaxSize()
             .background(DarkBackground)
-            .padding(horizontal = 16.dp),
+            .padding(horizontal = 12.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
         contentPadding = PaddingValues(top = 16.dp, bottom = 24.dp)
     ) {
@@ -408,12 +451,9 @@ fun ShortTermOpportunisticSignalsSection(timeframe: String, isBengali: Boolean, 
 
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         // --- 1. SPOT SECTIONS ---
-        Text(
-            text = if (isBengali) "🔥 তাত্ক্ষণিক স্পট টার্গেট (সেরা ৩)" else "🔥 HOT SPOT TRIGGERS (TOP 3)",
-            fontSize = 11.sp,
-            fontWeight = FontWeight.Bold,
-            color = LiveRadarInstitutionalYellow,
-            letterSpacing = 0.5.sp
+        RadarTriggerSectionHeader(
+            title = if (isBengali) "🔥 তাত্ক্ষণিক স্পট টার্গেট (সেরা ৩)" else "🔥 HOT SPOT TRIGGERS (TOP 3)",
+            accentColor = LiveRadarInstitutionalYellow
         )
 
         spotScalps.forEachIndexed { index, (name, symbol, basePrice) ->
@@ -501,11 +541,12 @@ fun ShortTermOpportunisticSignalsSection(timeframe: String, isBengali: Boolean, 
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    val mission = remember(symbol, target) {
+                    val mission = remember(symbol, target, timeframe) {
                         com.example.model.Mission(
                             coinSymbol = symbol,
                             type = "LONG",
                             marketType = "Spot",
+                            signalTimeframe = timeframe.uppercase(),
                             entryPrice = basePrice,
                             currentPrice = basePrice,
                             targets = formatPrice(target),
@@ -515,7 +556,7 @@ fun ShortTermOpportunisticSignalsSection(timeframe: String, isBengali: Boolean, 
                             aiStatusBengali = "রাডার স্পট সেটআপ সক্রিয়।"
                         )
                     }
-                    com.example.ui.StartTradeFlow(viewModel = viewModel, mission = mission, livePrice = livePrices["${symbol}USDT"] ?: basePrice)
+                    com.example.ui.StartTradeFlow(viewModel = viewModel, mission = mission)
                 }
             }
         }
@@ -523,12 +564,9 @@ fun ShortTermOpportunisticSignalsSection(timeframe: String, isBengali: Boolean, 
         Spacer(modifier = Modifier.height(4.dp))
 
         // --- 2. FUTURES LONG SECTIONS ---
-        Text(
-            text = if (isBengali) "⚡ ফিউচার লং টার্গেট" else "⚡ FUTURES LONG TRIGGERS (TOP 3)",
-            fontSize = 11.sp,
-            fontWeight = FontWeight.Bold,
-            color = LiveRadarInstitutionalGreen,
-            letterSpacing = 0.5.sp
+        RadarTriggerSectionHeader(
+            title = if (isBengali) "⚡ ফিউচার লং টার্গেট" else "⚡ FUTURES LONG TRIGGERS (TOP 3)",
+            accentColor = LiveRadarInstitutionalGreen
         )
 
         longScalps.forEachIndexed { index, (name, symbol, basePrice) ->
@@ -616,11 +654,12 @@ fun ShortTermOpportunisticSignalsSection(timeframe: String, isBengali: Boolean, 
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    val mission = remember(symbol, target) {
+                    val mission = remember(symbol, target, timeframe) {
                         com.example.model.Mission(
                             coinSymbol = symbol,
                             type = "LONG",
                             marketType = "Futures",
+                            signalTimeframe = timeframe.uppercase(),
                             entryPrice = basePrice,
                             currentPrice = basePrice,
                             targets = formatPrice(target),
@@ -630,7 +669,7 @@ fun ShortTermOpportunisticSignalsSection(timeframe: String, isBengali: Boolean, 
                             aiStatusBengali = "রাডার লং সেটআপ সক্রিয়।"
                         )
                     }
-                    com.example.ui.StartTradeFlow(viewModel = viewModel, mission = mission, livePrice = livePrices["${symbol}USDT"] ?: basePrice)
+                    com.example.ui.StartTradeFlow(viewModel = viewModel, mission = mission)
                 }
             }
         }
@@ -638,12 +677,9 @@ fun ShortTermOpportunisticSignalsSection(timeframe: String, isBengali: Boolean, 
         Spacer(modifier = Modifier.height(4.dp))
 
         // --- 3. FUTURES SHORT SECTIONS ---
-        Text(
-            text = if (isBengali) "🔻 ফিউচার শর্ট টার্গেট (সেরা ৩)" else "🔻 FUTURES SHORT TRIGGERS (TOP 3)",
-            fontSize = 11.sp,
-            fontWeight = FontWeight.Bold,
-            color = LiveRadarDangerRed,
-            letterSpacing = 0.5.sp
+        RadarTriggerSectionHeader(
+            title = if (isBengali) "🔻 ফিউচার শর্ট টার্গেট (সেরা ৩)" else "🔻 FUTURES SHORT TRIGGERS (TOP 3)",
+            accentColor = LiveRadarDangerRed
         )
 
         shortScalps.forEachIndexed { index, (name, symbol, basePrice) ->
@@ -731,11 +767,12 @@ fun ShortTermOpportunisticSignalsSection(timeframe: String, isBengali: Boolean, 
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    val mission = remember(symbol, target) {
+                    val mission = remember(symbol, target, timeframe) {
                         com.example.model.Mission(
                             coinSymbol = symbol,
                             type = "SHORT",
                             marketType = "Futures",
+                            signalTimeframe = timeframe.uppercase(),
                             entryPrice = basePrice,
                             currentPrice = basePrice,
                             targets = formatPrice(target),
@@ -745,7 +782,7 @@ fun ShortTermOpportunisticSignalsSection(timeframe: String, isBengali: Boolean, 
                             aiStatusBengali = "রাডার শর্ট সেটআপ সক্রিয়।"
                         )
                     }
-                    com.example.ui.StartTradeFlow(viewModel = viewModel, mission = mission, livePrice = livePrices["${symbol}USDT"] ?: basePrice)
+                    com.example.ui.StartTradeFlow(viewModel = viewModel, mission = mission)
                 }
             }
         }
@@ -1109,7 +1146,7 @@ private fun OracleAnalyticMetadataGrid(
             )
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(6.dp))
 
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -1154,12 +1191,12 @@ private fun OracleMetadataTile(
 ) {
     Column(
         modifier = modifier
-            .heightIn(min = 52.dp)
+            .heightIn(min = 58.dp)
             .background(LiveRadarTileDark, RoundedCornerShape(10.dp))
             .border(0.9.dp, borderColor, RoundedCornerShape(10.dp))
             .padding(horizontal = 8.dp, vertical = 6.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Top
+        verticalArrangement = Arrangement.Center
     ) {
         Text(
             text = title,
@@ -1440,10 +1477,10 @@ private fun BetaGuardMiniTile(
 
     Column(
         modifier = modifier
-            .heightIn(min = 64.dp)
+            .heightIn(min = 56.dp)
             .background(LiveRadarTileDark, RoundedCornerShape(9.dp))
             .border(0.85.dp, borderBrush, RoundedCornerShape(9.dp))
-            .padding(horizontal = 7.dp, vertical = 7.dp),
+            .padding(horizontal = 7.dp, vertical = 5.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
@@ -1457,7 +1494,7 @@ private fun BetaGuardMiniTile(
             overflow = TextOverflow.Ellipsis
         )
 
-        Spacer(modifier = Modifier.height(3.dp))
+        Spacer(modifier = Modifier.height(1.dp))
 
         Text(
             text = value,
@@ -1509,7 +1546,7 @@ private fun TakeProfitTargetTile(
             overflow = TextOverflow.Ellipsis
         )
 
-        Spacer(modifier = Modifier.height(3.dp))
+        Spacer(modifier = Modifier.height(1.dp))
 
         Text(
             text = value,
@@ -1622,7 +1659,7 @@ private fun ConsensusSummaryMetric(
             overflow = TextOverflow.Ellipsis
         )
 
-        Spacer(modifier = Modifier.height(2.dp))
+        Spacer(modifier = Modifier.height(1.dp))
 
         Text(
             text = value,
@@ -1662,7 +1699,7 @@ private fun AllocationSizingTile(
             overflow = TextOverflow.Ellipsis
         )
 
-        Spacer(modifier = Modifier.height(2.dp))
+        Spacer(modifier = Modifier.height(1.dp))
 
         Text(
             text = value,
