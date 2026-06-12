@@ -32,6 +32,53 @@ import com.example.ui.theme.*
 import com.example.viewmodel.CryptoViewModel
 import kotlin.random.Random
 
+
+private fun liveRadarConfidenceColor(value: String): Color {
+    val numeric = value.replace("%", "").trim().toIntOrNull() ?: return TextSecondary
+    return when {
+        numeric >= 80 -> CryptoGreen
+        numeric >= 60 -> AccentGold
+        else -> CryptoRedText
+    }
+}
+
+private fun liveRadarRiskColor(value: String): Color {
+    val normalized = value.uppercase()
+    return when {
+        normalized.contains("LOW") || normalized.contains("SAFE") || normalized.contains("CONSERVATIVE") -> CryptoGreen
+        normalized.contains("MEDIUM") || normalized.contains("MODERATE") || normalized.contains("BALANCED") -> AccentGold
+        normalized.contains("HIGH") || normalized.contains("ELEVATED") || normalized.contains("AGGRESSIVE") -> Color(0xFFFF9F0A)
+        normalized.contains("CRITICAL") || normalized.contains("EXTREME") || normalized.contains("INVALID") -> CryptoRedText
+        else -> TextSecondary
+    }
+}
+
+@Composable
+private fun RadarTriggerSectionHeader(
+    title: String,
+    accentColor: Color,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(accentColor.copy(alpha = 0.055f), RoundedCornerShape(9.dp))
+            .border(0.85.dp, accentColor.copy(alpha = 0.58f), RoundedCornerShape(9.dp))
+            .padding(start = 10.dp, end = 10.dp, top = 7.dp, bottom = 7.dp),
+        contentAlignment = Alignment.CenterStart
+    ) {
+        Text(
+            text = title,
+            fontSize = 11.sp,
+            fontWeight = FontWeight.Bold,
+            color = accentColor,
+            letterSpacing = 0.5.sp,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+    }
+}
+
 @Composable
 fun MarketRadarScreen(
     viewModel: CryptoViewModel,
@@ -502,6 +549,7 @@ fun ShortTermOpportunisticSignalsSection(timeframe: String, isBengali: Boolean, 
                             coinSymbol = symbol,
                             type = "LONG",
                             marketType = "Spot",
+                            signalTimeframe = timeframe.uppercase(),
                             entryPrice = basePrice,
                             currentPrice = basePrice,
                             targets = formatPrice(target),
@@ -617,6 +665,7 @@ fun ShortTermOpportunisticSignalsSection(timeframe: String, isBengali: Boolean, 
                             coinSymbol = symbol,
                             type = "LONG",
                             marketType = "Futures",
+                            signalTimeframe = timeframe.uppercase(),
                             entryPrice = basePrice,
                             currentPrice = basePrice,
                             targets = formatPrice(target),
@@ -732,6 +781,7 @@ fun ShortTermOpportunisticSignalsSection(timeframe: String, isBengali: Boolean, 
                             coinSymbol = symbol,
                             type = "SHORT",
                             marketType = "Futures",
+                            signalTimeframe = timeframe.uppercase(),
                             entryPrice = basePrice,
                             currentPrice = basePrice,
                             targets = formatPrice(target),
@@ -1150,7 +1200,7 @@ private fun OracleMetadataTile(
 ) {
     Column(
         modifier = modifier
-            .heightIn(min = 52.dp)
+            .heightIn(min = 44.dp)
             .background(LiveRadarTileDark, RoundedCornerShape(10.dp))
             .border(0.9.dp, borderColor, RoundedCornerShape(10.dp))
             .padding(horizontal = 8.dp, vertical = 6.dp),
@@ -1453,7 +1503,7 @@ private fun BetaGuardMiniTile(
             overflow = TextOverflow.Ellipsis
         )
 
-        Spacer(modifier = Modifier.height(3.dp))
+        Spacer(modifier = Modifier.height(1.dp))
 
         Text(
             text = value,
@@ -1505,7 +1555,7 @@ private fun TakeProfitTargetTile(
             overflow = TextOverflow.Ellipsis
         )
 
-        Spacer(modifier = Modifier.height(3.dp))
+        Spacer(modifier = Modifier.height(1.dp))
 
         Text(
             text = value,
@@ -1618,7 +1668,7 @@ private fun ConsensusSummaryMetric(
             overflow = TextOverflow.Ellipsis
         )
 
-        Spacer(modifier = Modifier.height(2.dp))
+        Spacer(modifier = Modifier.height(1.dp))
 
         Text(
             text = value,
@@ -1658,7 +1708,7 @@ private fun AllocationSizingTile(
             overflow = TextOverflow.Ellipsis
         )
 
-        Spacer(modifier = Modifier.height(2.dp))
+        Spacer(modifier = Modifier.height(1.dp))
 
         Text(
             text = value,

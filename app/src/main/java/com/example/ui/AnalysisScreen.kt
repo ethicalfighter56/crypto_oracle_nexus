@@ -194,6 +194,43 @@ private fun signalProTimeframeLabel(index: Int): String = when (index) {
     else -> "7D"
 }
 
+private fun signalProfileConfidenceColor(score: Int): Color = when {
+    score >= 80 -> CryptoGreen
+    score >= 60 -> AccentGold
+    else -> CryptoRedText
+}
+
+private fun signalProfileRiskColor(value: String): Color {
+    val normalized = value.uppercase()
+    return when {
+        normalized.contains("LOW") || normalized.contains("SAFE") || normalized.contains("CONSERVATIVE") -> CryptoGreen
+        normalized.contains("MEDIUM") || normalized.contains("MODERATE") || normalized.contains("BALANCED") -> AccentGold
+        normalized.contains("HIGH") || normalized.contains("ELEVATED") || normalized.contains("AGGRESSIVE") -> Color(0xFFFF9F0A)
+        normalized.contains("CRITICAL") || normalized.contains("EXTREME") || normalized.contains("INVALID") -> CryptoRedText
+        else -> TextSecondary
+    }
+}
+
+private fun signalProfileAllocationColor(value: String): Color {
+    val normalized = value.uppercase()
+    return when {
+        normalized.contains("CONSERVATIVE") -> CryptoCyan
+        normalized.contains("BALANCED") -> CryptoGreen
+        normalized.contains("AGGRESSIVE") -> AccentGold
+        normalized.contains("HIGH") || normalized.contains("MAX") -> CryptoRedText
+        else -> TextSecondary
+    }
+}
+
+private fun signalProfileDirectionColor(value: String): Color {
+    val normalized = value.uppercase()
+    return when {
+        normalized.contains("BEAR") || normalized.contains("SHORT") || normalized.contains("কমছে") -> CryptoRedText
+        normalized.contains("BULL") || normalized.contains("LONG") || normalized.contains("বাড়ছে") -> CryptoGreen
+        else -> CryptoCyan
+    }
+}
+
 @Composable
 fun PredictionDashboard(
     data: OracleAnalysisResponse,
@@ -2626,7 +2663,7 @@ fun RealTimeCountdown(
 fun AiScoreTile(title: String, score: Int, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
-            .height(58.dp)
+            .height(50.dp)
             .clip(RoundedCornerShape(9.dp))
             .background(
                 Brush.linearGradient(
@@ -2638,7 +2675,7 @@ fun AiScoreTile(title: String, score: Int, modifier: Modifier = Modifier) {
                 )
             )
             .border(0.75.dp, CryptoCyan.copy(alpha = 0.34f), RoundedCornerShape(9.dp))
-            .padding(horizontal = 6.dp),
+            .padding(horizontal = 5.dp, vertical = 3.dp),
         contentAlignment = Alignment.Center
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -2659,7 +2696,7 @@ fun AiScoreTile(title: String, score: Int, modifier: Modifier = Modifier) {
                 fontSize = 15.sp,
                 fontFamily = FontFamily.Monospace,
                 fontWeight = FontWeight.Black,
-                color = CryptoGreen,
+                color = signalProfileConfidenceColor(score),
                 maxLines = 1,
                 softWrap = false,
                 textAlign = TextAlign.Center
@@ -2684,7 +2721,7 @@ fun ConsensusMetricColumn(
 
     Column(
         modifier = modifier
-            .heightIn(min = 50.dp)
+            .heightIn(min = 44.dp)
             .padding(horizontal = 2.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
@@ -2758,7 +2795,7 @@ fun MultiAiConsensusModule(
                         )
                     )
                 )
-                .padding(14.dp)
+                .padding(horizontal = 12.dp, vertical = 10.dp)
         ) {
             Text(
                 text = if (isBengali) "মাল্টি-এআই ঐকমত্য ইঞ্জিন" else "MULTI-AI CONSENSUS ENGINES",
@@ -2770,18 +2807,18 @@ fun MultiAiConsensusModule(
                 overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(7.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(7.dp)
             ) {
                 AiScoreTile("Gemini Pro AI", geminiScore, Modifier.weight(1f))
                 AiScoreTile("GPT-4o Quant", gptScore, Modifier.weight(1f))
                 AiScoreTile("Claude Sentient", claudeScore, Modifier.weight(1f))
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(7.dp))
 
             Row(
                 modifier = Modifier
@@ -2797,27 +2834,27 @@ fun MultiAiConsensusModule(
                         )
                     )
                     .border(0.8.dp, CryptoCyan.copy(alpha = 0.62f), RoundedCornerShape(10.dp))
-                    .padding(vertical = 8.dp, horizontal = 6.dp),
+                    .padding(vertical = 6.dp, horizontal = 6.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 ConsensusMetricColumn(
                     label = if (isBengali) "ঐকমত্যের আস্থা" else "CONSENSUS CONFIDENCE",
                     value = "$consensusScore%",
-                    valueColor = CryptoCyan,
+                    valueColor = signalProfileConfidenceColor(consensusScore),
                     modifier = Modifier.weight(1.25f)
                 )
 
                 ConsensusMetricColumn(
                     label = if (isBengali) "দিকনির্দেশ" else "DIRECTION",
                     value = directionText,
-                    valueColor = CryptoGreen,
+                    valueColor = signalProfileDirectionColor(directionText),
                     modifier = Modifier.weight(1.05f)
                 )
 
                 ConsensusMetricColumn(
                     label = if (isBengali) "রিস্ক প্রোফাইল" else "RISK PROFILE",
                     value = riskText,
-                    valueColor = CryptoGreen,
+                    valueColor = signalProfileRiskColor(riskText),
                     modifier = Modifier.weight(1.0f)
                 )
             }
@@ -2878,7 +2915,7 @@ fun RiskManagementModule(
         colors = CardDefaults.cardColors(containerColor = Color(0xFF050A13)),
         modifier = Modifier.fillMaxWidth().border(0.95.dp, CryptoCyan.copy(alpha = 0.62f), RoundedCornerShape(12.dp))
     ) {
-        Column(modifier = Modifier.padding(14.dp)) {
+        Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp)) {
             Text(
                 text = "RISK ENGINEERING & SIZING CONTROL",
                 fontSize = 10.sp,
@@ -2886,7 +2923,7 @@ fun RiskManagementModule(
                 color = CryptoCyan,
                 letterSpacing = 1.sp
             )
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Column {
@@ -2899,7 +2936,7 @@ fun RiskManagementModule(
                 }
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(8.dp))
             Text(text = "TAKE PROFIT TARGET MATRIX", fontSize = 9.sp, color = TextSecondary, fontWeight = FontWeight.Bold)
             Spacer(modifier = Modifier.height(6.dp))
 
@@ -2910,7 +2947,7 @@ fun RiskManagementModule(
                 TpBadge("TP4 (100%)", tp4, Modifier.weight(1f))
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(8.dp))
             Text(text = "RECOMMENDED POSITION ALLOCATION SIZING", fontSize = 9.sp, color = TextSecondary, fontWeight = FontWeight.Bold)
             Spacer(modifier = Modifier.height(6.dp))
 
@@ -2955,14 +2992,15 @@ fun SizingBox(label: String, size: String, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .background(Color(0xFF050812), RoundedCornerShape(6.dp))
-            .border(0.75.dp, CryptoCyan.copy(alpha = 0.36f), RoundedCornerShape(6.dp))
-            .padding(horizontal = 6.dp, vertical = 7.dp),
+            .border(0.75.dp, signalProfileAllocationColor(label).copy(alpha = 0.46f), RoundedCornerShape(6.dp))
+            .padding(horizontal = 6.dp, vertical = 5.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        val profileColor = signalProfileAllocationColor(label)
         Text(
             text = label,
             fontSize = 9.5.sp,
-            color = TextSecondary,
+            color = profileColor.copy(alpha = 0.92f),
             fontWeight = FontWeight.Bold,
             maxLines = 1,
             softWrap = false,
@@ -2973,7 +3011,7 @@ fun SizingBox(label: String, size: String, modifier: Modifier = Modifier) {
             text = size,
             fontSize = 10.5.sp,
             fontWeight = FontWeight.Black,
-            color = AccentGold,
+            color = profileColor,
             maxLines = 1,
             softWrap = false
         )
@@ -3145,7 +3183,7 @@ fun AiExplanationModule(
                             )
                         )
                     )
-                    .padding(horizontal = 12.dp, vertical = 12.dp)
+                    .padding(horizontal = 10.dp, vertical = 9.dp)
             ) {
                 if (rotation <= 90f) {
                     Column {
@@ -3156,7 +3194,7 @@ fun AiExplanationModule(
                             lineHeight = 18.sp
                         )
 
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(6.dp))
 
                         Text(
                             text = "QUANTITATIVE HEATMAP SIGNALS",
@@ -3192,7 +3230,7 @@ fun AiExplanationModule(
                             lineHeight = 18.sp
                         )
 
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(6.dp))
 
                         Text(
                             text = "পরিমাণগত হিটম্যাপ সিগন্যাল",
@@ -3279,7 +3317,7 @@ fun InsightMetricPill(
 
     Column(
         modifier = modifier
-            .height(48.dp)
+            .height(42.dp)
             .clip(RoundedCornerShape(8.dp))
             .background(
                 brush = Brush.linearGradient(
@@ -3291,7 +3329,7 @@ fun InsightMetricPill(
                 )
             )
             .border(0.75.dp, valueColor.copy(alpha = 0.50f), RoundedCornerShape(8.dp))
-            .padding(horizontal = 5.dp, vertical = 6.dp),
+            .padding(horizontal = 5.dp, vertical = 4.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
@@ -3331,7 +3369,7 @@ fun LeverageIntelligenceModule(coin: FuturesSignal) {
         colors = CardDefaults.cardColors(containerColor = Color(0xFF050A13)),
         modifier = Modifier.fillMaxWidth().border(0.95.dp, CryptoCyan.copy(alpha = 0.62f), RoundedCornerShape(12.dp))
     ) {
-        Column(modifier = Modifier.padding(14.dp)) {
+        Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp)) {
             Text(
                 text = "LEVERAGE INTELLIGENCE MATRIX",
                 fontSize = 10.sp,
@@ -3339,9 +3377,9 @@ fun LeverageIntelligenceModule(coin: FuturesSignal) {
                 color = CryptoCyan,
                 letterSpacing = 1.sp
             )
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(7.dp)) {
                 LeverageBox("SAFE LEVERAGE", "${coin.leverageConservative}x", "Conservative risk mitigation level", CryptoGreen, Modifier.weight(1f))
                 LeverageBox("MODERATE RISK", "${coin.leverageBalanced}x", "Default recommended balanced index", AccentGold, Modifier.weight(1f))
                 LeverageBox("MAX AGGRESIVE", "${coin.leverageAggressive}x", "Extreme danger volatility thresholds", CryptoRedText, Modifier.weight(1f))
@@ -3356,11 +3394,11 @@ fun LeverageBox(title: String, multiplier: String, desc: String, accent: Color, 
         modifier = modifier
             .background(Color(0xFF050812), RoundedCornerShape(8.dp))
             .border(1.dp, BorderColor.copy(alpha = 0.5f), RoundedCornerShape(8.dp))
-            .padding(8.dp),
+            .padding(horizontal = 6.dp, vertical = 5.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(text = title, fontSize = 8.sp, color = TextSecondary, fontWeight = FontWeight.Bold)
-        Spacer(modifier = Modifier.height(4.dp))
+        Spacer(modifier = Modifier.height(2.dp))
         Text(text = multiplier, fontSize = 16.sp, fontWeight = FontWeight.Black, color = accent)
         Spacer(modifier = Modifier.height(2.dp))
         Text(text = desc, fontSize = 7.sp, color = TextMuted, textAlign = TextAlign.Center, lineHeight = 9.sp)
