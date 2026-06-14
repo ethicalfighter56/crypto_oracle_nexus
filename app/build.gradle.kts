@@ -85,3 +85,27 @@ dependencies {
     testImplementation(libs.junit)
     testImplementation(libs.robolectric)
 }
+
+tasks.register<Copy>("copyApkToRoot") {
+    from(layout.buildDirectory.dir("outputs/apk/debug"))
+    into(rootProject.layout.projectDirectory)
+    include("app-debug.apk")
+}
+
+tasks.configureEach {
+    if (name == "assembleDebug") {
+        finalizedBy("copyApkToRoot")
+    }
+    if (name == "createDebugApkListingFileRedirect") {
+        mustRunAfter("copyApkToRoot")
+    }
+}
+
+tasks.register("printApkSize") {
+    doLast {
+        val rootApk = file("../app-debug.apk")
+        println("rootApk exists: " + rootApk.exists())
+        println("rootApk size: " + rootApk.length() + " bytes")
+    }
+}
+
