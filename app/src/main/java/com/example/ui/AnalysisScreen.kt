@@ -338,7 +338,7 @@ fun PredictionDashboard(
             // Modality Switch Side
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Image(
-                    painter = painterResource(id = R.drawable.ic_app_logo_ai),
+                    painter = painterResource(id = R.drawable.app_logo),
                     contentDescription = "AI Oracle Modality Logo",
                     modifier = Modifier.size(24.dp).clip(RoundedCornerShape(4.dp))
                 )

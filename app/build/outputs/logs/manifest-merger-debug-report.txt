@@ -131,9 +131,9 @@ MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] /home/stran
 	android:label
 		ADDED from /home/stranger/Desktop/refactor/package-by-feature-phase1/app/src/main/AndroidManifest.xml:10:9-41
 	android:roundIcon
-		ADDED from /home/stranger/Desktop/refactor/package-by-feature-phase1/app/src/main/AndroidManifest.xml:11:9-53
+		ADDED from /home/stranger/Desktop/refactor/package-by-feature-phase1/app/src/main/AndroidManifest.xml:11:9-48
 	android:icon
-		ADDED from /home/stranger/Desktop/refactor/package-by-feature-phase1/app/src/main/AndroidManifest.xml:9:9-48
+		ADDED from /home/stranger/Desktop/refactor/package-by-feature-phase1/app/src/main/AndroidManifest.xml:9:9-43
 	android:allowBackup
 		ADDED from /home/stranger/Desktop/refactor/package-by-feature-phase1/app/src/main/AndroidManifest.xml:8:9-35
 	android:theme

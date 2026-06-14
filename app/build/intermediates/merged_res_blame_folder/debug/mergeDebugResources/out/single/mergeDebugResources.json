@@ -1,18 +1,34 @@
 [
     {
-        "merged": "com.example.app-debug-43:/drawable_ic_crypto_oracle_logo_1780253119065.xml.flat",
-        "source": "com.example.app-main-45:/drawable/ic_crypto_oracle_logo_1780253119065.xml"
+        "merged": "com.example.app-debug-43:/drawable_app_logo.png.flat",
+        "source": "com.example.app-main-45:/drawable/app_logo.png"
     },
     {
-        "merged": "com.example.app-debug-43:/drawable_ic_launcher_foreground.xml.flat",
-        "source": "com.example.app-main-45:/drawable/ic_launcher_foreground.xml"
+        "merged": "/home/stranger/.gradle/daemon/9.5.0/com.example.app-debug-43:/drawable_ic_crypto_oracle_logo_1780253119065.xml.flat",
+        "source": "/home/stranger/.gradle/daemon/9.5.0/com.example.app-main-45:/drawable/ic_crypto_oracle_logo_1780253119065.xml"
     },
     {
-        "merged": "com.example.app-debug-43:/drawable_ic_launcher_background.xml.flat",
-        "source": "com.example.app-main-45:/drawable/ic_launcher_background.xml"
+        "merged": "com.example.app-debug-43:/mipmap-xxxhdpi_ic_launcher.png.flat",
+        "source": "com.example.app-main-45:/mipmap-xxxhdpi/ic_launcher.png"
     },
     {
-        "merged": "com.example.app-debug-43:/drawable_ic_app_logo_ai.xml.flat",
-        "source": "com.example.app-main-45:/drawable/ic_app_logo_ai.xml"
+        "merged": "/home/stranger/.gradle/daemon/9.5.0/com.example.app-debug-43:/drawable_ic_launcher_background.xml.flat",
+        "source": "/home/stranger/.gradle/daemon/9.5.0/com.example.app-main-45:/drawable/ic_launcher_background.xml"
+    },
+    {
+        "merged": "com.example.app-debug-43:/mipmap-xhdpi_ic_launcher.png.flat",
+        "source": "com.example.app-main-45:/mipmap-xhdpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.example.app-debug-43:/mipmap-xxhdpi_ic_launcher.png.flat",
+        "source": "com.example.app-main-45:/mipmap-xxhdpi/ic_launcher.png"
+    },
+    {
+        "merged": "/home/stranger/.gradle/daemon/9.5.0/com.example.app-debug-43:/drawable_ic_launcher_foreground.xml.flat",
+        "source": "/home/stranger/.gradle/daemon/9.5.0/com.example.app-main-45:/drawable/ic_launcher_foreground.xml"
+    },
+    {
+        "merged": "/home/stranger/.gradle/daemon/9.5.0/com.example.app-debug-43:/drawable_ic_app_logo_ai.xml.flat",
+        "source": "/home/stranger/.gradle/daemon/9.5.0/com.example.app-main-45:/drawable/ic_app_logo_ai.xml"
     }
 ]

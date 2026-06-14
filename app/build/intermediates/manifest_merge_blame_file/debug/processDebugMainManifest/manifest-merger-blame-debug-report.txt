@@ -38,12 +38,12 @@
 23        android:debuggable="true"
 24        android:extractNativeLibs="false"
 24-->INJECTED
-25        android:icon="@drawable/ic_app_logo_ai"
-25-->/home/stranger/Desktop/refactor/package-by-feature-phase1/app/src/main/AndroidManifest.xml:9:9-48
+25        android:icon="@mipmap/ic_launcher"
+25-->/home/stranger/Desktop/refactor/package-by-feature-phase1/app/src/main/AndroidManifest.xml:9:9-43
 26        android:label="@string/app_name"
 26-->/home/stranger/Desktop/refactor/package-by-feature-phase1/app/src/main/AndroidManifest.xml:10:9-41
-27        android:roundIcon="@drawable/ic_app_logo_ai"
-27-->/home/stranger/Desktop/refactor/package-by-feature-phase1/app/src/main/AndroidManifest.xml:11:9-53
+27        android:roundIcon="@mipmap/ic_launcher"
+27-->/home/stranger/Desktop/refactor/package-by-feature-phase1/app/src/main/AndroidManifest.xml:11:9-48
 28        android:supportsRtl="true"
 28-->/home/stranger/Desktop/refactor/package-by-feature-phase1/app/src/main/AndroidManifest.xml:12:9-35
 29        android:theme="@android:style/Theme.DeviceDefault.NoActionBar.Fullscreen"
