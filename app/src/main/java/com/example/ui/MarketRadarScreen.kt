@@ -79,6 +79,7 @@ private fun RadarTriggerSectionHeader(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MarketRadarScreen(
     viewModel: CryptoViewModel,
@@ -300,6 +301,7 @@ fun MarketRadarScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ShortTermOpportunisticSignalsSection(timeframe: String, isBengali: Boolean, viewModel: CryptoViewModel) {
     var expandedKey by remember { mutableStateOf<String?>(null) }

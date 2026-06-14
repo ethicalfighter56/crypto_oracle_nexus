@@ -1662,7 +1662,7 @@ fun TerminalDataField(label: String, value: String, valueColor: Color, alignEnd:
 
 // Reinstating original TabButton format required by other files (AccuracyCenterScreen)
 @Composable
-fun TabButton(
+fun McTabButton(
     text: String,
     isSelected: Boolean,
     onClick: () -> Unit,

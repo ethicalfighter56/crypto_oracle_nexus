@@ -151,13 +151,13 @@ fun AccuracyCenterScreen(
                         .padding(4.dp),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    TabButton(
+                    McTabButton(
                         text = "GENERATED SIGNAL",
                         isSelected = selectedAccTab == "Generated",
                         onClick = { selectedAccTab = "Generated" },
                         modifier = Modifier.weight(1f)
                     )
-                    TabButton(
+                    McTabButton(
                         text = "USER ACTIVITY",
                         isSelected = selectedAccTab == "User",
                         onClick = { selectedAccTab = "User" },

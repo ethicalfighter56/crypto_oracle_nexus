@@ -73,7 +73,7 @@ dependencies {
     // Network & Serialization
     implementation(libs.retrofit)
     implementation(libs.converter.moshi)
-    implementation(libs.okhttp)
+    debugImplementation(libs.okhttp)
     implementation(libs.logging.interceptor)
     implementation(libs.moshi.kotlin)
     ksp(libs.moshi.kotlin.codegen)

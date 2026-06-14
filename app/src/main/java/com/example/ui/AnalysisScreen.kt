@@ -66,6 +66,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.navigationBarsPadding
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AnalysisScreen(
     viewModel: CryptoViewModel,
@@ -419,13 +420,13 @@ fun PredictionDashboard(
                 .border(0.95.dp, CryptoCyan.copy(alpha = 0.62f), RoundedCornerShape(12.dp))
                 .padding(4.dp)
         ) {
-            TabButton(
+            SignalProTabButton(
                 title = "Spot Signals",
                 isSelected = selectedIndex == 0,
                 modifier = Modifier.weight(1f),
                 onClick = { viewModel.setDashboardTab(0) }
             )
-            TabButton(
+            SignalProTabButton(
                 title = "Futures Signals",
                 isSelected = selectedIndex == 1,
                 modifier = Modifier.weight(1f),
@@ -551,7 +552,7 @@ fun SignalProLanguageSwitchButton(
 
 
 @Composable
-fun TabButton(
+fun SignalProTabButton(
     title: String,
     isSelected: Boolean,
     modifier: Modifier = Modifier,
@@ -656,6 +657,7 @@ fun SpotTradingList(signals: List<SpotSignal>, timeframeIndex: Int, viewModel: C
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SpotItemCard(coin: SpotSignal, timeframeIndex: Int, viewModel: CryptoViewModel, livePrices: Map<String, Double>) {
     val isBengali by viewModel.isBengali.collectAsState()
@@ -1647,6 +1649,7 @@ fun FuturesTradingList(signals: List<FuturesSignal>, timeframeIndex: Int, viewMo
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FuturesItemCard(coin: FuturesSignal, timeframeIndex: Int, viewModel: CryptoViewModel, livePrices: Map<String, Double>) {
     val isBengali by viewModel.isBengali.collectAsState()
@@ -2008,6 +2011,7 @@ fun FuturesItemCard(coin: FuturesSignal, timeframeIndex: Int, viewModel: CryptoV
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OraclePickCard(asset: Any, timeframeIndex: Int, viewModel: CryptoViewModel, livePrices: Map<String, Double> = emptyMap()) {
     val isBengali by viewModel.isBengali.collectAsState()

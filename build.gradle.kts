@@ -8,13 +8,16 @@ plugins {
 }
 
 abstract class DownloadFilesTask : DefaultTask() {
+    @get:Input
+    abstract val baseUrl: Property<String>
+
     @TaskAction
     fun downloadFiles() {
-        val baseUrl = "https://raw.githubusercontent.com/zahid5656/crypto_oracle_nexus/phase1-oracle-nexus-upgrade"
+        val base = baseUrl.get()
         fun download(path: String) {
-            val dest = project.file(path)
+            val dest = project.layout.projectDirectory.file(path).asFile
             dest.parentFile.mkdirs()
-            val url = java.net.URL("$baseUrl/$path")
+            val url = java.net.URL("$base/$path")
             val conn = url.openConnection() as java.net.HttpURLConnection
             if (conn.responseCode == 200) {
                 dest.writeBytes(conn.inputStream.readBytes())
@@ -35,7 +38,14 @@ abstract class DownloadFilesTask : DefaultTask() {
         download("app/src/main/res/drawable/ic_crypto_oracle_logo_1780253119065.xml")
     }
 }
-tasks.register<DownloadFilesTask>("downloadAll")
+tasks.register<DownloadFilesTask>("downloadAll") {
+    baseUrl.set("https://raw.githubusercontent.com/zahid5656/crypto_oracle_nexus/phase1-oracle-nexus-upgrade")
+}
+
+tasks.register<Copy>("copyApk") {
+    from("app/build/outputs/apk/debug/app-debug.apk")
+    into(".build-outputs")
+}
 
 tasks.register<Exec>("pullGit") {
     commandLine("git", "pull")
