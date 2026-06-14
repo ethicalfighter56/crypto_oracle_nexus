@@ -2,8 +2,6 @@ com.example
 drawable app_logo
 drawable ic_app_logo_ai
 drawable ic_crypto_oracle_logo_1780253119065
-drawable ic_launcher_background
-drawable ic_launcher_foreground
 mipmap ic_launcher
 string app_name
 string language_bangla
