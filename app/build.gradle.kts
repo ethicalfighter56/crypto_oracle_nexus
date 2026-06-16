@@ -37,7 +37,15 @@ android {
     }
     buildFeatures {
         buildConfig = true
+        viewBinding = false
     }
+    dependenciesInfo {
+        includeInApk = false
+        includeInBundle = false
+    }
+    buildToolsVersion = "37.0.0"
+    ndkVersion = ndkVersion
+    compileSdkMinor = 0
 }
 
 tasks.withType<KotlinCompile>().configureEach {
