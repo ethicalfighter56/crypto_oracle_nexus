@@ -108,4 +108,3 @@ tasks.register("printApkSize") {
         println("rootApk size: " + rootApk.length() + " bytes")
     }
 }
-
