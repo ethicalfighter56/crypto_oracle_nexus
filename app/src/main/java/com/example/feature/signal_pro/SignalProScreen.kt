@@ -335,11 +335,32 @@ fun PredictionDashboard(
         ) {
             // Modality Switch Side
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Image(
-                    painter = painterResource(id = R.drawable.ic_oracle_runtime_mark),
-                    contentDescription = "AI Oracle Modality Logo",
-                    modifier = Modifier.size(26.dp)
-                )
+                Box(
+                    modifier = Modifier
+                        .size(38.dp)
+                        .background(
+                            brush = Brush.radialGradient(
+                                colors = listOf(
+                                    Color(0x4422E6FF),
+                                    Color(0x2207111D),
+                                    Color(0xFF050A13)
+                                )
+                            ),
+                            shape = CircleShape
+                        )
+                        .border(
+                            width = 0.8.dp,
+                            color = Color(0x6617D6FF),
+                            shape = CircleShape
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.ic_oracle_runtime_mark),
+                        contentDescription = "AI Oracle Modality Logo",
+                        modifier = Modifier.size(31.dp)
+                    )
+                }
                 Spacer(modifier = Modifier.width(6.dp))
                 Column {
                     Text(
