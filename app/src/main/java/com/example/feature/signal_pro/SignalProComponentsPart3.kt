@@ -621,15 +621,15 @@ fun FuturesTradingList(signals: List<FuturesSignal>, timeframeIndex: Int, viewMo
     val livePrices by viewModel.livePrices.collectAsState()
 
     LazyColumn(
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-        contentPadding = PaddingValues(bottom = 24.dp, top = 4.dp)
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        contentPadding = PaddingValues(bottom = 16.dp, top = 4.dp)
     ) {
         if (oraclePick != null) {
             item {
                 OraclePickCard(asset = oraclePick, timeframeIndex = timeframeIndex, viewModel = viewModel, livePrices = livePrices)
             }
             item {
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = "ALL SCANNED FUTURES ASSETS",
                     fontSize = 11.sp,

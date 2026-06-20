@@ -202,7 +202,7 @@ fun RealTimeCountdown(
                 color = accentColor.copy(alpha = 0.88f),
                 shape = RoundedCornerShape(17.dp)
             )
-            .padding(horizontal = 12.dp, vertical = 10.dp)
+            .padding(horizontal = 12.dp, vertical = 8.dp)
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Row(
@@ -470,7 +470,7 @@ fun MultiAiConsensusModule(
                         )
                     )
                 )
-                .padding(horizontal = 12.dp, vertical = 10.dp)
+                .padding(horizontal = 12.dp, vertical = 8.dp)
         ) {
             Text(
                 text = if (isBengali) "মাল্টি-এআই ঐকমত্য ইঞ্জিন" else "MULTI-AI CONSENSUS ENGINES",
@@ -482,7 +482,7 @@ fun MultiAiConsensusModule(
                 overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
             )
 
-            Spacer(modifier = Modifier.height(7.dp))
+            Spacer(modifier = Modifier.height(5.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -493,7 +493,7 @@ fun MultiAiConsensusModule(
                 AiScoreTile("Claude Sentient", claudeScore, Modifier.weight(1f))
             }
 
-            Spacer(modifier = Modifier.height(7.dp))
+            Spacer(modifier = Modifier.height(5.dp))
 
             Row(
                 modifier = Modifier
@@ -588,7 +588,7 @@ fun RiskManagementModule(
         colors = CardDefaults.cardColors(containerColor = Color(0xFF050A13)),
         modifier = Modifier.fillMaxWidth().border(0.95.dp, CryptoCyan.copy(alpha = 0.62f), RoundedCornerShape(12.dp))
     ) {
-        Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp)) {
+        Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
             Text(
                 text = "RISK ENGINEERING & SIZING CONTROL",
                 fontSize = 10.sp,
@@ -596,7 +596,7 @@ fun RiskManagementModule(
                 color = CryptoCyan,
                 letterSpacing = 1.sp
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(6.dp))
 
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Column {
@@ -609,7 +609,7 @@ fun RiskManagementModule(
                 }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(6.dp))
             Text(text = "TAKE PROFIT TARGET MATRIX", fontSize = 9.sp, color = TextSecondary, fontWeight = FontWeight.Bold)
             Spacer(modifier = Modifier.height(6.dp))
 
@@ -620,7 +620,7 @@ fun RiskManagementModule(
                 TpBadge("TP4 (100%)", tp4, Modifier.weight(1f))
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(6.dp))
             Text(text = "RECOMMENDED POSITION ALLOCATION SIZING", fontSize = 9.sp, color = TextSecondary, fontWeight = FontWeight.Bold)
             Spacer(modifier = Modifier.height(6.dp))
 
@@ -696,7 +696,7 @@ fun MultiTimeframeForecastModule(currentPrice: Double, isLong: Boolean, priceCha
         colors = CardDefaults.cardColors(containerColor = Color(0xFF050A13)),
         modifier = Modifier.fillMaxWidth().border(0.95.dp, CryptoCyan.copy(alpha = 0.62f), RoundedCornerShape(12.dp))
     ) {
-        Column(modifier = Modifier.padding(14.dp)) {
+        Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp)) {
             Text(
                 text = "MULTI-TIMEFRAME PREDICTION CASCADE",
                 fontSize = 10.sp,
@@ -704,7 +704,7 @@ fun MultiTimeframeForecastModule(currentPrice: Double, isLong: Boolean, priceCha
                 color = CryptoCyan,
                 letterSpacing = 1.sp
             )
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(6.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -714,7 +714,7 @@ fun MultiTimeframeForecastModule(currentPrice: Double, isLong: Boolean, priceCha
                     ForecastGridItem(forecast, Modifier.weight(1f))
                 }
             }
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(6.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -723,7 +723,7 @@ fun MultiTimeframeForecastModule(currentPrice: Double, isLong: Boolean, priceCha
                     ForecastGridItem(forecast, Modifier.weight(1f))
                 }
             }
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(6.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)

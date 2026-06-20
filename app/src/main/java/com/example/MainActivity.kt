@@ -61,7 +61,7 @@ class MainActivity : ComponentActivity() {
                         windowInsets = WindowInsets.navigationBars,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .border(androidx.compose.foundation.BorderStroke(1.dp, BorderColor))
+                            .border(androidx.compose.foundation.BorderStroke(0.55.dp, BorderColor.copy(alpha = 0.34f)))
                     ) {
                         // Home Tab
                         NavigationBarItem(

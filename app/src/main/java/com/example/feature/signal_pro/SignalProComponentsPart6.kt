@@ -93,7 +93,7 @@ fun AiExplanationModule(
             overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(5.dp))
 
         Card(
             colors = CardDefaults.cardColors(containerColor = Color(0xFF030712)),
@@ -129,7 +129,7 @@ fun AiExplanationModule(
                             lineHeight = 18.sp
                         )
 
-                        Spacer(modifier = Modifier.height(6.dp))
+                        Spacer(modifier = Modifier.height(5.dp))
 
                         Text(
                             text = "QUANTITATIVE HEATMAP SIGNALS",
@@ -140,7 +140,7 @@ fun AiExplanationModule(
                             overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                         )
 
-                        Spacer(modifier = Modifier.height(6.dp))
+                        Spacer(modifier = Modifier.height(5.dp))
 
                         HeatmapSignalsAlignedRow(
                             firstLabel = "Trend",
@@ -165,7 +165,7 @@ fun AiExplanationModule(
                             lineHeight = 18.sp
                         )
 
-                        Spacer(modifier = Modifier.height(6.dp))
+                        Spacer(modifier = Modifier.height(5.dp))
 
                         Text(
                             text = "পরিমাণগত হিটম্যাপ সিগন্যাল",
@@ -176,7 +176,7 @@ fun AiExplanationModule(
                             overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                         )
 
-                        Spacer(modifier = Modifier.height(6.dp))
+                        Spacer(modifier = Modifier.height(5.dp))
 
                         HeatmapSignalsAlignedRow(
                             firstLabel = "ট্রেন্ড",
@@ -299,7 +299,7 @@ fun LeverageIntelligenceModule(coin: FuturesSignal) {
         colors = CardDefaults.cardColors(containerColor = Color(0xFF050A13)),
         modifier = Modifier.fillMaxWidth().border(0.95.dp, CryptoCyan.copy(alpha = 0.62f), RoundedCornerShape(12.dp))
     ) {
-        Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp)) {
+        Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
             Text(
                 text = "LEVERAGE INTELLIGENCE MATRIX",
                 fontSize = 10.sp,
@@ -307,7 +307,7 @@ fun LeverageIntelligenceModule(coin: FuturesSignal) {
                 color = CryptoCyan,
                 letterSpacing = 1.sp
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(5.dp))
 
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(7.dp)) {
                 LeverageBox("SAFE LEVERAGE", "${coin.leverageConservative}x", "Conservative risk mitigation level", CryptoGreen, Modifier.weight(1f))
@@ -426,7 +426,7 @@ fun ScrollableTimeframeRow(
                     .clip(RoundedCornerShape(8.dp))
                     .background(if (selectedInterval == index) CryptoCyan.copy(alpha = 0.15f) else Color.Transparent)
                     .clickable { onIntervalSelected(index) }
-                    .padding(vertical = 10.dp),
+                    .padding(vertical = 7.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
@@ -522,7 +522,7 @@ fun SignalQualitySystemBlock(
             .border(0.95.dp, CryptoCyan.copy(alpha = 0.62f), RoundedCornerShape(12.dp)),
         shape = RoundedCornerShape(12.dp)
     ) {
-        Column(modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)) {
+        Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
             Text(
                 text = if (isBengali) "সিগন্যাল মান যাচাই সূচক" else "SIGNAL QUALITY ENGINE INDEX",
                 fontSize = 10.sp,
@@ -533,7 +533,7 @@ fun SignalQualitySystemBlock(
                 overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
             )
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(5.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -573,9 +573,9 @@ fun SignalQualitySystemBlock(
                 }
             }
 
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(5.dp))
             HorizontalDivider(color = BorderColor.copy(alpha = 0.4f))
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(5.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -621,7 +621,7 @@ fun TradeChecklistBlock(
             .border(0.95.dp, CryptoCyan.copy(alpha = 0.62f), RoundedCornerShape(12.dp)),
         shape = RoundedCornerShape(12.dp)
     ) {
-        Column(modifier = Modifier.padding(14.dp)) {
+        Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp)) {
             Text(
                 text = if (isBengali) "ইনস্টিটিউশনাল নিশ্চিতকরণ তালিকা" else "INSTITUTIONAL CONFIRMATION CHECKLIST",
                 fontSize = 10.sp,
@@ -632,7 +632,7 @@ fun TradeChecklistBlock(
                 overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
             )
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(5.dp))
 
             val items = listOf(
                 (if (isBengali) "বাজারের দিক নিশ্চিত" else "Trend Confirmed") to trendConfirmed,
@@ -750,7 +750,7 @@ fun MarketRegimeTraceModule(
             .border(0.95.dp, CryptoCyan.copy(alpha = 0.62f), RoundedCornerShape(12.dp)),
         shape = RoundedCornerShape(12.dp)
     ) {
-        Column(modifier = Modifier.padding(14.dp)) {
+        Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp)) {
             Text(
                 text = if (isBengali) "চলতি বাজারের মতিগতি" else "PERSISTED REGIME TRACE",
                 fontSize = 10.sp,
@@ -761,7 +761,7 @@ fun MarketRegimeTraceModule(
                 overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
             )
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(5.dp))
 
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
@@ -799,7 +799,7 @@ fun MarketRegimeTraceModule(
                 )
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(5.dp))
 
             Text(
                 text = description,

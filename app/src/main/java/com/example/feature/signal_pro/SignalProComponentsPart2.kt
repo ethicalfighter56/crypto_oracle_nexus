@@ -127,7 +127,7 @@ fun SpotItemCard(coin: SpotSignal, timeframeIndex: Int, viewModel: CryptoViewMod
             .border(1.dp, if (isExpanded) CryptoCyan else BorderColor, RoundedCornerShape(16.dp))
             .clickable { if (!isExpanded) isExpanded = true }
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(modifier = Modifier.padding(12.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -189,7 +189,7 @@ fun SpotItemCard(coin: SpotSignal, timeframeIndex: Int, viewModel: CryptoViewMod
                 }
             }
 
-            HorizontalDivider(color = BorderColor, modifier = Modifier.padding(vertical = 12.dp))
+            HorizontalDivider(color = BorderColor, modifier = Modifier.padding(vertical = 8.dp))
 
             // Spot coin info (prior ago, Current, Growth %)
             Row(
@@ -274,14 +274,14 @@ fun SpotItemCard(coin: SpotSignal, timeframeIndex: Int, viewModel: CryptoViewMod
                 }
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             // Target price prediction box
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(DarkSurfaceVariant, RoundedCornerShape(10.dp))
-                    .padding(12.dp),
+                    .padding(horizontal = 10.dp, vertical = 8.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -319,13 +319,15 @@ fun SpotItemCard(coin: SpotSignal, timeframeIndex: Int, viewModel: CryptoViewMod
                 )
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = if (isExpanded) "Tap to collapse detailed matrix ⬏" else "Tap to unfold deep institutional matrix ➔",
-                fontSize = 10.sp,
-                color = TextMuted,
-                modifier = Modifier.align(Alignment.CenterHorizontally)
-            )
+            if (!isExpanded) {
+                Spacer(modifier = Modifier.height(6.dp))
+                Text(
+                    text = "Tap to unfold deep institutional matrix ➔",
+                    fontSize = 10.sp,
+                    color = TextMuted,
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                )
+            }
 
             AnimatedVisibility(
                 visible = isExpanded,
@@ -333,9 +335,9 @@ fun SpotItemCard(coin: SpotSignal, timeframeIndex: Int, viewModel: CryptoViewMod
                 exit = shrinkVertically() + fadeOut()
             ) {
                 Column {
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
                     HorizontalDivider(color = BorderColor)
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
 
                     val hours = when(timeframeIndex) {
                         0 -> 6
@@ -346,7 +348,7 @@ fun SpotItemCard(coin: SpotSignal, timeframeIndex: Int, viewModel: CryptoViewMod
                     }
                     RealTimeCountdown(coin.coinSymbol, hours, isBengali)
                     
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
                     
                     RealTimeInvestmentTrackingModule(
                         entryPrice = coin.currentPrice,
@@ -355,7 +357,7 @@ fun SpotItemCard(coin: SpotSignal, timeframeIndex: Int, viewModel: CryptoViewMod
                         currentPrice = livePrice
                     )
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
 
                     SignalQualitySystemBlock(
                         score = coin.oracleScore,
@@ -365,7 +367,7 @@ fun SpotItemCard(coin: SpotSignal, timeframeIndex: Int, viewModel: CryptoViewMod
                     ,
                         isBengali = isBengali)
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
 
                     TradeChecklistBlock(
                         trendConfirmed = coin.trendStrength != "WEAK",
@@ -376,16 +378,16 @@ fun SpotItemCard(coin: SpotSignal, timeframeIndex: Int, viewModel: CryptoViewMod
                     ,
                         isBengali = isBengali)
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
 
                     MarketRegimeTraceModule(coin.coinSymbol,
                         isBengali = isBengali)
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
 
                     MultiAiConsensusModule(coin.coinSymbol, coin.oracleScore, true, isBengali)
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
 
                     RiskManagementModule(
                         currentPrice = coin.currentPrice,
@@ -395,15 +397,15 @@ fun SpotItemCard(coin: SpotSignal, timeframeIndex: Int, viewModel: CryptoViewMod
                         isLong = true
                     )
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
 
                     MultiTimeframeForecastModule(coin.currentPrice, true, growthPotential)
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
 
                     AiExplanationModule(coin.whyThisSignalEnglish, coin.whyThisSignalBengali, coin.coinSymbol, isBengali) { viewModel.toggleLanguage() }
 
-                    Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
                     
                     val mission = remember(coin, projectedPrice) {
                         com.example.model.Mission(
@@ -421,7 +423,7 @@ fun SpotItemCard(coin: SpotSignal, timeframeIndex: Int, viewModel: CryptoViewMod
                         )
                     }
                     StartTradeFlow(viewModel = viewModel, mission = mission, livePrice = livePrice)
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
                     Text(
                         text = "Tap here to collapse details ⬏",
                         fontSize = 12.sp,
@@ -430,7 +432,7 @@ fun SpotItemCard(coin: SpotSignal, timeframeIndex: Int, viewModel: CryptoViewMod
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable { isExpanded = false }
-                            .padding(vertical = 12.dp),
+                            .padding(vertical = 8.dp),
                         textAlign = TextAlign.Center
                     )
                 }
@@ -458,7 +460,7 @@ fun DecisionBriefBlock(
                 )
             )
             .border(0.75.dp, accentColor.copy(alpha = 0.46f), RoundedCornerShape(10.dp))
-            .padding(horizontal = 11.dp, vertical = 9.dp)
+            .padding(horizontal = 10.dp, vertical = 7.dp)
     ) {
         Text(
             text = title,

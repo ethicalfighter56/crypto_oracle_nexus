@@ -268,7 +268,7 @@ fun PredictionDashboard(
             }
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(4.dp))
 
         // Condensed AI Modality and Scan Button
         val useAiOracle by viewModel.useAiOracle.collectAsState()
@@ -424,13 +424,13 @@ fun PredictionDashboard(
             }
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(4.dp))
 
         // Category Tab Selectors (A: Spot Trading, B: Futures Trading)
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp)
+                .padding(horizontal = 16.dp, vertical = 4.dp)
                 .background(DarkSurface, RoundedCornerShape(12.dp))
                 .border(0.95.dp, CryptoCyan.copy(alpha = 0.62f), RoundedCornerShape(12.dp))
                 .padding(4.dp)
@@ -486,7 +486,7 @@ fun PredictionDashboard(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(vertical = 8.dp)
+                                .padding(vertical = 4.dp)
                                 .background(DarkSurfaceVariant, RoundedCornerShape(8.dp))
                                 .padding(2.dp)
                         ) {
@@ -509,7 +509,7 @@ fun PredictionDashboard(
                         ScrollableTimeframeRow(
                             selectedInterval = futuresTimeframe,
                             onIntervalSelected = { futuresTimeframe = it },
-                            modifier = Modifier.padding(bottom = 8.dp)
+                            modifier = Modifier.padding(bottom = 4.dp)
                         )
 
                         val rawFutures = if (futuresSubTab == 0) data.futuresLongSignals else data.futuresShortSignals
@@ -579,7 +579,7 @@ fun TabButton(
                 RoundedCornerShape(8.dp)
             )
             .clickable(onClick = onClick)
-            .padding(vertical = 12.dp),
+            .padding(vertical = 8.dp),
         contentAlignment = Alignment.Center
     ) {
         Text(
@@ -623,7 +623,7 @@ fun SubTabButton(
             .background(activeBgColor)
             .then(borderModifier)
             .clickable(onClick = onClick)
-            .padding(vertical = 10.dp),
+            .padding(vertical = 8.dp),
         contentAlignment = Alignment.Center
     ) {
         Text(
@@ -641,15 +641,15 @@ fun SpotTradingList(signals: List<SpotSignal>, timeframeIndex: Int, viewModel: C
     val livePrices by viewModel.livePrices.collectAsState()
 
     LazyColumn(
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-        contentPadding = PaddingValues(bottom = 24.dp, top = 8.dp)
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        contentPadding = PaddingValues(bottom = 16.dp, top = 4.dp)
     ) {
         if (oraclePick != null) {
             item {
                 OraclePickCard(asset = oraclePick, timeframeIndex = timeframeIndex, viewModel = viewModel, livePrices = livePrices)
             }
             item {
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = "ALL SCANNED EXCHANGE ASSETS",
                     fontSize = 11.sp,
