@@ -398,8 +398,10 @@ fun ConsensusMetricColumn(
 
     Column(
         modifier = modifier
-            .heightIn(min = 44.dp)
-            .padding(horizontal = 2.dp),
+            .heightIn(min = 40.dp)
+            .background(valueColor.copy(alpha = 0.045f), RoundedCornerShape(8.dp))
+            .border(0.45.dp, valueColor.copy(alpha = 0.34f), RoundedCornerShape(8.dp))
+            .padding(horizontal = 3.dp, vertical = 3.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
@@ -486,7 +488,7 @@ fun MultiAiConsensusModule(
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(7.dp)
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 AiScoreTile("Gemini Pro AI", geminiScore, Modifier.weight(1f))
                 AiScoreTile("GPT-4o Quant", gptScore, Modifier.weight(1f))
@@ -509,18 +511,18 @@ fun MultiAiConsensusModule(
                         )
                     )
                     .border(0.8.dp, CryptoCyan.copy(alpha = 0.62f), RoundedCornerShape(10.dp))
-                    .padding(vertical = 6.dp, horizontal = 6.dp),
+                    .padding(vertical = 5.dp, horizontal = 5.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 ConsensusMetricColumn(
-                    label = if (isBengali) "ঐকমত্যের আস্থা" else "CONSENSUS CONFIDENCE",
+                    label = if (isBengali) "সম্মিলিত আস্থা" else "CONSENSUS CONFIDENCE",
                     value = "$consensusScore%",
                     valueColor = signalProfileConfidenceColor(consensusScore),
                     modifier = Modifier.weight(1.25f)
                 )
 
                 ConsensusMetricColumn(
-                    label = if (isBengali) "দিকনির্দেশ" else "DIRECTION",
+                    label = if (isBengali) "দিকনির্দেশনা" else "DIRECTION",
                     value = directionText,
                     valueColor = signalProfileDirectionColor(directionText),
                     modifier = Modifier.weight(1.05f)

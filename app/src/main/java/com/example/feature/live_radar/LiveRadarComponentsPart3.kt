@@ -43,10 +43,10 @@ internal fun ConsensusEngineTile(
 ) {
     Column(
         modifier = modifier
-            .heightIn(min = 44.dp)
+            .heightIn(min = 40.dp)
             .background(LiveRadarTileDark, RoundedCornerShape(9.dp))
-            .border(0.55.dp, accent, RoundedCornerShape(9.dp))
-            .padding(horizontal = 7.dp, vertical = 4.dp),
+            .border(0.55.dp, accent.copy(alpha = 0.72f), RoundedCornerShape(9.dp))
+            .padding(horizontal = 7.dp, vertical = 3.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
@@ -60,11 +60,11 @@ internal fun ConsensusEngineTile(
             overflow = TextOverflow.Ellipsis
         )
 
-        Spacer(modifier = Modifier.height(3.dp))
+        Spacer(modifier = Modifier.height(2.dp))
 
         Text(
             text = score,
-            fontSize = 15.sp,
+            fontSize = 13.2.sp,
             fontWeight = FontWeight.Black,
             color = LiveRadarInstitutionalGreen,
             textAlign = TextAlign.Center,
@@ -78,31 +78,32 @@ internal fun ConsensusSummaryStrip(
     direction: String,
     riskProfile: String,
     accent: Color,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isBengali: Boolean = false
 ) {
     Row(
         modifier = modifier
             .fillMaxWidth()
             .background(LiveRadarTileDark, RoundedCornerShape(10.dp))
             .border(0.55.dp, accent, RoundedCornerShape(10.dp))
-            .padding(horizontal = 8.dp, vertical = 6.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+            .padding(horizontal = 7.dp, vertical = 5.dp),
+        horizontalArrangement = Arrangement.spacedBy(7.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         ConsensusSummaryMetric(
-            label = "Consensus Confidence",
+            label = if (isBengali) "কনসেনসাস" else "Consensus Confidence",
             value = "$confidence%",
             valueColor = probabilityScoreColor("$confidence"),
             modifier = Modifier.weight(1f)
         )
         ConsensusSummaryMetric(
-            label = "Direction",
+            label = if (isBengali) "দিক" else "Direction",
             value = direction,
             valueColor = directionColor(direction),
             modifier = Modifier.weight(1f)
         )
         ConsensusSummaryMetric(
-            label = "Risk Profile",
+            label = if (isBengali) "রিস্ক" else "Risk Profile",
             value = riskProfile,
             valueColor = riskProfileColor(riskProfile),
             modifier = Modifier.weight(1f)
@@ -117,7 +118,11 @@ internal fun ConsensusSummaryMetric(
     modifier: Modifier = Modifier
 ) {
     Column(
-        modifier = modifier,
+        modifier = modifier
+            .heightIn(min = 38.dp)
+            .background(valueColor.copy(alpha = 0.045f), RoundedCornerShape(8.dp))
+            .border(0.45.dp, valueColor.copy(alpha = 0.36f), RoundedCornerShape(8.dp))
+            .padding(horizontal = 4.dp, vertical = 3.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
@@ -153,9 +158,9 @@ internal fun AllocationSizingTile(
 ) {
     Column(
         modifier = modifier
-            .heightIn(min = 42.dp)
-            .background(LiveRadarTileDark, RoundedCornerShape(9.dp))
-            .border(0.55.dp, accent, RoundedCornerShape(9.dp))
+            .heightIn(min = 39.dp)
+            .background(allocationProfileColor(label).copy(alpha = 0.045f), RoundedCornerShape(9.dp))
+            .border(0.55.dp, allocationProfileColor(label).copy(alpha = 0.56f), RoundedCornerShape(9.dp))
             .padding(horizontal = 6.dp, vertical = 3.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
@@ -176,13 +181,24 @@ internal fun AllocationSizingTile(
             text = value,
             fontSize = 11.8.sp,
             fontWeight = FontWeight.Black,
-            color = LiveRadarInstitutionalYellow,
+            color = allocationProfileColor(label),
             textAlign = TextAlign.Center,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
     }
 }
+internal fun allocationProfileColor(label: String): Color {
+    val normalized = label.uppercase()
+    return when {
+        normalized.contains("CONSERVATIVE") || normalized.contains("LOW") -> LiveRadarInstitutionalGreen
+        normalized.contains("BALANCED") || normalized.contains("MEDIUM") || normalized.contains("MODERATE") -> CryptoCyan
+        normalized.contains("AGGRESSIVE") || normalized.contains("HIGH") || normalized.contains("MAX") -> LiveRadarInstitutionalYellow
+        normalized.contains("CRITICAL") || normalized.contains("EXTREME") -> LiveRadarDangerRed
+        else -> LiveRadarInstitutionalYellow
+    }
+}
+
 internal fun probabilityScoreColor(rawValue: String): Color {
     val score = rawValue.filter { it.isDigit() }.toIntOrNull() ?: return LiveRadarSoftWhite
     return when {

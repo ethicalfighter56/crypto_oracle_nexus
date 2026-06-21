@@ -18,6 +18,7 @@ import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -100,10 +101,10 @@ internal fun RadarTriggerSectionHeader(
 }
 @Composable
 fun ShortTermOpportunisticSignalsSection(timeframe: String, isBengali: Boolean, viewModel: CryptoViewModel) {
-    var expandedKey by remember { mutableStateOf<String?>(null) }
-    var expandedHotSpot by remember { mutableStateOf(false) }
-    var expandedLong by remember { mutableStateOf(false) }
-    var expandedShort by remember { mutableStateOf(false) }
+    var expandedKey by rememberSaveable(timeframe) { mutableStateOf<String?>(null) }
+    var expandedHotSpot by rememberSaveable(timeframe) { mutableStateOf(false) }
+    var expandedLong by rememberSaveable(timeframe) { mutableStateOf(false) }
+    var expandedShort by rememberSaveable(timeframe) { mutableStateOf(false) }
     val livePrices by viewModel.livePrices.collectAsState()
 
     // Top 10 dynamic simulation metrics; UI shows compact Top 3 by default.
@@ -298,14 +299,16 @@ fun ShortTermOpportunisticSignalsSection(timeframe: String, isBengali: Boolean, 
                         if (isExpanded) LiveRadarInstitutionalYellow.copy(alpha = 0.6f) else BorderColor,
                         RoundedCornerShape(8.dp)
                     )
-                    .clickable {
-                        expandedKey = if (isExpanded) null else "spot_$index"
-                    }
                     .animateContentSize()
                     .padding(8.dp)
             ) {
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(7.dp))
+                        .clickable {
+                            expandedKey = if (isExpanded) null else "spot_$index"
+                        },
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -413,14 +416,16 @@ fun ShortTermOpportunisticSignalsSection(timeframe: String, isBengali: Boolean, 
                         if (isExpanded) LiveRadarInstitutionalGreen.copy(alpha = 0.6f) else BorderColor,
                         RoundedCornerShape(8.dp)
                     )
-                    .clickable {
-                        expandedKey = if (isExpanded) null else "long_$index"
-                    }
                     .animateContentSize()
                     .padding(8.dp)
             ) {
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(7.dp))
+                        .clickable {
+                            expandedKey = if (isExpanded) null else "long_$index"
+                        },
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -528,14 +533,16 @@ fun ShortTermOpportunisticSignalsSection(timeframe: String, isBengali: Boolean, 
                         if (isExpanded) LiveRadarDangerRed.copy(alpha = 0.6f) else BorderColor,
                         RoundedCornerShape(8.dp)
                     )
-                    .clickable {
-                        expandedKey = if (isExpanded) null else "short_$index"
-                    }
                     .animateContentSize()
                     .padding(8.dp)
             ) {
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(7.dp))
+                        .clickable {
+                            expandedKey = if (isExpanded) null else "short_$index"
+                        },
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {

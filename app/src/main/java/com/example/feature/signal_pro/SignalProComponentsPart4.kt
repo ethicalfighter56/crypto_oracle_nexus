@@ -100,8 +100,8 @@ fun FuturesItemCard(coin: FuturesSignal, timeframeIndex: Int, viewModel: CryptoV
         coin.currentPrice * (1.0 - (priceChange / 100.0))
     }
     
-    val changeLabel = if (isLong) "EXPECTED GAIN" else "EXPECTED DROP"
-    val targetLabel = signalProTargetLabel(timeframeIndex)
+    val changeLabel = "EXPECTED"
+    val targetLabel = "PREDICTED"
 
     Card(
         colors = CardDefaults.cardColors(containerColor = cardBg),
@@ -189,7 +189,7 @@ fun FuturesItemCard(coin: FuturesSignal, timeframeIndex: Int, viewModel: CryptoV
                     horizontalAlignment = Alignment.Start
                 ) {
                     Text(
-                        text = "ENTRY (LOCKED)",
+                        text = "ENTRY",
                         fontSize = 9.sp,
                         color = if (isLong) TextSecondary else Color(0xFFD1D5DB),
                         fontWeight = FontWeight.Normal,
@@ -216,7 +216,7 @@ fun FuturesItemCard(coin: FuturesSignal, timeframeIndex: Int, viewModel: CryptoV
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = "CURRENT PRICE",
+                        text = "CURRENT",
                         fontSize = 9.sp,
                         color = if (isLong) TextSecondary else Color(0xFFD1D5DB),
                         fontWeight = FontWeight.Normal,
@@ -239,8 +239,8 @@ fun FuturesItemCard(coin: FuturesSignal, timeframeIndex: Int, viewModel: CryptoV
 
                 // Column 3: EXPECTED GAIN/DROP
                 Column(
-                    modifier = Modifier.weight(1.1f),
-                    horizontalAlignment = Alignment.End
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
                         text = changeLabel,
@@ -266,7 +266,7 @@ fun FuturesItemCard(coin: FuturesSignal, timeframeIndex: Int, viewModel: CryptoV
 
                 // Column 3: TARGET PRICE (Right Aligned)
                 Column(
-                    modifier = Modifier.weight(1.2f),
+                    modifier = Modifier.weight(1f),
                     horizontalAlignment = Alignment.End
                 ) {
                     Text(
@@ -576,15 +576,15 @@ fun OraclePickCard(asset: Any, timeframeIndex: Int, viewModel: CryptoViewModel, 
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(text = "CURRENT PRICE", fontSize = 9.sp, color = TextSecondary)
+                    Text(text = "CURRENT", fontSize = 9.sp, color = TextSecondary)
                     Text(text = formatPrice(curPrice), fontFamily = FontFamily.Monospace, fontSize = 13.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
                 }
                 Column(modifier = Modifier.weight(1.1f), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(text = "TARGET FORECAST", fontSize = 9.sp, color = CryptoGreen)
+                    Text(text = "PREDICTED", fontSize = 9.sp, color = CryptoGreen)
                     Text(text = formatPrice(projPrice), fontFamily = FontFamily.Monospace, fontSize = 13.sp, fontWeight = FontWeight.Bold, color = CryptoGreen)
                 }
                 Column(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.End) {
-                    Text(text = "EXPECTED GAIN", fontSize = 9.sp, color = if (isLong) CryptoGreen else CryptoRedText)
+                    Text(text = "EXPECTED", fontSize = 9.sp, color = if (isLong) CryptoGreen else CryptoRedText)
                     Text(text = String.format("%s%.2f%%", if (isLong) "+" else "", potential), fontFamily = FontFamily.Monospace, fontSize = 13.sp, fontWeight = FontWeight.Black, color = if (isLong) CryptoGreen else CryptoRedText)
                 }
             }
@@ -749,7 +749,7 @@ fun RealTimeInvestmentTrackingModule(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column(horizontalAlignment = Alignment.Start) {
-                    Text(text = "ENTRY (LOCKED)", fontSize = 9.sp, color = TextSecondary)
+                    Text(text = "ENTRY", fontSize = 9.sp, color = TextSecondary)
                     Text(text = formatPrice(entryPrice), fontFamily = FontFamily.Monospace, fontSize = 13.sp, fontWeight = FontWeight.Bold, color = TextMuted)
                 }
 

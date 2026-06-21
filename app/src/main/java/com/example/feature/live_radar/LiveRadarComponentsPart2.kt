@@ -163,7 +163,8 @@ fun OpportunisticSignalAdornmentSection(
         confidence = consensusConfidence,
         direction = consensusDirection,
         riskProfile = consensusRiskProfile,
-        accent = themeColor
+        accent = themeColor,
+        isBengali = isBengali
     )
 
     Spacer(modifier = Modifier.height(10.dp))

@@ -2,12 +2,14 @@ package com.example.feature.live_radar
 
 import androidx.compose.animation.*
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.stickyHeader
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -33,6 +35,7 @@ import com.example.ui.theme.*
 import com.example.viewmodel.CryptoViewModel
 import kotlin.random.Random
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun LiveRadarScreen(
     viewModel: CryptoViewModel,
@@ -137,65 +140,22 @@ fun LiveRadarScreen(
             }
         }
 
-        // Short-Term Period Selector Tabs
-        item {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(DarkSurface, RoundedCornerShape(14.dp))
-                    .border(1.dp, BorderColor, RoundedCornerShape(14.dp))
-                    .padding(12.dp)
-            ) {
-                Text(
-                    text = if (isBengali) "সংক্ষিপ্ত সময়ের ওরাকল স্ক্যাল্পস" else "SHORT-TERM SCALP ORACLE",
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = LiveRadarSoftWhite,
-                    letterSpacing = 1.sp
-                )
-                
-                Spacer(modifier = Modifier.height(10.dp))
+        val intervals = listOf("1M", "5M", "15M", "30M", "45M", "1H")
+        val displayWindow = intervals.getOrElse(shortTermInterval) { "15M" }
 
-                val intervals = listOf("1M", "5M", "15M", "30M", "45M", "1H")
+        // Sticky scalp oracle header + timeframe selector.
+        stickyHeader(key = "short_term_scalp_oracle_header") {
+            ShortTermScalpOracleStickyHeader(
+                intervals = intervals,
+                selectedIndex = shortTermInterval,
+                isBengali = isBengali,
+                onSelect = { idx -> viewModel.setShortTermTimeframe(idx) }
+            )
+        }
 
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(DarkBackground, RoundedCornerShape(8.dp))
-                        .padding(3.dp),
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    intervals.forEachIndexed { idx, label ->
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .clip(RoundedCornerShape(6.dp))
-                                .background(if (shortTermInterval == idx) CryptoCyan.copy(alpha = 0.15f) else Color.Transparent)
-                                .border(
-                                    1.dp,
-                                    if (shortTermInterval == idx) CryptoCyan else Color.Transparent,
-                                    RoundedCornerShape(6.dp)
-                                )
-                                .clickable { viewModel.setShortTermTimeframe(idx) }
-                                .padding(vertical = 8.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = label,
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = if (shortTermInterval == idx) CryptoCyan else TextSecondary
-                            )
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                // Short Term Signals Display List
-                val displayWindow = intervals.getOrElse(shortTermInterval) { "15M" }
-                ShortTermOpportunisticSignalsSection(timeframe = displayWindow, isBengali = isBengali, viewModel = viewModel)
-            }
+        // Short Term Signals Display List
+        item(key = "short_term_signals_$displayWindow") {
+            ShortTermOpportunisticSignalsSection(timeframe = displayWindow, isBengali = isBengali, viewModel = viewModel)
         }
 
         // Radar Alert Logs Title
@@ -250,6 +210,75 @@ fun LiveRadarScreen(
         } else {
             items(radarAlerts, key = { it.id }) { alert ->
                 RadarAlertCard(alert = alert, isBengali = isBengali)
+            }
+        }
+    }
+}
+
+@Composable
+private fun ShortTermScalpOracleStickyHeader(
+    intervals: List<String>,
+    selectedIndex: Int,
+    isBengali: Boolean,
+    onSelect: (Int) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(DarkBackground)
+            .padding(top = 2.dp, bottom = 8.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(DarkSurface, RoundedCornerShape(14.dp))
+                .border(0.85.dp, BorderColor, RoundedCornerShape(14.dp))
+                .padding(horizontal = 10.dp, vertical = 9.dp)
+        ) {
+            Text(
+                text = if (isBengali) "সংক্ষিপ্ত সময়ের ওরাকল স্ক্যাল্পস" else "SHORT-TERM SCALP ORACLE",
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Bold,
+                color = LiveRadarSoftWhite,
+                letterSpacing = 1.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(DarkBackground, RoundedCornerShape(8.dp))
+                    .padding(3.dp),
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                intervals.forEachIndexed { idx, label ->
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(6.dp))
+                            .background(if (selectedIndex == idx) CryptoCyan.copy(alpha = 0.15f) else Color.Transparent)
+                            .border(
+                                1.dp,
+                                if (selectedIndex == idx) CryptoCyan else Color.Transparent,
+                                RoundedCornerShape(6.dp)
+                            )
+                            .clickable { onSelect(idx) }
+                            .padding(vertical = 7.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = label,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = if (selectedIndex == idx) CryptoCyan else TextSecondary,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
             }
         }
     }

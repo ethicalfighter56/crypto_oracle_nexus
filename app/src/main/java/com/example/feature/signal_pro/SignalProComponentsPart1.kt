@@ -197,15 +197,7 @@ internal fun signalProSpotGrowthPotential(coin: SpotSignal, index: Int): Double 
     "3D" -> coin.growthPotentialPct * 3.5
     else -> coin.growthPotentialPct * 5.0
 }
-internal fun signalProTargetLabel(index: Int): String = when (signalProTimeframeLabel(index)) {
-    "2H" -> "2-H Predicted Target"
-    "4H" -> "4-H Predicted Target"
-    "6H" -> "6-H Predicted Target"
-    "12H" -> "12-H Predicted Target"
-    "24H" -> "24-H Gold Target"
-    "3D" -> "3-Day Wave Target"
-    else -> "7-Day Range Target"
-}
+internal fun signalProTargetLabel(index: Int): String = "PREDICTED"
 internal fun signalProFuturesProbability(coin: FuturesSignal, index: Int): Int = when (signalProTimeframeLabel(index)) {
     "2H" -> (coin.probabilityPct + 2).coerceIn(40, 99)
     "4H" -> (coin.probabilityPct + 1).coerceIn(40, 99)
