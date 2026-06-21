@@ -127,7 +127,7 @@ fun OpportunisticSignalAdornmentSection(
         text = if (isBengali) "মাল্টি-এআই কনসেনসাস স্কোর" else "MULTI-AI CONSENSUS ENGINES",
         fontSize = 9.8.sp,
         fontWeight = FontWeight.Bold,
-        color = themeColor,
+        color = Color.White.copy(alpha = 0.92f),
         letterSpacing = 1.sp
     )
     Spacer(modifier = Modifier.height(7.dp))
