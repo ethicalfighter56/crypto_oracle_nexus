@@ -21,11 +21,11 @@ object TitanOracleColors {
     val AccentGold = Color(0xFFF59E0B)
     val WarningGold = Color(0xFFFFCC00)
 
-    val SuccessLongGreen = Color(0xFF10B981)
-    val InstitutionalGreen = Color(0xFF0ECB81)
-    val DangerShortRed = Color(0xFFDC2626)
-    val DangerRedContainer = Color(0xFF2D0E12)
-    val DangerRedText = Color(0xFFFF647C)
+    val SuccessLongGreen = Color(0xFF34C785)
+    val InstitutionalGreen = Color(0xFF34C785)
+    val DangerShortRed = Color(0xFFF6465D)
+    val DangerRedContainer = Color(0x1AF6465D)
+    val DangerRedText = Color(0xFFF6465D)
 
     val TextPrimary = Color(0xFFF3F4F6)
     val TextSecondary = Color(0xFF9CA3AF)

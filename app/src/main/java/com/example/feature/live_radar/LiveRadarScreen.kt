@@ -156,6 +156,8 @@ fun LiveRadarScreen(
                 
                 Spacer(modifier = Modifier.height(10.dp))
 
+                val intervals = listOf("1M", "5M", "15M", "30M", "45M", "1H")
+
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -163,7 +165,6 @@ fun LiveRadarScreen(
                         .padding(3.dp),
                     horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    val intervals = listOf("1 Min", "5 Min", "15 Min", "30 Min")
                     intervals.forEachIndexed { idx, label ->
                         Box(
                             modifier = Modifier
@@ -192,7 +193,7 @@ fun LiveRadarScreen(
                 Spacer(modifier = Modifier.height(12.dp))
 
                 // Short Term Signals Display List
-                val displayWindow = listOf("1M", "5M", "15M", "30M")[shortTermInterval]
+                val displayWindow = intervals.getOrElse(shortTermInterval) { "15M" }
                 ShortTermOpportunisticSignalsSection(timeframe = displayWindow, isBengali = isBengali, viewModel = viewModel)
             }
         }

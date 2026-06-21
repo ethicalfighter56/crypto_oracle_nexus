@@ -79,31 +79,19 @@ fun FuturesItemCard(coin: FuturesSignal, timeframeIndex: Int, viewModel: CryptoV
     val isLong = coin.isLong
     
     // REDISIGNED CONTRAST RED FOR SHORT: Highly vibrant, high-contrast scarlet red
-    val shortRedThemeColor = Color(0xFFFF3F60)
-    val shortRedBadgeBg = Color(0xFFFF3F60).copy(alpha = 0.18f)
+    val shortRedThemeColor = CryptoRedText
+    val shortRedBadgeBg = CryptoRedText.copy(alpha = 0.14f)
     val shortRedCardBg = Color(0xFF1D1113) // Custom premium wine background tone for high contrast
-    val shortRedBorderColor = Color(0xFFFF3F60).copy(alpha = 0.35f) // Sharp, vibrant red border outline
+    val shortRedBorderColor = CryptoRedText.copy(alpha = 0.34f) // Sharp, vibrant red border outline
 
     val themeColor = if (isLong) CryptoGreen else shortRedThemeColor
     val badgeBg = if (isLong) themeColor.copy(alpha = 0.1f) else shortRedBadgeBg
     val cardBg = if (isLong) DarkSurface else shortRedCardBg
     val cardBorder = if (isLong) BorderColor else if (isExpanded) shortRedThemeColor else shortRedBorderColor
 
-    val probability = when(timeframeIndex) {
-        0 -> coin.probabilityPct
-        1 -> coin.probabilityTwelveHoursPct ?: coin.probabilityPct
-        2 -> (coin.probabilityPct - 4).coerceIn(40, 99)
-        3 -> (coin.probabilityPct - 8).coerceIn(35, 99)
-        else -> (coin.probabilityPct - 12).coerceIn(30, 99)
-    }
+    val probability = signalProFuturesProbability(coin, timeframeIndex)
 
-    val priceChangeMultiplier = when(timeframeIndex) {
-        0 -> 1.0
-        1 -> 1.48
-        2 -> 2.1
-        3 -> 3.8
-        else -> 5.5
-    }
+    val priceChangeMultiplier = signalProFuturesPriceChangeMultiplier(timeframeIndex)
     val priceChange = coin.priceChangePct * priceChangeMultiplier
 
     val targetPrice = if (isLong) {
@@ -113,13 +101,7 @@ fun FuturesItemCard(coin: FuturesSignal, timeframeIndex: Int, viewModel: CryptoV
     }
     
     val changeLabel = if (isLong) "EXPECTED GAIN" else "EXPECTED DROP"
-    val targetLabel = when(timeframeIndex) {
-        0 -> "6-H Predicted Target"
-        1 -> "12-H Predicted Target"
-        2 -> "24-H Gold Target"
-        3 -> "3-Day Wave Target"
-        else -> "7-Day Range Target"
-    }
+    val targetLabel = signalProTargetLabel(timeframeIndex)
 
     Card(
         colors = CardDefaults.cardColors(containerColor = cardBg),
@@ -328,13 +310,7 @@ fun FuturesItemCard(coin: FuturesSignal, timeframeIndex: Int, viewModel: CryptoV
                     HorizontalDivider(color = if (isLong) BorderColor else cardBorder.copy(alpha = 0.3f))
                     Spacer(modifier = Modifier.height(10.dp))
 
-                    val hours = when(timeframeIndex) {
-                        0 -> 6
-                        1 -> 12
-                        2 -> 24
-                        3 -> 72
-                        else -> 168
-                    }
+                    val hours = signalProForecastHours(timeframeIndex)
                     RealTimeCountdown(coin.coinSymbol, hours, isBengali)
 
                     Spacer(modifier = Modifier.height(10.dp))
@@ -398,7 +374,7 @@ fun FuturesItemCard(coin: FuturesSignal, timeframeIndex: Int, viewModel: CryptoV
 
                     Spacer(modifier = Modifier.height(12.dp))
                     
-                    val mission = remember(coin, targetPrice, isLong) {
+                    val mission = remember(coin, targetPrice, isLong, timeframeIndex) {
                         com.example.model.Mission(
                             coinSymbol = coin.coinSymbol,
                             type = if (isLong) "LONG" else "SHORT",
@@ -456,21 +432,9 @@ fun OraclePickCard(asset: Any, timeframeIndex: Int, viewModel: CryptoViewModel, 
     val curPrice = livePrices["${symbol}USDT"] ?: entryPrice
 
     val potential = when (asset) {
-        is SpotSignal -> when(timeframeIndex) {
-            0 -> asset.growthPotentialPct
-            1 -> asset.growthPotentialTwelveHoursPct ?: (asset.growthPotentialPct * 1.5)
-            2 -> asset.growthPotentialPct * 2.2
-            3 -> asset.growthPotentialPct * 3.5
-            else -> asset.growthPotentialPct * 5.0
-        }
+        is SpotSignal -> signalProSpotGrowthPotential(asset, timeframeIndex)
         is FuturesSignal -> {
-            val multiplier = when(timeframeIndex) {
-                0 -> 1.0
-                1 -> 1.48
-                2 -> 2.1
-                3 -> 3.8
-                else -> 5.5
-            }
+            val multiplier = signalProFuturesPriceChangeMultiplier(timeframeIndex)
             asset.priceChangePct * multiplier
         }
         else -> 0.0
@@ -645,13 +609,7 @@ fun OraclePickCard(asset: Any, timeframeIndex: Int, viewModel: CryptoViewModel, 
                     HorizontalDivider(color = BorderColor)
                     Spacer(modifier = Modifier.height(10.dp))
 
-                    val hours = when(timeframeIndex) {
-                        0 -> 6
-                        1 -> 12
-                        2 -> 24
-                        3 -> 72
-                        else -> 168
-                    }
+                    val hours = signalProForecastHours(timeframeIndex)
                     RealTimeCountdown(symbol, hours, isBengali)
 
                     Spacer(modifier = Modifier.height(10.dp))
@@ -704,7 +662,7 @@ fun OraclePickCard(asset: Any, timeframeIndex: Int, viewModel: CryptoViewModel, 
 
                     Spacer(modifier = Modifier.height(12.dp))
                     
-                    val mission = remember(asset, projPrice, isLong) {
+                    val mission = remember(asset, projPrice, isLong, timeframeIndex) {
                         val invalidation = when (asset) {
                             is SpotSignal -> asset.invalidationPrice
                             is FuturesSignal -> asset.invalidationPrice

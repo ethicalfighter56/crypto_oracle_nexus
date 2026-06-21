@@ -44,8 +44,17 @@ fun RunningMissionsContent(viewModel: CryptoViewModel, isBengali: Boolean) {
     if (missions.isEmpty()) {
         EmptyMissionTerminal(isBengali)
     } else {
+        val displayMissions = missions
+            .mapIndexed { index, mission -> index to mission }
+            .sortedWith(
+                compareBy<Pair<Int, com.example.model.Mission>> { mcMissionDisplaySortRank(it.second, it.first).first }
+                    .thenBy { mcMissionDisplaySortRank(it.second, it.first).second }
+                    .thenBy { mcMissionDisplaySortRank(it.second, it.first).third }
+            )
+            .map { it.second }
+
         Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            missions.forEach { m ->
+            displayMissions.forEach { m ->
                 val diff = m.currentPrice - m.entryPrice
                 val diffPct = (diff / m.entryPrice) * 100.0 * (if (m.type == "LONG") 1.0 else -1.0)
                 val isLoss = diffPct < 0

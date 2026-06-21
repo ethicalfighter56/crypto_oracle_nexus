@@ -161,13 +161,21 @@ fun MissionTerminalCard(
                     fontWeight = FontWeight.Bold
                 )
                 val tf = mission?.signalTimeframe?.ifBlank { "N/A" } ?: "N/A"
-                Text(
-                    text = tf.uppercase(),
-                    color = T_TextSecondary,
-                    fontFamily = FontFamily.Monospace,
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.Bold
-                )
+                Box(
+                    modifier = Modifier
+                        .background(T_TextSecondary.copy(alpha = 0.12f), RoundedCornerShape(5.dp))
+                        .border(0.5.dp, T_TextSecondary.copy(alpha = 0.32f), RoundedCornerShape(5.dp))
+                        .padding(horizontal = 6.dp, vertical = 2.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = tf.uppercase(),
+                        color = T_TextSecondary,
+                        fontFamily = FontFamily.Monospace,
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
         }
         

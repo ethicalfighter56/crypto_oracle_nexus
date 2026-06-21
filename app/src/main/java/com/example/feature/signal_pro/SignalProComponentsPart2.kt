@@ -76,48 +76,18 @@ fun SpotItemCard(coin: SpotSignal, timeframeIndex: Int, viewModel: CryptoViewMod
     
     val livePrice = livePrices["${coin.coinSymbol}USDT"] ?: coin.currentPrice
 
-    val confidence = when(timeframeIndex) {
-        0 -> coin.confidencePct
-        1 -> coin.confidenceTwelveHoursPct ?: coin.confidencePct
-        2 -> (coin.confidencePct - 5).coerceIn(60, 99)
-        3 -> (coin.confidencePct - 10).coerceIn(52, 99)
-        else -> (coin.confidencePct - 16).coerceIn(45, 99)
-    }
+    val confidence = signalProSpotConfidence(coin, timeframeIndex)
 
-    val priceDiffLabel = when(timeframeIndex) {
-        0 -> "PRICE 6H AGO"
-        1 -> "PRICE 12H AGO"
-        2 -> "PRICE 24H AGO"
-        3 -> "PRICE 3D AGO"
-        else -> "PRICE 7D AGO"
-    }
+    val priceDiffLabel = signalProSpotPriceDiffLabel(timeframeIndex)
 
-    val scaleFactor = when(timeframeIndex) {
-        0 -> 1.0
-        1 -> 1.8
-        2 -> 3.2
-        3 -> 7.5
-        else -> 12.0
-    }
+    val scaleFactor = signalProSpotScaleFactor(timeframeIndex)
     val prevPrice = coin.currentPrice * (1.0 - (coin.growthPotentialPct * 0.1 * scaleFactor).coerceIn(0.01, 0.4))
 
-    val growthPotential = when(timeframeIndex) {
-        0 -> coin.growthPotentialPct
-        1 -> coin.growthPotentialTwelveHoursPct ?: (coin.growthPotentialPct * 1.5)
-        2 -> coin.growthPotentialPct * 2.2
-        3 -> coin.growthPotentialPct * 3.5
-        else -> coin.growthPotentialPct * 5.0
-    }
+    val growthPotential = signalProSpotGrowthPotential(coin, timeframeIndex)
 
     val projectedPrice = coin.currentPrice * (1.0 + growthPotential / 100.0)
 
-    val targetLabel = when(timeframeIndex) {
-        0 -> "6-H Predicted Target"
-        1 -> "12-H Predicted Target"
-        2 -> "24-H Gold Target"
-        3 -> "3-Day Wave Target"
-        else -> "7-Day Range High"
-    }
+    val targetLabel = signalProTargetLabel(timeframeIndex)
 
     Card(
         colors = CardDefaults.cardColors(containerColor = Color(0xFF030712)),
@@ -339,13 +309,7 @@ fun SpotItemCard(coin: SpotSignal, timeframeIndex: Int, viewModel: CryptoViewMod
                     HorizontalDivider(color = BorderColor)
                     Spacer(modifier = Modifier.height(10.dp))
 
-                    val hours = when(timeframeIndex) {
-                        0 -> 6
-                        1 -> 12
-                        2 -> 24
-                        3 -> 72
-                        else -> 168
-                    }
+                    val hours = signalProForecastHours(timeframeIndex)
                     RealTimeCountdown(coin.coinSymbol, hours, isBengali)
                     
                     Spacer(modifier = Modifier.height(10.dp))
@@ -407,7 +371,7 @@ fun SpotItemCard(coin: SpotSignal, timeframeIndex: Int, viewModel: CryptoViewMod
 
                     Spacer(modifier = Modifier.height(12.dp))
                     
-                    val mission = remember(coin, projectedPrice) {
+                    val mission = remember(coin, projectedPrice, timeframeIndex) {
                         com.example.model.Mission(
                             coinSymbol = coin.coinSymbol,
                             type = "LONG",

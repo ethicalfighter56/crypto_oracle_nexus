@@ -409,7 +409,7 @@ fun ScrollableTimeframeRow(
     onIntervalSelected: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val intervals = listOf("6H", "12H", "24H", "3D", "7D")
+    val intervals = SignalProTimeframes
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -504,7 +504,7 @@ fun SignalQualitySystemBlock(
     val riskColor = when (riskGrade.uppercase()) {
         "LOW" -> CryptoGreen
         "MEDIUM" -> AccentGold
-        "HIGH", "EXTREME" -> Color(0xFFFF3F60)
+        "HIGH", "EXTREME" -> CryptoRedText
         else -> AccentGold
     }
 
@@ -512,7 +512,7 @@ fun SignalQualitySystemBlock(
         score >= 82 -> CryptoCyan
         score >= 70 -> CryptoGreen
         score >= 55 -> AccentGold
-        else -> Color(0xFFFF3F60)
+        else -> CryptoRedText
     }
 
     Card(
@@ -652,8 +652,8 @@ fun TradeChecklistBlock(
                             modifier = Modifier
                                 .size(14.dp)
                                 .clip(CircleShape)
-                                .background(if (checked) CryptoGreen.copy(alpha = 0.15f) else Color(0xFFFF3F60).copy(alpha = 0.15f))
-                                .border(1.dp, if (checked) CryptoGreen else Color(0xFFFF3F60), CircleShape),
+                                .background(if (checked) CryptoGreen.copy(alpha = 0.15f) else CryptoRedText.copy(alpha = 0.15f))
+                                .border(1.dp, if (checked) CryptoGreen else CryptoRedText, CircleShape),
                             contentAlignment = Alignment.Center
                         ) {
                             if (checked) {
@@ -664,7 +664,7 @@ fun TradeChecklistBlock(
                                     modifier = Modifier.size(9.dp)
                                 )
                             } else {
-                                Box(modifier = Modifier.size(4.dp).background(Color(0xFFFF3F60), CircleShape))
+                                Box(modifier = Modifier.size(4.dp).background(CryptoRedText, CircleShape))
                             }
                         }
 
@@ -737,7 +737,7 @@ fun MarketRegimeTraceModule(
 
     val tint = when(regime) {
         "BULLISH" -> CryptoGreen
-        "BEARISH" -> Color(0xFFFF3F60)
+        "BEARISH" -> CryptoRedText
         "SIDEWAYS" -> TextMuted
         "ACCUMULATION" -> CryptoCyan
         else -> AccentGold

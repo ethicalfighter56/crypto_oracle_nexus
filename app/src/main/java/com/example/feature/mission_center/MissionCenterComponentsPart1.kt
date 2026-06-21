@@ -44,10 +44,39 @@ internal val T_BorderHigh = Color(0xFF2C2C2E)
 internal val T_TextPrimary = Color(0xFFFFFFFF)
 internal val T_TextSecondary = Color(0xFF8E8E93)
 internal val T_TextMuted = Color(0xFF636366)
-internal val T_Green = Color(0xFF34C759)
-internal val T_Red = Color(0xFFFF3B30)
+internal val T_Green = Color(0xFF34C785)
+internal val T_Red = Color(0xFFF6465D)
 internal val T_Cyan = Color(0xFF32ADE6)
 internal val T_Gold = Color(0xFFFFCC00)
+internal val mcTimeframeDurationMinutes = mapOf(
+    "1M" to 1,
+    "5M" to 5,
+    "15M" to 15,
+    "30M" to 30,
+    "45M" to 45,
+    "1H" to 60,
+    "2H" to 120,
+    "4H" to 240,
+    "6H" to 360,
+    "12H" to 720,
+    "24H" to 1440,
+    "3D" to 4320,
+    "7D" to 10080
+)
+internal fun mcTimeframeRank(timeframe: String?): Int {
+    val normalized = timeframe.orEmpty().trim().uppercase()
+    return mcTimeframeDurationMinutes[normalized] ?: Int.MAX_VALUE
+}
+internal fun mcMissionDisplaySortRank(mission: com.example.model.Mission, originalIndex: Int): Triple<Int, Int, Int> {
+    val criticalBucket = if (mcMissionRiskState(mission) == "CRITICAL") 0 else 1
+    val timeframeRank = mcTimeframeRank(mission.signalTimeframe)
+    val warningBucket = when (mcMissionRiskState(mission)) {
+        "WARNING" -> 0
+        "ACTIVE" -> 1
+        else -> 2
+    }
+    return Triple(criticalBucket, timeframeRank, warningBucket * 10_000 + originalIndex)
+}
 internal fun mcMissionDirectionMultiplier(mission: com.example.model.Mission): Double {
     val isLong = mission.type.equals("LONG", ignoreCase = true) || mission.type.equals("BUY", ignoreCase = true)
     return if (isLong) 1.0 else -1.0

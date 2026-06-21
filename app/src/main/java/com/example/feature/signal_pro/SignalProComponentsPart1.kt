@@ -143,12 +143,86 @@ fun AnalyzingTelemetryScreen(stepMessage: String) {
         }
     }
 }
-internal fun signalProTimeframeLabel(index: Int): String = when (index) {
-    0 -> "6H"
-    1 -> "12H"
-    2 -> "24H"
-    3 -> "3D"
-    else -> "7D"
+internal val SignalProTimeframes = listOf("6H", "2H", "4H", "12H", "24H", "3D", "7D")
+internal val signalProTimeframeDurationMinutes = mapOf(
+    "1M" to 1,
+    "5M" to 5,
+    "15M" to 15,
+    "30M" to 30,
+    "45M" to 45,
+    "1H" to 60,
+    "2H" to 120,
+    "4H" to 240,
+    "6H" to 360,
+    "12H" to 720,
+    "24H" to 1440,
+    "3D" to 4320,
+    "7D" to 10080
+)
+internal fun signalProTimeframeLabel(index: Int): String = SignalProTimeframes.getOrElse(index) { "7D" }
+internal fun signalProForecastHours(index: Int): Int = when (signalProTimeframeLabel(index)) {
+    "2H" -> 2
+    "4H" -> 4
+    "6H" -> 6
+    "12H" -> 12
+    "24H" -> 24
+    "3D" -> 72
+    else -> 168
+}
+internal fun signalProSpotConfidence(coin: SpotSignal, index: Int): Int = when (signalProTimeframeLabel(index)) {
+    "2H" -> (coin.confidencePct + 2).coerceIn(60, 99)
+    "4H" -> (coin.confidencePct + 1).coerceIn(60, 99)
+    "6H" -> coin.confidencePct
+    "12H" -> coin.confidenceTwelveHoursPct ?: coin.confidencePct
+    "24H" -> (coin.confidencePct - 5).coerceIn(60, 99)
+    "3D" -> (coin.confidencePct - 10).coerceIn(52, 99)
+    else -> (coin.confidencePct - 16).coerceIn(45, 99)
+}
+internal fun signalProSpotPriceDiffLabel(index: Int): String = "PRICE ${signalProTimeframeLabel(index)} AGO"
+internal fun signalProSpotScaleFactor(index: Int): Double = when (signalProTimeframeLabel(index)) {
+    "2H" -> 0.45
+    "4H" -> 0.70
+    "6H" -> 1.0
+    "12H" -> 1.8
+    "24H" -> 3.2
+    "3D" -> 7.5
+    else -> 12.0
+}
+internal fun signalProSpotGrowthPotential(coin: SpotSignal, index: Int): Double = when (signalProTimeframeLabel(index)) {
+    "2H" -> coin.growthPotentialPct * 0.45
+    "4H" -> coin.growthPotentialPct * 0.70
+    "6H" -> coin.growthPotentialPct
+    "12H" -> coin.growthPotentialTwelveHoursPct ?: (coin.growthPotentialPct * 1.5)
+    "24H" -> coin.growthPotentialPct * 2.2
+    "3D" -> coin.growthPotentialPct * 3.5
+    else -> coin.growthPotentialPct * 5.0
+}
+internal fun signalProTargetLabel(index: Int): String = when (signalProTimeframeLabel(index)) {
+    "2H" -> "2-H Predicted Target"
+    "4H" -> "4-H Predicted Target"
+    "6H" -> "6-H Predicted Target"
+    "12H" -> "12-H Predicted Target"
+    "24H" -> "24-H Gold Target"
+    "3D" -> "3-Day Wave Target"
+    else -> "7-Day Range Target"
+}
+internal fun signalProFuturesProbability(coin: FuturesSignal, index: Int): Int = when (signalProTimeframeLabel(index)) {
+    "2H" -> (coin.probabilityPct + 2).coerceIn(40, 99)
+    "4H" -> (coin.probabilityPct + 1).coerceIn(40, 99)
+    "6H" -> coin.probabilityPct
+    "12H" -> coin.probabilityTwelveHoursPct ?: coin.probabilityPct
+    "24H" -> (coin.probabilityPct - 4).coerceIn(40, 99)
+    "3D" -> (coin.probabilityPct - 8).coerceIn(35, 99)
+    else -> (coin.probabilityPct - 12).coerceIn(30, 99)
+}
+internal fun signalProFuturesPriceChangeMultiplier(index: Int): Double = when (signalProTimeframeLabel(index)) {
+    "2H" -> 0.42
+    "4H" -> 0.68
+    "6H" -> 1.0
+    "12H" -> 1.48
+    "24H" -> 2.1
+    "3D" -> 3.8
+    else -> 5.5
 }
 internal fun signalProfileConfidenceColor(score: Int): Color = when {
     score >= 80 -> CryptoGreen
@@ -465,13 +539,7 @@ fun PredictionDashboard(
                         )
 
                         val sortedSpot = data.spotSignals.sortedByDescending { coin ->
-                            when (spotTimeframe) {
-                                0 -> coin.confidencePct
-                                1 -> coin.confidenceTwelveHoursPct ?: coin.confidencePct
-                                2 -> coin.confidencePct - 5
-                                3 -> coin.confidencePct - 10
-                                else -> coin.confidencePct - 16
-                            }
+                            signalProSpotConfidence(coin, spotTimeframe)
                         }.take(10)
 
                         SpotTradingList(
@@ -514,13 +582,7 @@ fun PredictionDashboard(
 
                         val rawFutures = if (futuresSubTab == 0) data.futuresLongSignals else data.futuresShortSignals
                         val sortedFutures = rawFutures.sortedByDescending { coin ->
-                            when (futuresTimeframe) {
-                                0 -> coin.probabilityPct
-                                1 -> coin.probabilityTwelveHoursPct ?: coin.probabilityPct
-                                2 -> coin.probabilityPct - 4
-                                3 -> coin.probabilityPct - 8
-                                else -> coin.probabilityPct - 12
-                            }
+                            signalProFuturesProbability(coin, futuresTimeframe)
                         }.take(10)
 
                         FuturesTradingList(

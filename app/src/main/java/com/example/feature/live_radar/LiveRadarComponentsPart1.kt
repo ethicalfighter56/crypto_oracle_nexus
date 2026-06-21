@@ -14,6 +14,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -56,15 +58,18 @@ internal fun liveRadarRiskColor(value: String): Color {
 internal fun RadarTriggerSectionHeader(
     title: String,
     accentColor: Color,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    expanded: Boolean = false,
+    onToggle: (() -> Unit)? = null
 ) {
-    Box(
+    Row(
         modifier = modifier
             .fillMaxWidth()
             .background(accentColor.copy(alpha = 0.055f), RoundedCornerShape(9.dp))
             .border(0.85.dp, accentColor.copy(alpha = 0.58f), RoundedCornerShape(9.dp))
-            .padding(start = 10.dp, end = 10.dp, top = 7.dp, bottom = 7.dp),
-        contentAlignment = Alignment.CenterStart
+            .then(onToggle?.let { toggle -> Modifier.clickable { toggle() } } ?: Modifier)
+            .padding(start = 10.dp, end = 7.dp, top = 6.dp, bottom = 6.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
             text = title,
@@ -73,32 +78,72 @@ internal fun RadarTriggerSectionHeader(
             color = accentColor,
             letterSpacing = 0.5.sp,
             maxLines = 1,
-            overflow = TextOverflow.Ellipsis
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f)
         )
+        if (onToggle != null) {
+            Box(
+                modifier = Modifier
+                    .size(30.dp)
+                    .background(accentColor.copy(alpha = 0.10f), RoundedCornerShape(8.dp)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                    contentDescription = if (expanded) "Collapse radar section" else "Expand radar section",
+                    tint = accentColor,
+                    modifier = Modifier.size(22.dp)
+                )
+            }
+        }
     }
 }
 @Composable
 fun ShortTermOpportunisticSignalsSection(timeframe: String, isBengali: Boolean, viewModel: CryptoViewModel) {
     var expandedKey by remember { mutableStateOf<String?>(null) }
+    var expandedHotSpot by remember { mutableStateOf(false) }
+    var expandedLong by remember { mutableStateOf(false) }
+    var expandedShort by remember { mutableStateOf(false) }
     val livePrices by viewModel.livePrices.collectAsState()
 
-    // Top 3 dynamic simulation metrics
+    // Top 10 dynamic simulation metrics; UI shows compact Top 3 by default.
     val spotScalps = listOf(
         Triple("Bitcoin", "BTC", livePrices["BTCUSDT"] ?: 66520.0),
         Triple("Ethereum", "ETH", livePrices["ETHUSDT"] ?: 3482.0),
-        Triple("Solana", "SOL", livePrices["SOLUSDT"] ?: 164.2)
+        Triple("Solana", "SOL", livePrices["SOLUSDT"] ?: 164.2),
+        Triple("BNB", "BNB", livePrices["BNBUSDT"] ?: 612.0),
+        Triple("XRP", "XRP", livePrices["XRPUSDT"] ?: 0.62),
+        Triple("Chainlink", "LINK", livePrices["LINKUSDT"] ?: 14.8),
+        Triple("Avalanche", "AVAX", livePrices["AVAXUSDT"] ?: 28.4),
+        Triple("Toncoin", "TON", livePrices["TONUSDT"] ?: 6.72),
+        Triple("Sui", "SUI", livePrices["SUIUSDT"] ?: 3.46),
+        Triple("Dogecoin", "DOGE", livePrices["DOGEUSDT"] ?: 0.125)
     )
 
     val longScalps = listOf(
         Triple("Render Token", "RNDR", livePrices["RNDRUSDT"] ?: 8.45),
         Triple("NEAR Protocol", "NEAR", livePrices["NEARUSDT"] ?: 6.12),
-        Triple("Floki", "FLOKI", livePrices["FLOKIUSDT"] ?: 0.000215)
+        Triple("Floki", "FLOKI", livePrices["FLOKIUSDT"] ?: 0.000215),
+        Triple("Injective", "INJ", livePrices["INJUSDT"] ?: 27.4),
+        Triple("Optimism", "OP", livePrices["OPUSDT"] ?: 2.18),
+        Triple("Arbitrum", "ARB", livePrices["ARBUSDT"] ?: 0.95),
+        Triple("Artificial Superintelligence", "FET", livePrices["FETUSDT"] ?: 1.42),
+        Triple("Aptos", "APT", livePrices["APTUSDT"] ?: 8.10),
+        Triple("Sei", "SEI", livePrices["SEIUSDT"] ?: 0.44),
+        Triple("dogwifhat", "WIF", livePrices["WIFUSDT"] ?: 2.35)
     )
 
     val shortScalps = listOf(
         Triple("Cardano", "ADA", livePrices["ADAUSDT"] ?: 0.45),
         Triple("Dogecoin", "DOGE", livePrices["DOGEUSDT"] ?: 0.125),
-        Triple("Arbitrum", "ARB", livePrices["ARBUSDT"] ?: 0.95)
+        Triple("Arbitrum", "ARB", livePrices["ARBUSDT"] ?: 0.95),
+        Triple("Polygon", "MATIC", livePrices["MATICUSDT"] ?: 0.72),
+        Triple("Filecoin", "FIL", livePrices["FILUSDT"] ?: 5.20),
+        Triple("Ethereum Classic", "ETC", livePrices["ETCUSDT"] ?: 27.1),
+        Triple("Cosmos", "ATOM", livePrices["ATOMUSDT"] ?: 8.64),
+        Triple("Internet Computer", "ICP", livePrices["ICPUSDT"] ?: 12.3),
+        Triple("ApeCoin", "APE", livePrices["APEUSDT"] ?: 1.18),
+        Triple("Lido DAO", "LDO", livePrices["LDOUSDT"] ?: 2.04)
     )
 
     val spotDetails = listOf(
@@ -225,19 +270,24 @@ fun ShortTermOpportunisticSignalsSection(timeframe: String, isBengali: Boolean, 
             else -> String.format("%,.2f", price)
         }
     }
+    val visibleSpotScalps = if (expandedHotSpot) spotScalps.take(10) else spotScalps.take(3)
+    val visibleLongScalps = if (expandedLong) longScalps.take(10) else longScalps.take(3)
+    val visibleShortScalps = if (expandedShort) shortScalps.take(10) else shortScalps.take(3)
 
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         // --- 1. SPOT SECTIONS ---
         RadarTriggerSectionHeader(
-            title = if (isBengali) "🔥 তাত্ক্ষণিক স্পট টার্গেট (সেরা ৩)" else "🔥 HOT SPOT TRIGGERS (TOP 3)",
-            accentColor = LiveRadarInstitutionalYellow
+            title = if (isBengali) "🔥 তাত্ক্ষণিক স্পট টার্গেট (${if (expandedHotSpot) "সেরা ১০" else "সেরা ৩"})" else "🔥 HOT SPOT TRIGGERS (${if (expandedHotSpot) "TOP 10" else "TOP 3"})",
+            accentColor = LiveRadarInstitutionalYellow,
+            expanded = expandedHotSpot,
+            onToggle = { expandedHotSpot = !expandedHotSpot }
         )
 
-        spotScalps.forEachIndexed { index, (name, symbol, basePrice) ->
+        visibleSpotScalps.forEachIndexed { index, (name, symbol, basePrice) ->
             val potential = 1.5 + index * 0.4
             val target = basePrice * (1.0 + potential / 100)
             val isExpanded = expandedKey == "spot_$index"
-            val details = spotDetails[index]
+            val details = spotDetails[index % spotDetails.size]
 
             Column(
                 modifier = Modifier
@@ -342,15 +392,17 @@ fun ShortTermOpportunisticSignalsSection(timeframe: String, isBengali: Boolean, 
 
         // --- 2. FUTURES LONG SECTIONS ---
         RadarTriggerSectionHeader(
-            title = if (isBengali) "⚡ ফিউচার লং টার্গেট" else "⚡ FUTURES LONG TRIGGERS (TOP 3)",
-            accentColor = LiveRadarInstitutionalGreen
+            title = if (isBengali) "⚡ ফিউচার লং টার্গেট (${if (expandedLong) "সেরা ১০" else "সেরা ৩"})" else "⚡ FUTURES LONG TRIGGERS (${if (expandedLong) "TOP 10" else "TOP 3"})",
+            accentColor = LiveRadarInstitutionalGreen,
+            expanded = expandedLong,
+            onToggle = { expandedLong = !expandedLong }
         )
 
-        longScalps.forEachIndexed { index, (name, symbol, basePrice) ->
+        visibleLongScalps.forEachIndexed { index, (name, symbol, basePrice) ->
             val potential = 3.2 + index * 0.8
             val target = basePrice * (1.0 + potential / 100)
             val isExpanded = expandedKey == "long_$index"
-            val details = longDetails[index]
+            val details = longDetails[index % longDetails.size]
 
             Column(
                 modifier = Modifier
@@ -455,15 +507,17 @@ fun ShortTermOpportunisticSignalsSection(timeframe: String, isBengali: Boolean, 
 
         // --- 3. FUTURES SHORT SECTIONS ---
         RadarTriggerSectionHeader(
-            title = if (isBengali) "🔻 ফিউচার শর্ট টার্গেট (সেরা ৩)" else "🔻 FUTURES SHORT TRIGGERS (TOP 3)",
-            accentColor = LiveRadarDangerRed
+            title = if (isBengali) "🔻 ফিউচার শর্ট টার্গেট (${if (expandedShort) "সেরা ১০" else "সেরা ৩"})" else "🔻 FUTURES SHORT TRIGGERS (${if (expandedShort) "TOP 10" else "TOP 3"})",
+            accentColor = LiveRadarDangerRed,
+            expanded = expandedShort,
+            onToggle = { expandedShort = !expandedShort }
         )
 
-        shortScalps.forEachIndexed { index, (name, symbol, basePrice) ->
+        visibleShortScalps.forEachIndexed { index, (name, symbol, basePrice) ->
             val potential = 2.8 + index * 0.7
             val target = basePrice * (1.0 - potential / 100)
             val isExpanded = expandedKey == "short_$index"
-            val details = shortDetails[index]
+            val details = shortDetails[index % shortDetails.size]
 
             Column(
                 modifier = Modifier
