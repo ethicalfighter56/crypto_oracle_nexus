@@ -28,10 +28,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.text.style.TextOverflow
-import com.example.ui.AnalysisScreen
-import com.example.ui.HomeScreen
-import com.example.ui.MarketRadarScreen
-import com.example.ui.AccuracyCenterScreen
+import com.example.feature.oracle_feed.OracleFeedScreen
+import com.example.feature.signal_pro.SignalProScreen
+import com.example.feature.live_radar.LiveRadarScreen
+import com.example.feature.mission_center.MissionCenterScreen
+import com.example.feature.accuracy_center.AccuracyCenterScreen
 import com.example.ui.ChatScreen
 import com.example.ui.theme.*
 import com.example.viewmodel.AppScreen
@@ -61,7 +62,7 @@ class MainActivity : ComponentActivity() {
                         windowInsets = WindowInsets.navigationBars,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .border(androidx.compose.foundation.BorderStroke(1.dp, BorderColor))
+                            .border(androidx.compose.foundation.BorderStroke(0.55.dp, BorderColor.copy(alpha = 0.34f)))
                     ) {
                         // Home Tab
                         NavigationBarItem(
@@ -203,19 +204,19 @@ class MainActivity : ComponentActivity() {
                         .background(DarkBackground)
                 ) {
                     when (currentScreen) {
-                        AppScreen.Home -> HomeScreen(
+                        AppScreen.Home -> OracleFeedScreen(
                             viewModel = viewModel,
                             modifier = Modifier.fillMaxSize()
                         )
-                        AppScreen.Analysis -> AnalysisScreen(
+                        AppScreen.Analysis -> SignalProScreen(
                             viewModel = viewModel,
                             modifier = Modifier.fillMaxSize()
                         )
-                        AppScreen.MarketRadar -> MarketRadarScreen(
+                        AppScreen.MarketRadar -> LiveRadarScreen(
                             viewModel = viewModel,
                             modifier = Modifier.fillMaxSize()
                         )
-                        AppScreen.MissionCenter -> com.example.ui.MissionCenterScreen(
+                        AppScreen.MissionCenter -> MissionCenterScreen(
                             viewModel = viewModel,
                             modifier = Modifier.fillMaxSize()
                         )

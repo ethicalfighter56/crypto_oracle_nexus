@@ -36,46 +36,37 @@ import com.example.ui.theme.DarkBackground
 
 // Terminal Colors - Institutional Grade
 
+// Extracted from MissionCenterScreen.kt to keep the public screen entry point compact.
 @Composable
-fun MissionCenterScreen(
-    viewModel: CryptoViewModel,
+fun TerminalDataField(label: String, value: String, valueColor: Color, alignEnd: Boolean = false) {
+    Column(horizontalAlignment = if (alignEnd) Alignment.End else Alignment.Start) {
+        Text(text = label, color = T_TextMuted, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
+        Spacer(modifier = Modifier.height(2.dp))
+        Text(text = value, color = valueColor, fontSize = 14.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
+    }
+}
+
+// Reinstating original TabButton format required by other files (AccuracyCenterScreen)
+@Composable
+fun TabButton(
+    text: String,
+    isSelected: Boolean,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val isBengali by viewModel.isBengali.collectAsState()
-    var selectedTab by remember { mutableStateOf("Running") }
-
-    LazyColumn(
+    Box(
         modifier = modifier
-            .fillMaxSize()
-            .background(T_Bg),
-        contentPadding = PaddingValues(bottom = 24.dp)
+            .clip(RoundedCornerShape(20.dp))
+            .background(if (isSelected) T_Gold.copy(alpha = 0.2f) else Color.Transparent)
+            .clickable { onClick() }
+            .padding(vertical = 8.dp),
+        contentAlignment = Alignment.Center
     ) {
-        item {
-            MissionTerminalHeaderBlock(viewModel)
-            Spacer(modifier = Modifier.height(10.dp))
-            HeaderSummaryDashboard(viewModel, isBengali)
-            Spacer(modifier = Modifier.height(8.dp))
-            EscalationPolicyCard(viewModel, isBengali)
-            Spacer(modifier = Modifier.height(10.dp))
-        }
-
-        item {
-            McSectionHeader("MISSION LOG")
-            MissionTabs(
-                selectedTab = selectedTab,
-                onTabSelected = { selectedTab = it },
-                isBengali = isBengali
-            )
-        }
-
-        if (selectedTab == "Running") {
-            item {
-                RunningMissionsContent(viewModel, isBengali)
-            }
-        } else {
-            item {
-                HistoryMissionsContent(viewModel, isBengali)
-            }
-        }
+        Text(
+            text = text,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Bold,
+            color = if (isSelected) T_Gold else T_TextMuted
+        )
     }
 }

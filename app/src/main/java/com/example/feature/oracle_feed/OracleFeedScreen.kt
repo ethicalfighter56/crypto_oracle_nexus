@@ -41,7 +41,7 @@ import kotlinx.coroutines.delay
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
-import com.example.ui.theme.DarkBackground
+import com.example.ui.theme.*
 
 // Terminal Colors - Institutional Grade Apple Ecosystem Style
 private val T_Bg = DarkBackground
@@ -51,10 +51,10 @@ private val T_BorderHigh = Color(0xFF2C2C2E)
 private val T_TextPrimary = Color(0xFFFFFFFF)
 private val T_TextSecondary = Color(0xFF8E8E93)
 private val T_TextMuted = Color(0xFF636366)
-private val T_Green = Color(0xFF34C759) 
-private val T_Red = Color(0xFFFF3B30)   
-private val T_Cyan = Color(0xFF32ADE6)  
-private val T_Gold = Color(0xFFFFCC00)  
+private val T_Green = CryptoGreen 
+private val T_Red = CryptoRedText   
+private val T_Cyan = CryptoCyan  
+private val T_Gold = TitanGold  
 
 @Composable
 fun OracleFeedScreen(
@@ -262,7 +262,7 @@ fun TopCoinsDenseTable(newsFeed: OracleAnalysisResponse, livePrices: Map<String,
         val symbols = listOf("BTC", "ETH", "XRP", "SOL", "ADA")
         symbols.forEach { sym ->
             val spot = newsFeed.spotSignals.find { it.coinSymbol == sym }
-            val price = livePrices["\${sym}USDT"] ?: spot?.currentPrice ?: 0.0
+            val price = livePrices["${sym}USDT"] ?: spot?.currentPrice ?: 0.0
             val change = spot?.growthPotentialPct ?: 0.0
             DenseTickerRow(sym, price, change)
         }
@@ -321,7 +321,9 @@ fun DenseTickerRow(symbol: String, price: Double, changePct: Double) {
             fontFamily = FontFamily.Monospace,
             fontWeight = FontWeight.Medium,
             modifier = Modifier.weight(0.4f),
-            textAlign = TextAlign.End
+            textAlign = TextAlign.End,
+            maxLines = 1,
+            softWrap = false
         )
         Text(
             text = String.format("%+.2f%%", changePct),
@@ -330,7 +332,9 @@ fun DenseTickerRow(symbol: String, price: Double, changePct: Double) {
             fontFamily = FontFamily.Monospace,
             fontWeight = FontWeight.SemiBold,
             modifier = Modifier.weight(0.3f),
-            textAlign = TextAlign.End
+            textAlign = TextAlign.End,
+            maxLines = 1,
+            softWrap = false
         )
     }
 }
@@ -368,7 +372,7 @@ fun RealTimeDenseDashboard() {
                             )
                         }
                     }
-                    assets = parsedAssets.sortedBy { topSymbols.indexOf("\${it.symbol}USDT") }
+                    assets = parsedAssets.sortedBy { topSymbols.indexOf("${it.symbol}USDT") }
                     isLoading = false
                 } catch (e: Exception) {
                     e.printStackTrace()
@@ -444,7 +448,7 @@ fun DeepInsightTerminalBlock(
             }
             val (dirLabel, dirColor) = if (insight.direction.uppercase() == "PUMP") Pair(if (isBengali) "পাম্প" else "LONG", T_Green) else Pair(if (isBengali) "ডাম্প" else "SHORT", T_Red)
             Text(
-                text = "[\$dirLabel +\${insight.expectedChangePct}%]",
+                text = "[$dirLabel +${insight.expectedChangePct}%]",
                 color = dirColor,
                 fontSize = 11.sp,
                 fontFamily = FontFamily.Monospace,
@@ -511,10 +515,14 @@ fun NewsTerminalBlock(article: NewsItem, isBengali: Boolean, onToggleLanguage: (
             val sourceText = if (isBengali) article.sourceBengali ?: article.source else article.source
             val timeAgoText = if (isBengali) article.timeAgoBengali ?: article.timeAgo else article.timeAgo
             Text(
-                text = "\${sourceText.uppercase()} • \${timeAgoText.uppercase()}",
+                text = "${sourceText.uppercase()} • ${timeAgoText.uppercase()}",
                 color = T_TextMuted,
                 fontSize = 9.sp,
-                fontFamily = FontFamily.Monospace
+                fontFamily = FontFamily.Monospace,
+                modifier = Modifier.weight(1f).padding(end = 8.dp),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                softWrap = false
             )
             Box(
                 modifier = Modifier
@@ -522,8 +530,8 @@ fun NewsTerminalBlock(article: NewsItem, isBengali: Boolean, onToggleLanguage: (
                     .padding(horizontal = 4.dp, vertical = 2.dp)
             ) {
                 val sentimentText = when (article.sentiment.uppercase()) {
-                    "BULLISH" -> if (isBengali) "তেজি" else "BULLISH"
-                    "BEARISH" -> if (isBengali) "মন্দা" else "BEARISH"
+                    "BULLISH" -> if (isBengali) "উর্ধ্বমুখী প্রবণতা" else "BULLISH"
+                    "BEARISH" -> if (isBengali) "নিম্নমুখী প্রবণতা" else "BEARISH"
                     else -> if (isBengali) "নিরপেক্ষ" else "NEUTRAL"
                 }
                 Text(
