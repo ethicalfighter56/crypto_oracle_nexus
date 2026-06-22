@@ -41,9 +41,7 @@ import kotlinx.coroutines.delay
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
-import com.example.ui.theme.DarkBackground
-import com.example.ui.theme.CryptoGreen
-import com.example.ui.theme.CryptoRedText
+import com.example.ui.theme.*
 
 // Terminal Colors - Institutional Grade Apple Ecosystem Style
 private val T_Bg = DarkBackground
@@ -53,10 +51,10 @@ private val T_BorderHigh = Color(0xFF2C2C2E)
 private val T_TextPrimary = Color(0xFFFFFFFF)
 private val T_TextSecondary = Color(0xFF8E8E93)
 private val T_TextMuted = Color(0xFF636366)
-private val T_Green = CryptoGreen
-private val T_Red = CryptoRedText
-private val T_Cyan = Color(0xFF32ADE6)  
-private val T_Gold = Color(0xFFFFCC00)  
+private val T_Green = CryptoGreen 
+private val T_Red = CryptoRedText   
+private val T_Cyan = CryptoCyan  
+private val T_Gold = TitanGold  
 
 @Composable
 fun OracleFeedScreen(
@@ -532,8 +530,8 @@ fun NewsTerminalBlock(article: NewsItem, isBengali: Boolean, onToggleLanguage: (
                     .padding(horizontal = 4.dp, vertical = 2.dp)
             ) {
                 val sentimentText = when (article.sentiment.uppercase()) {
-                    "BULLISH" -> if (isBengali) "তেজি" else "BULLISH"
-                    "BEARISH" -> if (isBengali) "মন্দা" else "BEARISH"
+                    "BULLISH" -> if (isBengali) "উর্ধ্বমুখী প্রবণতা" else "BULLISH"
+                    "BEARISH" -> if (isBengali) "নিম্নমুখী প্রবণতা" else "BEARISH"
                     else -> if (isBengali) "নিরপেক্ষ" else "NEUTRAL"
                 }
                 Text(

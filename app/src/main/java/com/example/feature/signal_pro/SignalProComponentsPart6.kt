@@ -311,7 +311,7 @@ fun LeverageIntelligenceModule(coin: FuturesSignal) {
 
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(7.dp)) {
                 LeverageBox("SAFE LEVERAGE", "${coin.leverageConservative}x", "Conservative risk mitigation level", CryptoGreen, Modifier.weight(1f))
-                LeverageBox("MODERATE RISK", "${coin.leverageBalanced}x", "Default recommended balanced index", AccentGold, Modifier.weight(1f))
+                LeverageBox("MODERATE RISK", "${coin.leverageBalanced}x", "Default recommended moderate index", AccentGold, Modifier.weight(1f))
                 LeverageBox("MAX AGGRESIVE", "${coin.leverageAggressive}x", "Extreme danger volatility thresholds", CryptoRedText, Modifier.weight(1f))
             }
         }
@@ -351,11 +351,7 @@ fun getConsensusDetails(coinSymbol: String, oracleScore: Int, isLong: Boolean): 
     val gpt = (oracleScore + gptOffset).coerceIn(60, 99)
     val claude = (oracleScore + claudeOffset).coerceIn(60, 99)
     val confidence = ((gemini + gpt + claude) / 3).coerceIn(60, 99)
-    val risk = when {
-        confidence >= 85 -> "LOW"
-        confidence >= 75 -> "MEDIUM"
-        else -> "HIGH"
-    }
+    val risk = titanRiskScoreLabelFromPositiveScore(confidence)
     return AiConsensus(
         geminiScore = gemini,
         gptScore = gpt,
@@ -496,24 +492,14 @@ fun SignalQualitySystemBlock(
     val riskText = when (riskGrade.uppercase()) {
         "LOW" -> if (isBengali) "কম" else "LOW"
         "MEDIUM" -> if (isBengali) "মাঝারি" else "MEDIUM"
-        "HIGH" -> if (isBengali) "তীব্র" else "HIGH"
+        "HIGH" -> if (isBengali) "বেশি" else "HIGH"
         "EXTREME" -> if (isBengali) "খুব বেশি" else "EXTREME"
         else -> riskGrade
     }
 
-    val riskColor = when (riskGrade.uppercase()) {
-        "LOW" -> CryptoGreen
-        "MEDIUM" -> AccentGold
-        "HIGH", "EXTREME" -> CryptoRedText
-        else -> AccentGold
-    }
+    val riskColor = titanRiskScoreColorFromLabel(riskGrade)
 
-    val themeColor = when {
-        score >= 82 -> CryptoCyan
-        score >= 70 -> CryptoGreen
-        score >= 55 -> AccentGold
-        else -> CryptoRedText
-    }
+    val themeColor = titanPositiveScoreColor(score)
 
     Card(
         colors = CardDefaults.cardColors(containerColor = Color(0xFF050A13)),
@@ -584,19 +570,19 @@ fun SignalQualitySystemBlock(
                 QualityMetricColumn(
                     label = if (isBengali) "আস্থা" else "CONFIDENCE",
                     value = "$confidence%",
-                    valueColor = TextPrimary,
+                    valueColor = titanPositiveScoreColor(confidence),
                     modifier = Modifier.weight(1f)
                 )
 
                 QualityMetricColumn(
                     label = if (isBengali) "সম্ভাবনা" else "PROBABILITY",
                     value = "$probability%",
-                    valueColor = TextPrimary,
+                    valueColor = titanPositiveScoreColor(probability),
                     modifier = Modifier.weight(1f)
                 )
 
                 QualityMetricColumn(
-                    label = if (isBengali) "রিস্ক" else "RISK SCORE",
+                    label = if (isBengali) "ঝুঁকির স্কোর" else "RISK SCORE",
                     value = riskText,
                     valueColor = riskColor,
                     modifier = Modifier.weight(1f)
@@ -694,8 +680,8 @@ fun MarketRegimeTraceModule(
     val regime = regimes[seed % regimes.size]
 
     val regimeText = when (regime) {
-        "BULLISH" -> if (isBengali) "দাম বাড়ার ভাব" else "BULLISH"
-        "BEARISH" -> if (isBengali) "মন্দা ভাব" else "BEARISH"
+        "BULLISH" -> if (isBengali) "উর্ধ্বমুখী প্রবণতা" else "BULLISH"
+        "BEARISH" -> if (isBengali) "নিম্নমুখী প্রবণতা" else "BEARISH"
         "SIDEWAYS" -> if (isBengali) "দাম স্থির ভাব" else "SIDEWAYS"
         "ACCUMULATION" -> if (isBengali) "সঞ্চয় হচ্ছে" else "ACCUMULATION"
         else -> if (isBengali) "বিক্রির চাপ" else "DISTRIBUTION"

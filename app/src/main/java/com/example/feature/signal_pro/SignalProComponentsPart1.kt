@@ -216,36 +216,14 @@ internal fun signalProFuturesPriceChangeMultiplier(index: Int): Double = when (s
     "3D" -> 3.8
     else -> 5.5
 }
-internal fun signalProfileConfidenceColor(score: Int): Color = when {
-    score >= 80 -> CryptoGreen
-    score >= 60 -> AccentGold
-    else -> CryptoRedText
-}
-internal fun signalProfileRiskColor(value: String): Color {
-    val normalized = value.uppercase()
-    return when {
-        normalized.contains("LOW") || normalized.contains("SAFE") || normalized.contains("CONSERVATIVE") -> CryptoGreen
-        normalized.contains("MEDIUM") || normalized.contains("MODERATE") || normalized.contains("BALANCED") -> AccentGold
-        normalized.contains("HIGH") || normalized.contains("ELEVATED") || normalized.contains("AGGRESSIVE") -> Color(0xFFFF9F0A)
-        normalized.contains("CRITICAL") || normalized.contains("EXTREME") || normalized.contains("INVALID") -> CryptoRedText
-        else -> TextSecondary
-    }
-}
-internal fun signalProfileAllocationColor(value: String): Color {
-    val normalized = value.uppercase()
-    return when {
-        normalized.contains("CONSERVATIVE") -> CryptoCyan
-        normalized.contains("BALANCED") -> CryptoGreen
-        normalized.contains("AGGRESSIVE") -> AccentGold
-        normalized.contains("HIGH") || normalized.contains("MAX") -> CryptoRedText
-        else -> TextSecondary
-    }
-}
+internal fun signalProfileConfidenceColor(score: Int): Color = titanPositiveScoreColor(score)
+internal fun signalProfileRiskColor(value: String): Color = titanRiskProfileColor(value)
+internal fun signalProfileAllocationColor(value: String): Color = titanAllocationProfileColor(value)
 internal fun signalProfileDirectionColor(value: String): Color {
     val normalized = value.uppercase()
     return when {
-        normalized.contains("BEAR") || normalized.contains("SHORT") || normalized.contains("কমছে") -> CryptoRedText
-        normalized.contains("BULL") || normalized.contains("LONG") || normalized.contains("বাড়ছে") -> CryptoGreen
+        normalized.contains("BEAR") || normalized.contains("SHORT") || normalized.contains("কমছে") || normalized.contains("নিম্নমুখী") -> CryptoRedText
+        normalized.contains("BULL") || normalized.contains("LONG") || normalized.contains("বাড়ছে") || normalized.contains("উর্ধ্বমুখী") -> CryptoGreen
         else -> CryptoCyan
     }
 }

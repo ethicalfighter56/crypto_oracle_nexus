@@ -42,13 +42,13 @@ fun SignalHistoryCard(entity: SignalEntity, isSystemGenerated: Boolean = false) 
     
     val badgeBg = when {
         isWin -> CryptoGreen.copy(alpha = 0.12f)
-        isLoss -> Color(0xFFFF3F60).copy(alpha = 0.12f)
+        isLoss -> TitanRed.copy(alpha = 0.12f)
         else -> TextMuted.copy(alpha = 0.12f)
     }
 
     val badgeColor = when {
         isWin -> CryptoGreen
-        isLoss -> Color(0xFFFF3F60)
+        isLoss -> TitanRed
         else -> TextSecondary
     }
 
@@ -205,8 +205,8 @@ fun SignalHistoryCard(entity: SignalEntity, isSystemGenerated: Boolean = false) 
 @Composable
 fun UserMissionHistoryCard(mission: com.example.model.Mission) {
     val isWin = !mission.isNegative
-    val badgeBg = if (isWin) CryptoGreen.copy(alpha = 0.12f) else Color(0xFFFF3F60).copy(alpha = 0.12f)
-    val badgeColor = if (isWin) CryptoGreen else Color(0xFFFF3F60)
+    val badgeBg = if (isWin) CryptoGreen.copy(alpha = 0.12f) else TitanRed.copy(alpha = 0.12f)
+    val badgeColor = if (isWin) CryptoGreen else TitanRed
 
     Card(
         colors = CardDefaults.cardColors(containerColor = DarkSurface),
@@ -376,10 +376,10 @@ fun WinLossRatioCanvas(wins: Int, losses: Int, pending: Int) {
                 )
             }
 
-            // 2. Draw losses (CryptoRed / Color(0xFFFF3F60))
+            // 2. Draw losses (TitanRed)
             if (lossSize > 0) {
                 drawRect(
-                    color = Color(0xFFFF3F60),
+                    color = TitanRed,
                     size = Size(lossSize, size.height),
                     topLeft = Offset(winSize, 0f)
                 )
@@ -408,7 +408,7 @@ fun WinLossRatioCanvas(wins: Int, losses: Int, pending: Int) {
             val pendingPct = (pending.toFloat() / total) * 100
 
             LegendItem(label = "WINS (${String.format("%.1f", winPct)}%)", color = CryptoGreen)
-            LegendItem(label = "LOSSES (${String.format("%.1f", lossPct)}%)", color = Color(0xFFFF3F60))
+            LegendItem(label = "LOSSES (${String.format("%.1f", lossPct)}%)", color = TitanRed)
             if (pending > 0) {
                 LegendItem(label = "PENDING (${String.format("%.1f", pendingPct)}%)", color = TextMuted)
             }
@@ -498,7 +498,7 @@ fun MetricDonutChart(modifier: Modifier = Modifier, winRate: Float) {
     Canvas(modifier = modifier) {
         val stroke = androidx.compose.ui.graphics.drawscope.Stroke(width = 40f)
         drawArc(
-            color = CryptoRedText,
+            color = TitanRed,
             startAngle = 0f,
             sweepAngle = 360f,
             useCenter = false,

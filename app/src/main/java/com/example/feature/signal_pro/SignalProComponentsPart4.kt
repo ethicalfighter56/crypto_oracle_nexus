@@ -183,7 +183,7 @@ fun FuturesItemCard(coin: FuturesSignal, timeframeIndex: Int, viewModel: CryptoV
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Column 1: ENTRY
+                // Column 1: ENTRY (LOCKED)
                 Column(
                     modifier = Modifier.weight(1f),
                     horizontalAlignment = Alignment.Start
@@ -210,7 +210,7 @@ fun FuturesItemCard(coin: FuturesSignal, timeframeIndex: Int, viewModel: CryptoV
 
                 Spacer(modifier = Modifier.width(8.dp))
 
-                // Column 2: CURRENT
+                // Column 2: CURRENT PRICE
                 Column(
                     modifier = Modifier.weight(1f),
                     horizontalAlignment = Alignment.CenterHorizontally
@@ -330,7 +330,7 @@ fun FuturesItemCard(coin: FuturesSignal, timeframeIndex: Int, viewModel: CryptoV
                         score = coin.oracleScore,
                         confidence = probability,
                         probability = (probability - 4).coerceIn(40, 99),
-                        riskGrade = if (coin.oracleScore >= 83) "LOW" else "MEDIUM"
+                        riskGrade = titanRiskScoreLabelFromPositiveScore(coin.oracleScore)
                     ,
                         isBengali = isBengali)
 
@@ -386,7 +386,7 @@ fun FuturesItemCard(coin: FuturesSignal, timeframeIndex: Int, viewModel: CryptoV
                             stopLoss = formatPrice(coin.invalidationPrice),
                             confidence = probability,
                             aiStatusEnglish = if (isLong) "Bullish convergence intact." else "Bearish momentum building.",
-                            aiStatusBengali = if (isLong) "দাম বাড়ছে কনভারজেন্স অটুট রয়েছে।" else "দাম কমছে মোমেন্টাম তৈরি হচ্ছে।"
+                            aiStatusBengali = if (isLong) "উর্ধ্বমুখী প্রবণতা অটুট রয়েছে।" else "নিম্নমুখী প্রবণতার মতিগতি তৈরি হচ্ছে।"
                         )
                     }
                     StartTradeFlow(viewModel = viewModel, mission = mission, livePrice = livePrice)

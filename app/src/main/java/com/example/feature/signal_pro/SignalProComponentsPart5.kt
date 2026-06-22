@@ -441,16 +441,12 @@ fun MultiAiConsensusModule(
     val consensusScore = ((geminiScore + gptScore + claudeScore) / 3).coerceIn(0, 100)
 
     val directionText = if (isBengali) {
-        if (isLong) "দাম বাড়ছে" else "দাম কমছে"
+        if (isLong) "উর্ধ্বমুখী প্রবণতা" else "নিম্নমুখী প্রবণতা"
     } else {
         if (isLong) "BULLISH" else "BEARISH"
     }
 
-    val riskText = if (isBengali) {
-        if (oracleScore >= 85) "কম" else "মাঝারি"
-    } else {
-        if (oracleScore >= 85) "LOW" else "MEDIUM"
-    }
+    val riskText = titanRiskProfileForPositiveScore(consensusScore)
 
     Card(
         colors = CardDefaults.cardColors(containerColor = Color(0xFF030712)),
@@ -473,7 +469,7 @@ fun MultiAiConsensusModule(
                 .padding(horizontal = 12.dp, vertical = 8.dp)
         ) {
             Text(
-                text = if (isBengali) "মাল্টি-এআই ঐকমত্য ইঞ্জিন" else "MULTI-AI CONSENSUS ENGINES",
+                text = if (isBengali) "মাল্টি-এআই মডেলের ঐক্যমত ইঞ্জিন" else "MULTI-AI CONSENSUS ENGINES",
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Black,
                 color = CryptoCyan,
@@ -551,7 +547,7 @@ fun AiEngineGauge(name: String, score: Int, modifier: Modifier = Modifier) {
             text = "$score / 100",
             fontSize = 12.sp,
             fontWeight = FontWeight.ExtraBold,
-            color = if (score >= 80) CryptoGreen else if (score >= 70) AccentGold else CryptoCyan
+            color = titanPositiveScoreColor(score)
         )
     }
 }
@@ -626,7 +622,7 @@ fun RiskManagementModule(
 
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 SizingBox("Conservative", "2.0% Cap", Modifier.weight(1f))
-                SizingBox("Balanced", "5.0% Cap", Modifier.weight(1f))
+                SizingBox("Moderate", "5.0% Cap", Modifier.weight(1f))
                 SizingBox("Aggressive", "10.0% Max", Modifier.weight(1f))
             }
         }

@@ -39,20 +39,13 @@ import kotlin.random.Random
 // Extracted from LiveRadarScreen.kt to keep the public screen entry point compact.
 internal fun liveRadarConfidenceColor(value: String): Color {
     val numeric = value.replace("%", "").trim().toIntOrNull() ?: return TextSecondary
-    return when {
-        numeric >= 80 -> CryptoGreen
-        numeric >= 60 -> AccentGold
-        else -> CryptoRedText
-    }
+    return titanPositiveScoreColor(numeric)
 }
 internal fun liveRadarRiskColor(value: String): Color {
     val normalized = value.uppercase()
     return when {
-        normalized.contains("LOW") || normalized.contains("SAFE") || normalized.contains("CONSERVATIVE") -> CryptoGreen
-        normalized.contains("MEDIUM") || normalized.contains("MODERATE") || normalized.contains("BALANCED") -> AccentGold
-        normalized.contains("HIGH") || normalized.contains("ELEVATED") || normalized.contains("AGGRESSIVE") -> Color(0xFFFF9F0A)
-        normalized.contains("CRITICAL") || normalized.contains("EXTREME") || normalized.contains("INVALID") -> CryptoRedText
-        else -> TextSecondary
+        normalized.contains("CONSERVATIVE") || normalized.contains("MODERATE") || normalized.contains("AGGRESSIVE") || normalized.contains("BALANCED") -> titanRiskProfileColor(value)
+        else -> titanRiskScoreColorFromLabel(normalized)
     }
 }
 @Composable

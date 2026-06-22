@@ -117,14 +117,14 @@ fun OpportunisticSignalAdornmentSection(
     val consensusConfidence = remember(geminiScore, gptQuantScore, claudeScore) {
         ((geminiScore + gptQuantScore + claudeScore) / 3.0).toInt()
     }
-    val consensusDirection = if (isLong) "BULLISH" else "BEARISH"
+    val consensusDirection = if (isBengali) { if (isLong) "উর্ধ্বমুখী প্রবণতা" else "নিম্নমুখী প্রবণতা" } else { if (isLong) "BULLISH" else "BEARISH" }
     val consensusRiskProfile = conservativeConsensusRiskProfile(
         confidence = consensusConfidence,
         potential = potential
     )
 
     Text(
-        text = if (isBengali) "মাল্টি-এআই কনসেনসাস স্কোর" else "MULTI-AI CONSENSUS ENGINES",
+        text = if (isBengali) "মাল্টি-এআই মডেলের ঐক্যমত ইঞ্জিন" else "MULTI-AI CONSENSUS ENGINES",
         fontSize = 9.8.sp,
         fontWeight = FontWeight.Bold,
         color = Color.White.copy(alpha = 0.92f),
@@ -192,7 +192,7 @@ fun OpportunisticSignalAdornmentSection(
         )
 
         AllocationSizingTile(
-            label = "Balanced",
+            label = "Moderate",
             value = "5.0% Cap",
             accent = themeColor,
             modifier = Modifier.weight(1f)
@@ -217,7 +217,7 @@ internal val LiveRadarPanelDark = Color(0xFF050A13)
 internal val LiveRadarTileDark = Color(0xFF050A13)
 internal val LiveRadarSoftWhite = Color(0xFFF5F5F5)
 internal val LiveRadarInstitutionalGreen = CryptoGreen
-internal val LiveRadarInstitutionalYellow = Color(0xFFFFD60A)
+internal val LiveRadarInstitutionalYellow = TitanGold
 internal val LiveRadarDangerRed = CryptoRedText
 internal enum class LiveRadarGuardSeverity {
     CLEAR,

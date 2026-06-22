@@ -63,6 +63,7 @@ ACCUMULATING| সঞ্চয় হচ্ছে
 Leverage| গৃহীত ঋণ
 Conservative| কম ঝুকি
 Balanced| মধ্যম ঝুঁকি
+Moderate| মধ্যম ঝুঁকি
 Aggressive| বড় ঝুঁকি
 BROKER| দালাল
 YIELD| অর্জিত আয়
@@ -161,3 +162,25 @@ Implementation Notes
 6. Do not use "দাম কমছে" as a replacement for "BEARISH"; use "নিম্নমুখী প্রবণতা".
 7. Do not use "দাম বাড়ছে" as a replacement for "BULLISH"; use "উর্ধ্বমুখী প্রবণতা".
  8. Only those articles that correspond to the current text of the project will be changed, and those that are not on this list but are displaying Bangla in the project, will remain as it is.
+
+Project Risk/Score Color Rules
+
+Positive Score Color:
+85-100 = Green
+75-84 = Gold
+65-74 = Orange
+0-64 = Red
+
+Risk Score Color:
+0-15 = Green / LOW
+16-25 = Gold / MEDIUM
+26-35 = Orange / HIGH
+36-100 = Red / EXTREME
+
+Risk Profile / Position Allocation Posture:
+CONSERVATIVE = Cyan Blue
+MODERATE = Green
+AGGRESSIVE = Gold
+
+Risk Score is a danger scale. Higher risk is worse.
+Risk Profile is an execution posture scale, not raw danger.

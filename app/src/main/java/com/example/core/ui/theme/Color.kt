@@ -18,14 +18,15 @@ object TitanOracleColors {
 
     val CyberCyan = Color(0xFF06B6D4)
     val CyberBlue = Color(0xFF32ADE6)
-    val AccentGold = Color(0xFFF59E0B)
+    val AccentGold = Color(0xFFF5B84B)
     val WarningGold = Color(0xFFFFCC00)
+    val InstitutionalOrange = Color(0xFFFF7A1A)
 
     val SuccessLongGreen = Color(0xFF34C785)
-    val InstitutionalGreen = Color(0xFF34C785)
+    val InstitutionalGreen = SuccessLongGreen
     val DangerShortRed = Color(0xFFF6465D)
     val DangerRedContainer = Color(0x1AF6465D)
-    val DangerRedText = Color(0xFFF6465D)
+    val DangerRedText = DangerShortRed
 
     val TextPrimary = Color(0xFFF3F4F6)
     val TextSecondary = Color(0xFF9CA3AF)
@@ -43,6 +44,7 @@ val TitanCyberCyan = TitanOracleColors.CyberCyan
 val TitanCyberBlue = TitanOracleColors.CyberBlue
 val TitanAccentGold = TitanOracleColors.AccentGold
 val TitanWarningGold = TitanOracleColors.WarningGold
+val TitanInstitutionalOrange = TitanOracleColors.InstitutionalOrange
 val TitanSuccessLongGreen = TitanOracleColors.SuccessLongGreen
 val TitanInstitutionalGreen = TitanOracleColors.InstitutionalGreen
 val TitanDangerShortRed = TitanOracleColors.DangerShortRed

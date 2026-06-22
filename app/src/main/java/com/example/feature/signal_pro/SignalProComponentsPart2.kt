@@ -327,7 +327,7 @@ fun SpotItemCard(coin: SpotSignal, timeframeIndex: Int, viewModel: CryptoViewMod
                         score = coin.oracleScore,
                         confidence = confidence,
                         probability = (confidence - 4).coerceIn(40, 99),
-                        riskGrade = if (coin.oracleScore >= 85) "LOW" else "MEDIUM"
+                        riskGrade = titanRiskScoreLabelFromPositiveScore(coin.oracleScore)
                     ,
                         isBengali = isBengali)
 

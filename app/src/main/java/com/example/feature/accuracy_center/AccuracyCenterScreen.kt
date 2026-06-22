@@ -226,7 +226,7 @@ fun AccuracyCenterScreen(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     StatCard("Best Trade", bestTradeStr, CryptoGreen, modifier = Modifier.weight(1f))
-                    StatCard("Worst Trade", worstTradeStr, CryptoRedText, modifier = Modifier.weight(1f))
+                    StatCard("Worst Trade", worstTradeStr, TitanRed, modifier = Modifier.weight(1f))
                     StatCard("Avg ROI", avgRoiStr, CryptoGreen, modifier = Modifier.weight(1f))
                 }
             }
@@ -332,7 +332,7 @@ fun AccuracyCenterScreen(
                             Text(" ($winsFallback)", color = TextSecondary, fontSize = 14.sp)
                         }
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Box(modifier = Modifier.size(12.dp).clip(CircleShape).background(CryptoRedText))
+                            Box(modifier = Modifier.size(12.dp).clip(CircleShape).background(TitanRed))
                             Spacer(modifier = Modifier.width(8.dp))
                             Text("Loss", color = TextSecondary, fontSize = 14.sp)
                             Spacer(modifier = Modifier.width(16.dp))
@@ -391,7 +391,7 @@ fun AccuracyCenterScreen(
                 ) {
                     Text(
                         text = "Reset Database",
-                        color = Color(0xFFFF5252),
+                        color = TitanRed,
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -407,7 +407,7 @@ fun AccuracyCenterScreen(
                             confirmButton = {
                                 Button(
                                     onClick = { confirmStep = 1 },
-                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF5252))
+                                    colors = ButtonDefaults.buttonColors(containerColor = TitanRed)
                                 ) {
                                     Text("Confirm Wipe", color = Color.White, fontWeight = FontWeight.Bold)
                                 }
@@ -432,7 +432,7 @@ fun AccuracyCenterScreen(
                                         showResetDialog = false
                                         confirmStep = 0
                                     },
-                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF5252))
+                                    colors = ButtonDefaults.buttonColors(containerColor = TitanRed)
                                 ) {
                                     Text("Execute Reset", color = Color.White, fontWeight = FontWeight.Bold)
                                 }

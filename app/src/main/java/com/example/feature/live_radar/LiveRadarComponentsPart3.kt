@@ -184,51 +184,31 @@ internal fun AllocationSizingTile(
         )
     }
 }
-internal fun allocationProfileColor(label: String): Color {
-    val normalized = label.uppercase()
-    return when {
-        normalized.contains("CONSERVATIVE") -> CryptoCyan
-        normalized.contains("BALANCED") -> LiveRadarInstitutionalGreen
-        normalized.contains("AGGRESSIVE") || normalized.contains("MAX") -> LiveRadarInstitutionalYellow
-        normalized.contains("CRITICAL") || normalized.contains("EXTREME") || normalized.contains("HIGH") -> LiveRadarDangerRed
-        normalized.contains("LOW") -> LiveRadarInstitutionalGreen
-        normalized.contains("MEDIUM") || normalized.contains("MODERATE") -> LiveRadarInstitutionalYellow
-        else -> LiveRadarInstitutionalYellow
-    }
-}
+internal fun allocationProfileColor(label: String): Color = titanAllocationProfileColor(label)
 
 internal fun probabilityScoreColor(rawValue: String): Color {
     val score = rawValue.filter { it.isDigit() }.toIntOrNull() ?: return LiveRadarSoftWhite
-    return when {
-        score <= 70 -> LiveRadarDangerRed
-        score <= 80 -> LiveRadarInstitutionalYellow
-        else -> LiveRadarInstitutionalGreen
-    }
+    return titanPositiveScoreColor(score)
 }
 internal fun conservativeConsensusRiskProfile(
     confidence: Int,
     potential: Double
 ): String {
     return when {
-        confidence >= 88 && potential <= 12.0 -> "LOW"
-        confidence >= 76 && potential <= 18.0 -> "MEDIUM"
-        else -> "HIGH"
+        confidence >= 88 && potential <= 12.0 -> "AGGRESSIVE"
+        confidence >= 76 && potential <= 18.0 -> "MODERATE"
+        else -> "CONSERVATIVE"
     }
 }
 internal fun directionColor(direction: String): Color {
-    return when (direction.uppercase()) {
-        "BULLISH", "LONG" -> LiveRadarInstitutionalGreen
-        "BEARISH", "SHORT" -> LiveRadarDangerRed
+    val normalized = direction.uppercase()
+    return when {
+        normalized.contains("BULLISH") || normalized.contains("LONG") || normalized.contains("উর্ধ্বমুখী") -> LiveRadarInstitutionalGreen
+        normalized.contains("BEARISH") || normalized.contains("SHORT") || normalized.contains("নিম্নমুখী") -> LiveRadarDangerRed
         else -> LiveRadarInstitutionalYellow
     }
 }
-internal fun riskProfileColor(riskProfile: String): Color {
-    return when (riskProfile.uppercase()) {
-        "LOW" -> LiveRadarInstitutionalGreen
-        "MEDIUM" -> LiveRadarInstitutionalYellow
-        else -> LiveRadarDangerRed
-    }
-}
+internal fun riskProfileColor(riskProfile: String): Color = titanRiskProfileColor(riskProfile)
 internal fun buildLiveRadarBetaGuardUiState(
     symbol: String,
     ecosystemLeaderName: String,

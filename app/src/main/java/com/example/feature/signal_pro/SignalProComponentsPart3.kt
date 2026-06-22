@@ -149,7 +149,7 @@ fun StartTradeFlow(
     var setupSl2 by remember(mission.id, mission.targets, mission.stopLoss) { mutableStateOf("") }
     var setupLeverage by remember(mission.id, mission.marketType) { mutableStateOf(defaultLeverage) }
     var setupAllocation by remember(mission.id) { mutableStateOf("") }
-    var setupRiskProfile by remember(mission.id) { mutableStateOf(if (highConfidence) "BALANCED" else "CONSERVATIVE") }
+    var setupRiskProfile by remember(mission.id) { mutableStateOf(if (highConfidence) "MODERATE" else "CONSERVATIVE") }
     var setupRemark by remember(mission.id) { mutableStateOf("AUTO-FILLED FROM SIGNAL PRO") }
 
     fun nullableSetupValue(value: String): String? = value.trim().takeIf { it.isNotBlank() }

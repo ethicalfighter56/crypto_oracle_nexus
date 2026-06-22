@@ -32,9 +32,7 @@ import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import kotlin.math.absoluteValue
 
-import com.example.ui.theme.DarkBackground
-import com.example.ui.theme.CryptoGreen
-import com.example.ui.theme.CryptoRedText
+import com.example.ui.theme.*
 
 // Terminal Colors - Institutional Grade
 
@@ -48,8 +46,8 @@ internal val T_TextSecondary = Color(0xFF8E8E93)
 internal val T_TextMuted = Color(0xFF636366)
 internal val T_Green = CryptoGreen
 internal val T_Red = CryptoRedText
-internal val T_Cyan = Color(0xFF32ADE6)
-internal val T_Gold = Color(0xFFFFCC00)
+internal val T_Cyan = CryptoCyan
+internal val T_Gold = TitanGold
 internal val mcTimeframeDurationMinutes = mapOf(
     "1M" to 1,
     "5M" to 5,
@@ -143,11 +141,10 @@ internal fun mcSetupModeColor(value: String): Color {
 internal fun mcRiskProfileColor(value: String?): Color {
     val normalized = value?.uppercase().orEmpty()
     return when {
-        normalized.contains("CONSERVATIVE") || normalized.contains("SAFE") || normalized.contains("LOW") -> T_Cyan
-        normalized.contains("BALANCED") || normalized.contains("MEDIUM") || normalized.contains("MODERATE") -> T_Green
-        normalized.contains("AGGRESSIVE") || normalized.contains("ELEVATED") || normalized.contains("CUSTOM") -> T_Gold
-        normalized.contains("HIGH") || normalized.contains("CRITICAL") || normalized.contains("EXTREME") || normalized.contains("INVALID") -> T_Red
-        normalized.contains("DEFAULT") -> T_Cyan
+        normalized.contains("CONSERVATIVE") || normalized.contains("SAFE") || normalized.contains("DEFAULT") -> T_Cyan
+        normalized.contains("MODERATE") || normalized.contains("BALANCED") -> T_Green
+        normalized.contains("AGGRESSIVE") || normalized.contains("CUSTOM") -> T_Gold
+        normalized.contains("LOW") || normalized.contains("MEDIUM") || normalized.contains("HIGH") || normalized.contains("EXTREME") || normalized.contains("CRITICAL") || normalized.contains("INVALID") -> titanRiskScoreColorFromLabel(normalized)
         else -> T_TextPrimary
     }
 }
@@ -447,7 +444,7 @@ fun MissionSetupSummary(isBengali: Boolean) {
                 SetupRow("SOURCE", "SIGNAL PRO", T_TextPrimary)
             }
             Column(modifier = Modifier.weight(1f)) {
-                SetupRow("RISK PROFILE", "STANDARD", T_Gold)
+                SetupRow("RISK PROFILE", "MODERATE", T_Green)
                 Spacer(modifier = Modifier.height(8.dp))
                 SetupRow("COPILOT MODE", "ALERT-ONLY", T_Cyan)
                 Spacer(modifier = Modifier.height(8.dp))
