@@ -70,7 +70,10 @@ fun OracleFeedScreen(
     val livePrices by viewModel.livePrices.collectAsState()
 
     var activeTimeframe by remember { mutableStateOf("15M") }
+    var activeTab by remember { mutableStateOf("TERMINAL") }
     var feedState by remember { mutableStateOf("LIVE") } // LIVE, CACHED, LOCAL, SYNCING
+
+    val tabs = listOf("TERMINAL", "COCKPIT", "MOVERS", "ALERTS", "SYSTEM")
 
     LazyColumn(
         modifier = modifier
@@ -83,43 +86,111 @@ fun OracleFeedScreen(
         }
 
         item {
-            SourceProvenanceRow()
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 12.dp, vertical = 8.dp)
+                    .horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                tabs.forEach { tab ->
+                    val isActive = tab == activeTab
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(4.dp))
+                            .background(if (isActive) T_Cyan.copy(alpha = 0.2f) else T_Surface)
+                            .border(0.5.dp, if (isActive) T_Cyan else T_BorderMedium, RoundedCornerShape(4.dp))
+                            .clickable { activeTab = tab }
+                            .padding(horizontal = 12.dp, vertical = 6.dp)
+                    ) {
+                        Text(
+                            text = tab,
+                            color = if (isActive) T_Cyan else T_TextSecondary,
+                            fontSize = 11.sp,
+                            fontFamily = FontFamily.Monospace,
+                            fontWeight = if (isActive) FontWeight.Bold else FontWeight.Normal
+                        )
+                    }
+                }
+            }
         }
 
-        item {
-            Spacer(modifier = Modifier.height(12.dp))
-            SectionHeader("MARKET REGIME")
-            MarketRegimePanel()
+        if (activeTab == "TERMINAL") {
+            item {
+                Spacer(modifier = Modifier.height(12.dp))
+                SectionHeader("ORACLE REFERENCE INDEX (REAL-TIME)")
+                OracleReferenceIndexPanel()
+            }
+            item {
+                Spacer(modifier = Modifier.height(12.dp))
+                SectionHeader("MARKET DASHBOARD (GLOBAL BINANCE SYNC)")
+                RealTimeMarketPricePanel()
+            }
+            item {
+                Spacer(modifier = Modifier.height(12.dp))
+                SectionHeader("ORACLE ANALYTICAL INSIGHTS")
+                OracleAnalyticalInsightsPanel()
+            }
+            item {
+                Spacer(modifier = Modifier.height(12.dp))
+                SectionHeader("MARKET FEED & INTELLIGENCE")
+                MarketFeedIntelligencePanel()
+            }
+            item {
+                Spacer(modifier = Modifier.height(12.dp))
+                SectionHeader("FX OPEN-MARKET INDEX")
+                FxOpenMarketIndexPanel()
+            }
         }
 
-        item {
-            Spacer(modifier = Modifier.height(12.dp))
-            SectionHeader("GLOBAL MARKET SNAPSHOT")
-            GlobalMarketSnapshotPanel()
+        if (activeTab == "COCKPIT") {
+            item {
+                Spacer(modifier = Modifier.height(8.dp))
+                CockpitStatusRow(feedState)
+            }
+            item {
+                Spacer(modifier = Modifier.height(12.dp))
+                SourceProvenanceRow()
+            }
+            item {
+                Spacer(modifier = Modifier.height(12.dp))
+                SectionHeader("MARKET REGIME")
+                MarketRegimePanel()
+            }
+            item {
+                Spacer(modifier = Modifier.height(12.dp))
+                SectionHeader("GLOBAL MARKET SNAPSHOT")
+                GlobalMarketSnapshotPanel()
+            }
         }
 
-        item {
-            Spacer(modifier = Modifier.height(12.dp))
-            SectionHeader("TIMEFRAME")
-            TimeframeControlSurface(activeTimeframe) { activeTimeframe = it }
+        if (activeTab == "MOVERS") {
+            item {
+                Spacer(modifier = Modifier.height(12.dp))
+                SectionHeader("TIMEFRAME")
+                TimeframeControlSurface(activeTimeframe) { activeTimeframe = it }
+            }
+            item {
+                Spacer(modifier = Modifier.height(12.dp))
+                SectionHeader("TOP MOVERS / MARKET FEED")
+                TopAssetFeedList(livePrices)
+            }
         }
 
-        item {
-            Spacer(modifier = Modifier.height(12.dp))
-            SectionHeader("TOP MOVERS / MARKET FEED")
-            TopAssetFeedList(livePrices)
+        if (activeTab == "ALERTS") {
+            item {
+                Spacer(modifier = Modifier.height(12.dp))
+                SectionHeader("ALERTS & WATCHLIST")
+                AlertsWatchlistPreviewPanel()
+            }
         }
 
-        item {
-            Spacer(modifier = Modifier.height(12.dp))
-            SectionHeader("ALERTS & WATCHLIST")
-            AlertsWatchlistPreviewPanel()
-        }
-        
-        item {
-            Spacer(modifier = Modifier.height(12.dp))
-            SectionHeader("SYSTEM STATES (UI TEST)")
-            SystemStatesPreview()
+        if (activeTab == "SYSTEM") {
+            item {
+                Spacer(modifier = Modifier.height(12.dp))
+                SectionHeader("SYSTEM STATES (UI TEST)")
+                SystemStatesPreview()
+            }
         }
     }
 }
@@ -154,7 +225,7 @@ fun OracleFeedHeaderBlock(viewModel: CryptoViewModel, feedState: String) {
                 Spacer(modifier = Modifier.width(6.dp))
                 Column {
                     Text(
-                        text = "TITAN ORACLE",
+                        text = "NEXUS TERMINAL v3.1",
                         color = T_TextPrimary,
                         fontSize = 14.sp,
                         fontFamily = FontFamily.Monospace,
@@ -181,35 +252,14 @@ fun OracleFeedHeaderBlock(viewModel: CryptoViewModel, feedState: String) {
         ) {
             Column {
                 Text(
-                    text = "DATA STATE",
+                    text = "DATA STREAM",
                     color = T_TextMuted,
                     fontSize = 9.sp,
                     fontFamily = FontFamily.Monospace,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = feedState,
-                    color = when (feedState) {
-                        "LIVE" -> T_Green
-                        "SYNCING" -> T_Gold
-                        "CACHED" -> T_Cyan
-                        else -> T_Red
-                    },
-                    fontSize = 11.sp,
-                    fontFamily = FontFamily.Monospace,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(
-                    text = "FRESHNESS",
-                    color = T_TextMuted,
-                    fontSize = 9.sp,
-                    fontFamily = FontFamily.Monospace,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = "12s",
+                    text = "BINANCE WSS : ACTIVE",
                     color = T_Green,
                     fontSize = 11.sp,
                     fontFamily = FontFamily.Monospace,
@@ -218,20 +268,87 @@ fun OracleFeedHeaderBlock(viewModel: CryptoViewModel, feedState: String) {
             }
             Column(horizontalAlignment = Alignment.End) {
                 Text(
-                    text = "GLOBAL MODE",
+                    text = "INTELLIGENCE CORE",
                     color = T_TextMuted,
                     fontSize = 9.sp,
                     fontFamily = FontFamily.Monospace,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = "Risk-On",
-                    color = T_Gold,
+                    text = "GEMINI PRO : ONLINE",
+                    color = T_Cyan,
                     fontSize = 11.sp,
                     fontFamily = FontFamily.Monospace,
                     fontWeight = FontWeight.Bold
                 )
             }
+        }
+    }
+}
+
+@Composable
+fun CockpitStatusRow(feedState: String) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp, vertical = 8.dp)
+            .border(0.5.dp, T_BorderMedium, RoundedCornerShape(4.dp))
+            .background(T_Surface)
+            .padding(12.dp),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Column {
+            Text(
+                text = "DATA STATE",
+                color = T_TextMuted,
+                fontSize = 9.sp,
+                fontFamily = FontFamily.Monospace,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = feedState,
+                color = when (feedState) {
+                    "LIVE" -> T_Green
+                    "SYNCING" -> T_Gold
+                    "CACHED" -> T_Cyan
+                    else -> T_Red
+                },
+                fontSize = 11.sp,
+                fontFamily = FontFamily.Monospace,
+                fontWeight = FontWeight.Bold
+            )
+        }
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                text = "FRESHNESS",
+                color = T_TextMuted,
+                fontSize = 9.sp,
+                fontFamily = FontFamily.Monospace,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = "12s",
+                color = T_Green,
+                fontSize = 11.sp,
+                fontFamily = FontFamily.Monospace,
+                fontWeight = FontWeight.Bold
+            )
+        }
+        Column(horizontalAlignment = Alignment.End) {
+            Text(
+                text = "GLOBAL MODE",
+                color = T_TextMuted,
+                fontSize = 9.sp,
+                fontFamily = FontFamily.Monospace,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = "Risk-On",
+                color = T_Gold,
+                fontSize = 11.sp,
+                fontFamily = FontFamily.Monospace,
+                fontWeight = FontWeight.Bold
+            )
         }
     }
 }
@@ -372,7 +489,7 @@ fun SnapshotItem(label: String, value: String) {
 @Composable
 fun TimeframeControlSurface(active: String, onSelect: (String) -> Unit) {
     val scrollState = rememberScrollState()
-    val timeframes = listOf("1M", "5M", "15M", "30M", "1H", "4H", "24H", "3D", "7D")
+    val timeframes = listOf("1M", "5M", "15M", "30M", "45M", "1H", "4H", "24H")
     
     Row(
         modifier = Modifier
@@ -564,12 +681,9 @@ fun AlertsWatchlistPreviewPanel() {
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 12.dp, vertical = 8.dp)
-            .border(0.5.dp, T_BorderMedium, RoundedCornerShape(4.dp))
-            .background(T_Surface)
-            .padding(12.dp)
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().border(0.5.dp, T_BorderMedium, RoundedCornerShape(4.dp)).background(T_Surface).padding(12.dp),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Column {
@@ -618,5 +732,200 @@ fun StateBox(message: String, color: Color) {
             fontFamily = FontFamily.Monospace,
             fontWeight = FontWeight.Medium
         )
+    }
+}
+
+@Composable
+fun OracleReferenceIndexPanel() {
+    Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp)) {
+        Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth().padding(bottom = 6.dp)) {
+            Text("Source: Simulated", color = T_TextMuted, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
+            Text("Last update: 12s", color = T_TextMuted, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
+        }
+        val indexList = listOf(
+            Pair("BTC", "+2.4%"),
+            Pair("ETH", "+1.8%"),
+            Pair("XRP", "-2.1%"),
+            Pair("SOL", "-0.5%"),
+            Pair("ADA", "+1.1%")
+        )
+        // Table Header
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text("TICKER", color = T_TextMuted, fontSize = 9.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+            Text("PRICE", color = T_TextMuted, fontSize = 9.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f), textAlign = TextAlign.End)
+            Text("24H %", color = T_TextMuted, fontSize = 9.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold, modifier = Modifier.weight(0.5f), textAlign = TextAlign.End)
+        }
+        
+        indexList.forEach { (name, change) ->
+            val priceStr = when(name) {
+                "BTC" -> "$67,420.50"; "ETH" -> "$3,540.20"; "XRP" -> "$0.52"; "SOL" -> "$145.30"; "ADA" -> "$0.45"
+                else -> "$0.00"
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth().border(0.5.dp, T_BorderMedium, RoundedCornerShape(4.dp)).background(T_Surface).padding(horizontal = 12.dp, vertical = 10.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(name, color = T_TextPrimary, fontSize = 11.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                Text(priceStr, color = T_TextPrimary, fontSize = 11.sp, fontFamily = FontFamily.Monospace, style = androidx.compose.ui.text.TextStyle(fontFeatureSettings = "tnum"), modifier = Modifier.weight(1f), textAlign = TextAlign.End)
+                Text(change, color = if (change.startsWith("+")) T_Green else T_Red, fontSize = 11.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold, style = androidx.compose.ui.text.TextStyle(fontFeatureSettings = "tnum"), modifier = Modifier.weight(0.5f), textAlign = TextAlign.End)
+            }
+            Spacer(modifier = Modifier.height(4.dp))
+        }
+    }
+}
+
+@Composable
+fun RealTimeMarketPricePanel() {
+    Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp)) {
+        Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth().padding(bottom = 6.dp)) {
+            Text("Market data: Mock", color = T_TextMuted, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
+            Text("Feed status: Stable", color = T_TextMuted, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
+        }
+        // Table Header
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text("ASSET", color = T_TextMuted, fontSize = 9.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+            Text("LAST", color = T_TextMuted, fontSize = 9.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f), textAlign = TextAlign.End)
+            Text("CHG", color = T_TextMuted, fontSize = 9.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold, modifier = Modifier.weight(0.5f), textAlign = TextAlign.End)
+        }
+        
+        val top10 = listOf(
+            Triple("BTC", "$67,420.50", "+2.4%"), Triple("ETH", "$3,540.20", "+1.8%"), Triple("SOL", "$145.30", "-0.5%"), Triple("BNB", "$590.10", "+0.2%"), Triple("XRP", "$0.52", "-2.1%"),
+            Triple("DOGE", "$0.12", "+12.5%"), Triple("ADA", "$0.45", "+1.1%"), Triple("AVAX", "$35.20", "-1.4%"), Triple("LINK", "$14.10", "+3.2%"), Triple("TON", "$6.80", "+0.8%")
+        )
+        top10.forEach { (coin, price, chg) ->
+            Row(
+                modifier = Modifier.fillMaxWidth().border(0.5.dp, T_BorderMedium, RoundedCornerShape(4.dp)).background(T_Surface).padding(horizontal = 12.dp, vertical = 10.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(coin, color = T_TextPrimary, fontSize = 11.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                Text(price, color = T_TextPrimary, fontSize = 11.sp, fontFamily = FontFamily.Monospace, style = androidx.compose.ui.text.TextStyle(fontFeatureSettings = "tnum"), modifier = Modifier.weight(1f), textAlign = TextAlign.End)
+                Text(chg, color = if (chg.startsWith("+")) T_Green else T_Red, fontSize = 11.sp, fontFamily = FontFamily.Monospace, style = androidx.compose.ui.text.TextStyle(fontFeatureSettings = "tnum"), modifier = Modifier.weight(0.5f), textAlign = TextAlign.End)
+            }
+            Spacer(modifier = Modifier.height(4.dp))
+        }
+    }
+}
+
+@Composable
+fun OracleAnalyticalInsightsPanel() {
+    Column(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp).border(0.5.dp, T_BorderMedium, RoundedCornerShape(4.dp)).background(T_Surface).padding(12.dp)
+    ) {
+        Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth().padding(bottom = 6.dp)) {
+            Text("Source: Cached Model", color = T_TextMuted, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
+            Text("Last update: 45s", color = T_TextMuted, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
+        }
+        val insights = listOf(
+            Triple("SOL", "NEXT 48 HOURS", "LONG" to "Target: \$165.00. Strong bullish divergence observed on high timeframe indices. Liquidity inflows suggest continued momentum with moderate risk of short-term pullback."),
+            Triple("XRP", "NEXT 24 HOURS", "SHORT" to "Target: \$0.48. Rejection at key resistance with declining volume. Orderbook shows heavy sell walls forming above current levels."),
+            Triple("ADA", "NEXT 7 DAYS", "LONG" to "Target: \$0.55. Accumulation phase detected. On-chain metrics indicate growing institutional interest and network activity increase.")
+        )
+        
+        insights.forEach { (coin, timeframe, details) ->
+            val (direction, text) = details
+            Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(coin, color = T_TextPrimary, fontSize = 11.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text("— $timeframe —", color = T_TextMuted, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(direction, color = if (direction == "LONG") T_Green else T_Red, fontSize = 10.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
+                }
+            }
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(text, color = T_TextSecondary, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
+            Spacer(modifier = Modifier.height(12.dp))
+        }
+    }
+}
+
+@Composable
+fun MarketFeedIntelligencePanel() {
+    Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp)) {
+        Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth().padding(bottom = 6.dp)) {
+            Text("Source: Simulated Feed", color = T_TextMuted, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
+            Text("Feed status: Stable", color = T_TextMuted, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
+        }
+        val articles = listOf(
+            Triple("GAS TRACKER AI", "45M AGO", "NEUTRAL" to "ETH Gas Fees Stabilizing\nAverage gas fees have dropped below 15 gwei, stabilizing network transaction costs for smart contracts."),
+            Triple("ORACLE FINANCIALS", "3H AGO", "BULLISH" to "Institutional Inflows Increase\nBitcoin ETFs show consecutive days of positive inflows, indicating strong institutional demand holding support levels."),
+            Triple("LEGAL LEDGER", "2H AGO", "BEARISH" to "Regulatory Uncertainty in EU\nNew statements from European regulators suggest stricter compliance requirements for DeFi protocols coming next month.")
+        )
+        
+        articles.forEach { (source, age, details) ->
+            val (status, content) = details
+            val lines = content.split("\n")
+            val headline = lines[0]
+            val paragraph = lines.getOrElse(1) { "" }
+            
+            Column(
+                modifier = Modifier.fillMaxWidth().border(0.5.dp, T_BorderMedium, RoundedCornerShape(4.dp)).background(T_Surface).padding(12.dp)
+            ) {
+                Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(source, color = T_TextPrimary, fontSize = 9.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(age, color = T_TextMuted, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
+                    }
+                    val color = when(status) { "BULLISH" -> T_Green; "BEARISH" -> T_Red; else -> T_Cyan }
+                    Box(modifier = Modifier.background(color.copy(alpha=0.1f), RoundedCornerShape(2.dp)).border(0.5.dp, color, RoundedCornerShape(2.dp)).padding(horizontal = 4.dp, vertical = 2.dp)) {
+                        Text(status, color = color, fontSize = 8.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
+                    }
+                }
+                Spacer(modifier = Modifier.height(6.dp))
+                Text(headline, color = T_TextPrimary, fontSize = 11.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(paragraph, color = T_TextSecondary, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+        }
+    }
+}
+
+@Composable
+fun FxOpenMarketIndexPanel() {
+    Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp)) {
+        Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth().padding(bottom = 6.dp)) {
+            Text("Market data: Mock", color = T_TextMuted, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
+            Text("Last update: 12s", color = T_TextMuted, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
+        }
+        
+        // Table Header
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text("CCY", color = T_TextMuted, fontSize = 9.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold, modifier = Modifier.weight(0.5f))
+            Text("CURRENCY", color = T_TextMuted, fontSize = 9.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1.5f))
+            Text("RATE (BDT)", color = T_TextMuted, fontSize = 9.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f), textAlign = TextAlign.End)
+        }
+        
+        val fxList = listOf(
+            Triple("USD", "US Dollar", "118.42"),
+            Triple("EUR", "Euro", "128.65"),
+            Triple("GBP", "British Pound", "151.10"),
+            Triple("SAR", "Saudi Riyal", "31.58"),
+            Triple("AED", "UAE Dirham", "32.24")
+        )
+        fxList.forEach { (code, name, rate) ->
+            Row(
+                modifier = Modifier.fillMaxWidth().border(0.5.dp, T_BorderMedium, RoundedCornerShape(4.dp)).background(T_Surface).padding(horizontal = 12.dp, vertical = 10.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(code, color = T_TextPrimary, fontSize = 11.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold, modifier = Modifier.weight(0.5f))
+                Text(name, color = T_TextSecondary, fontSize = 11.sp, fontFamily = FontFamily.Monospace, modifier = Modifier.weight(1.5f))
+                Text(rate, color = T_TextPrimary, fontSize = 11.sp, fontFamily = FontFamily.Monospace, style = androidx.compose.ui.text.TextStyle(fontFeatureSettings = "tnum"), modifier = Modifier.weight(1f), textAlign = TextAlign.End)
+            }
+            Spacer(modifier = Modifier.height(4.dp))
+        }
     }
 }
