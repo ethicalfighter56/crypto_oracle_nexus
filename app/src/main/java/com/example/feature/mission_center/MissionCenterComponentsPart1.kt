@@ -462,6 +462,15 @@ fun SetupRow(label: String, value: String, valueColor: Color) {
 }
 @Composable
 fun HeaderSummaryDashboard(viewModel: CryptoViewModel, isBengali: Boolean) {
+    val missions by viewModel.activeMissions.collectAsState()
+    val history by viewModel.missionHistory.collectAsState()
+    
+    val activeCount = missions.size
+    val pendingCount = missions.count { it.setupMode == "Pending Manual Setup" || it.setupMode == null }
+    val protectedCount = missions.count { mcMissionRiskState(it) == "WARNING" || mcMissionRiskState(it) == "CRITICAL" }
+    val invalidCount = 0 // In this implementation, invalid missions are blocked or resolved before active state
+    val completedCount = history.size
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -479,27 +488,27 @@ fun HeaderSummaryDashboard(viewModel: CryptoViewModel, isBengali: Boolean) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text("ACTIVE", color = T_TextMuted, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
                 Spacer(modifier = Modifier.height(2.dp))
-                Text("2", color = T_Cyan, fontSize = 14.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
+                Text("$activeCount", color = T_Cyan, fontSize = 14.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
             }
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text("PENDING", color = T_TextMuted, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
                 Spacer(modifier = Modifier.height(2.dp))
-                Text("1", color = T_TextPrimary, fontSize = 14.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
+                Text("$pendingCount", color = T_TextPrimary, fontSize = 14.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
             }
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text("PROTECTED", color = T_TextMuted, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
                 Spacer(modifier = Modifier.height(2.dp))
-                Text("1", color = T_Gold, fontSize = 14.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
+                Text("$protectedCount", color = T_Gold, fontSize = 14.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
             }
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text("INVALID", color = T_TextMuted, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
                 Spacer(modifier = Modifier.height(2.dp))
-                Text("0", color = T_Red, fontSize = 14.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
+                Text("$invalidCount", color = T_Red, fontSize = 14.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
             }
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text("COMPLETED", color = T_TextMuted, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
                 Spacer(modifier = Modifier.height(2.dp))
-                Text("0", color = T_Green, fontSize = 14.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
+                Text("$completedCount", color = T_Green, fontSize = 14.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
             }
         }
     }
