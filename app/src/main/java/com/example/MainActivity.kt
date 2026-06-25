@@ -76,7 +76,7 @@ class MainActivity : ComponentActivity() {
                                     fontWeight = FontWeight.Bold,
                                     maxLines = 1,
                                     softWrap = false,
-                                    overflow = TextOverflow.Visible
+                                    overflow = TextOverflow.Ellipsis
                                 ) 
                             },
                             colors = NavigationBarItemDefaults.colors(
@@ -100,7 +100,7 @@ class MainActivity : ComponentActivity() {
                                     fontWeight = FontWeight.Bold,
                                     maxLines = 1,
                                     softWrap = false,
-                                    overflow = TextOverflow.Visible
+                                    overflow = TextOverflow.Ellipsis
                                 ) 
                             },
                             colors = NavigationBarItemDefaults.colors(
@@ -134,7 +134,7 @@ class MainActivity : ComponentActivity() {
                                     fontWeight = FontWeight.Bold,
                                     maxLines = 1,
                                     softWrap = false,
-                                    overflow = TextOverflow.Visible
+                                    overflow = TextOverflow.Ellipsis
                                 ) 
                             },
                             colors = NavigationBarItemDefaults.colors(
@@ -158,7 +158,7 @@ class MainActivity : ComponentActivity() {
                                     fontWeight = FontWeight.Bold,
                                     maxLines = 1,
                                     softWrap = false,
-                                    overflow = TextOverflow.Visible
+                                    overflow = TextOverflow.Ellipsis
                                 ) 
                             },
                             colors = NavigationBarItemDefaults.colors(
@@ -182,7 +182,7 @@ class MainActivity : ComponentActivity() {
                                     fontWeight = FontWeight.Bold,
                                     maxLines = 1,
                                     softWrap = false,
-                                    overflow = TextOverflow.Visible
+                                    overflow = TextOverflow.Ellipsis
                                 ) 
                             },
                             colors = NavigationBarItemDefaults.colors(

@@ -136,21 +136,21 @@ fun OpportunisticSignalAdornmentSection(
         horizontalArrangement = Arrangement.spacedBy(7.dp)
     ) {
         ConsensusEngineTile(
-            name = "Gemini Pro AI",
+            name = "Oracle Quant [LS]",
             accent = themeColor,
             score = "$geminiScore/100",
             modifier = Modifier.weight(1f)
         )
 
         ConsensusEngineTile(
-            name = "GPT-4Q Quant",
+            name = "Sentiment [LS]",
             accent = themeColor,
             score = "$gptQuantScore/100",
             modifier = Modifier.weight(1f)
         )
 
         ConsensusEngineTile(
-            name = "Claude Sentient",
+            name = "Structure [LS]",
             accent = themeColor,
             score = "$claudeScore/100",
             modifier = Modifier.weight(1f)

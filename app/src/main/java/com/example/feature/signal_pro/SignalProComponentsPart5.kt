@@ -446,7 +446,7 @@ fun MultiAiConsensusModule(
         if (isLong) "BULLISH" else "BEARISH"
     }
 
-    val riskText = titanRiskProfileForPositiveScore(consensusScore)
+    val consensusBias = titanConsensusBiasForPositiveScore(consensusScore)
 
     Card(
         colors = CardDefaults.cardColors(containerColor = Color(0xFF030712)),
@@ -484,9 +484,9 @@ fun MultiAiConsensusModule(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-                AiScoreTile("Gemini Pro [Mock]", geminiScore, Modifier.weight(1f))
-                AiScoreTile("GPT-4o [Mock]", gptScore, Modifier.weight(1f))
-                AiScoreTile("Claude [Mock]", claudeScore, Modifier.weight(1f))
+                AiScoreTile("Oracle Quant [LS]", geminiScore, Modifier.weight(1f))
+                AiScoreTile("Sentiment [LS]", gptScore, Modifier.weight(1f))
+                AiScoreTile("Structure [LS]", claudeScore, Modifier.weight(1f))
             }
 
             Spacer(modifier = Modifier.height(5.dp))
@@ -524,8 +524,8 @@ fun MultiAiConsensusModule(
 
                 ConsensusMetricColumn(
                     label = if (isBengali) "কনসেনসাস বায়াস" else "CONSENSUS BIAS",
-                    value = riskText,
-                    valueColor = signalProfileRiskColor(riskText),
+                    value = consensusBias,
+                    valueColor = signalProfileRiskColor(consensusBias),
                     modifier = Modifier.weight(1.0f)
                 )
             }
@@ -569,21 +569,18 @@ fun RiskManagementModule(
     invalidationPrice: Double = 0.0,
     isLong: Boolean = true
 ) {
-    val calcStopLoss = if (isLong) {
-        if (invalidationPrice > 0.0) invalidationPrice else currentPrice * (1.0 - (priceChangePct.absoluteValue * 0.4) / 100.0)
-    } else {
-        if (invalidationPrice > 0.0) invalidationPrice else currentPrice * (1.0 + (priceChangePct.absoluteValue * 0.4) / 100.0)
-    }
-
-    val riskRewardRatio = if (isLong) {
-        val targetMove = projectedPrice - currentPrice
-        val stopMove = currentPrice - calcStopLoss
-        if (stopMove != 0.0) (targetMove / stopMove).absoluteValue else 2.5
-    } else {
-        val targetMove = currentPrice - projectedPrice
-        val stopMove = calcStopLoss - currentPrice
-        if (stopMove != 0.0) (targetMove / stopMove).absoluteValue else 2.5
-    }
+    val calcStopLoss = signalProValidatedStopLoss(
+        currentPrice = currentPrice,
+        priceChangePct = priceChangePct,
+        invalidationPrice = invalidationPrice,
+        isLong = isLong
+    )
+    val directionValid = signalProTradeDirectionValid(currentPrice, projectedPrice, calcStopLoss, isLong)
+    val riskRewardRatio = signalProRiskRewardRatio(currentPrice, projectedPrice, calcStopLoss)
+    val rrValid = signalProRiskRewardValid(currentPrice, projectedPrice, calcStopLoss, isLong)
+    val slDistancePct = signalProStopLossDistancePct(currentPrice, calcStopLoss)
+    val slSanity = signalProStopLossSanityLabel(slDistancePct)
+    val slSanityColor = signalProStopLossSanityColor(slDistancePct)
 
     val tp1 = currentPrice + (projectedPrice - currentPrice) * 0.25
     val tp2 = currentPrice + (projectedPrice - currentPrice) * 0.50
@@ -606,16 +603,16 @@ fun RiskManagementModule(
 
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Column {
-                    Text(text = "STOP LOSS (ATR AWARE)", fontSize = 9.sp, color = CryptoRedText)
+                    Text(text = if (directionValid) "STOP LOSS (ATR AWARE)" else "STOP LOSS (INVALID)", fontSize = 9.sp, color = CryptoRedText)
                     Text(text = formatPrice(calcStopLoss), fontFamily = FontFamily.Monospace, fontSize = 13.sp, fontWeight = FontWeight.Bold, color = CryptoRedText)
-                    Text(text = "SL Distance: ~${String.format("%.1f", priceChangePct.absoluteValue * 0.4)}%", fontSize = 9.sp, color = TextMuted)
-                    Text(text = "Sanity State: OK (Standard)", fontSize = 9.sp, color = CryptoGreen)
+                    Text(text = "SL Distance: ${String.format("%.1f", slDistancePct)}%", fontSize = 9.sp, color = TextMuted)
+                    Text(text = "Sanity State: $slSanity", fontSize = 9.sp, color = slSanityColor)
                 }
                 Column(horizontalAlignment = Alignment.End) {
                     Text(text = "RISK REWARD RATIO", fontSize = 9.sp, color = TextSecondary)
-                    Text(text = String.format("1 : %.2f", riskRewardRatio), fontFamily = FontFamily.Monospace, fontSize = 13.sp, fontWeight = FontWeight.Black, color = AccentGold)
-                    Text(text = "RR Validation: PASS", fontSize = 9.sp, color = CryptoGreen)
-                    Text(text = "Risk Path: Asymmetric", fontSize = 9.sp, color = TextMuted)
+                    Text(text = if (rrValid) String.format("1 : %.2f", riskRewardRatio) else "INVALID", fontFamily = FontFamily.Monospace, fontSize = 13.sp, fontWeight = FontWeight.Black, color = if (rrValid) AccentGold else CryptoRedText)
+                    Text(text = "RR Validation: ${if (rrValid) "PASS" else "REVIEW"}", fontSize = 9.sp, color = if (rrValid) CryptoGreen else CryptoRedText)
+                    Text(text = "Risk Path: ${if (directionValid) "Asymmetric" else "Direction fault"}", fontSize = 9.sp, color = TextMuted)
                 }
             }
 

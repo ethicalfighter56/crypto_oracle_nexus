@@ -87,6 +87,9 @@ fun titanRiskProfileForPositiveScore(score: Int): String {
     }
 }
 
+fun titanConsensusBiasForPositiveScore(score: Int): String =
+    titanRiskProfileForPositiveScore(score)
+
 fun titanRiskProfileColor(profile: String?): Color {
     val normalized = profile.orEmpty().uppercase()
     return when {
@@ -98,3 +101,36 @@ fun titanRiskProfileColor(profile: String?): Color {
 }
 
 fun titanAllocationProfileColor(profile: String?): Color = titanRiskProfileColor(profile)
+
+fun titanCqiClassification(score: Int): String {
+    val s = score.coerceIn(0, 100)
+    return when {
+        s >= 90 -> "INSTITUTIONAL GRADE"
+        s >= 85 -> "HIGH CONFIDENCE"
+        s >= 75 -> "MODERATE CONFIDENCE"
+        s >= 65 -> "CAUTION"
+        else -> "LOW CONFIDENCE"
+    }
+}
+
+fun titanExecutionReadinessColor(status: String?): Color {
+    val normalized = status.orEmpty().uppercase()
+    return when {
+        normalized.contains("OPTIMAL") -> TitanGreen
+        normalized.contains("ACCEPTABLE") -> TitanGold
+        normalized.contains("DEGRADED") -> TitanOrange
+        normalized.contains("POOR") || normalized.contains("INVALID") -> TitanRed
+        else -> TextSecondary
+    }
+}
+
+fun titanMarketRegimeColor(regime: String?): Color {
+    val normalized = regime.orEmpty().uppercase()
+    return when {
+        normalized.contains("BULL") || normalized.contains("ACCUMULATION") -> TitanGreen
+        normalized.contains("BEAR") || normalized.contains("BREAKDOWN") || normalized.contains("CRASH") -> TitanRed
+        normalized.contains("VOLATILITY") || normalized.contains("DISTRIBUTION") -> TitanOrange
+        normalized.contains("SIDEWAYS") || normalized.contains("CONSOLIDATION") -> TitanGold
+        else -> TitanCyan
+    }
+}

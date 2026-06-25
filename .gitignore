@@ -1,13 +1,23 @@
 # APK Outputs
 *.apk
 /app-debug.apk
-
-# Secrets
-/.env
-
-# Gradle and Build Output
 /.build-outputs/
-.gradle/
-build/
-app/build/
-outputs/
+
+# Local IDE / AI Studio metadata
+/.idea/
+/.junie/
+/.kotlin/
+
+# Secrets and machine-local config
+/.env
+/local.properties
+
+# Gradle caches and generated output
+/.gradle/
+/build/
+/app/build/
+/outputs/
+/gradle/wrapper/
+/gradle/gradle-daemon-jvm.properties
+/gradlew
+/gradlew.bat

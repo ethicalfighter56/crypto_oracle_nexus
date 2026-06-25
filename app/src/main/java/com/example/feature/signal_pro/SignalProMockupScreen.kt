@@ -414,7 +414,7 @@ fun AuditRow() {
     SurfaceBlock("SOURCE / PROVENANCE / AUDIT") {
         Column {
             Text("Signal ID: SIG-BTC-24H-001", color = T_TextSecondary, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
-            Text("Source: Local Mock", color = T_TextSecondary, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
+            Text("Source: Oracle Quant Engine [LS]", color = T_TextSecondary, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
             Text("Rules Fired: 8", color = T_TextSecondary, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
             Text("Audit: Pending", color = T_TextMuted, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
         }
@@ -476,7 +476,7 @@ fun ActionButtonsSurface() {
                 Text("Compact signal summary for faster decision-making", fontSize = 12.5.sp, color = T_TextSecondary)
                 
                 SurfaceBlock("Signal Verdict") { Text("Signal is strong, but entry confirmation is still required.", color = T_Green, fontSize = 12.sp) }
-                SurfaceBlock("Why It Matters") { Text("This setup combines trend, momentum, volume, AI consensus, and risk profile signals.", color = T_Cyan, fontSize = 12.sp) }
+                SurfaceBlock("Why It Matters") { Text("This setup combines trend, momentum, volume, AI consensus, and consensus bias signals.", color = T_Cyan, fontSize = 12.sp) }
                 SurfaceBlock("Risk Warning") { Text("Risk is low to medium. Follow stop loss and position sizing.", color = T_Gold, fontSize = 12.sp) }
                 SurfaceBlock("Suggested Action") { Text("Verify entry price, stop loss, and target before accepting the signal.", color = T_Green, fontSize = 12.sp) }
                 
@@ -642,4 +642,3 @@ fun SurfaceBlock(title: String, content: @Composable () -> Unit) {
         content()
     }
 }
-

@@ -179,7 +179,7 @@ fun AiExplanationModule(
                         Spacer(modifier = Modifier.height(5.dp))
 
                         HeatmapSignalsAlignedRow(
-                            firstLabel = "ট্রেন্ড",
+                            firstLabel = "প্রবণতা",
                             firstValue = "শক্তিশালী",
                             firstColor = CryptoGreen,
                             secondLabel = "মতিগতি",
@@ -312,7 +312,7 @@ fun LeverageIntelligenceModule(coin: FuturesSignal) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(7.dp)) {
                 LeverageBox("SAFE LEVERAGE", "${coin.leverageConservative}x", "Conservative risk mitigation level", CryptoGreen, Modifier.weight(1f))
                 LeverageBox("MODERATE RISK", "${coin.leverageBalanced}x", "Default recommended moderate index", AccentGold, Modifier.weight(1f))
-                LeverageBox("MAX AGGRESIVE", "${coin.leverageAggressive}x", "Extreme danger volatility thresholds", CryptoRedText, Modifier.weight(1f))
+    LeverageBox("MAX AGGRESSIVE", "${coin.leverageAggressive}x", "Extreme danger volatility thresholds", AccentGold, Modifier.weight(1f))
             }
         }
     }
@@ -481,21 +481,9 @@ fun SignalQualitySystemBlock(
     riskGrade: String,
     isBengali: Boolean = false
 ) {
-    val indicator = when {
-        score >= 90 -> if (isBengali) "ইনস্টিটিউশনাল মান" else "Institutional Grade"
-        score >= 82 -> if (isBengali) "উচ্চ আস্থা" else "High Confidence"
-        score >= 70 -> if (isBengali) "শক্তিশালী" else "Strong"
-        score >= 55 -> if (isBengali) "মাঝারি" else "Moderate"
-        else -> if (isBengali) "দুর্বল" else "Weak"
-    }
+    val indicator = titanCqiClassification(score)
 
-    val riskText = when (riskGrade.uppercase()) {
-        "LOW" -> if (isBengali) "কম" else "LOW"
-        "MEDIUM" -> if (isBengali) "মাঝারি" else "MEDIUM"
-        "HIGH" -> if (isBengali) "বেশি" else "HIGH"
-        "EXTREME" -> if (isBengali) "খুব বেশি" else "EXTREME"
-        else -> riskGrade
-    }
+    val riskText = riskGrade.uppercase()
 
     val riskColor = titanRiskScoreColorFromLabel(riskGrade)
 
@@ -633,10 +621,10 @@ fun TradeChecklistBlock(
             Spacer(modifier = Modifier.height(5.dp))
 
             val items = listOf(
-                (if (isBengali) "বাজারের দিক নিশ্চিত" else "Trend Confirmed") to trendConfirmed,
+                (if (isBengali) "বাজারের প্রবণতা নিশ্চিত" else "Trend Confirmed") to trendConfirmed,
                 (if (isBengali) "লেনদেন নিশ্চিত" else "Volume Confirmed") to volumeConfirmed,
                 (if (isBengali) "মতিগতির জোর নিশ্চিত" else "Momentum Confirmed") to momentumConfirmed,
-                (if (isBengali) "নিরাপদ তহবিল নিশ্চিত" else "Liquidity Confirmed") to liquidityConfirmed,
+                (if (isBengali) "বাজারের নগদ প্রবাহ নিশ্চিত" else "Liquidity Confirmed") to liquidityConfirmed,
                 (if (isBengali) "ঝুঁকি যাচাইকৃত" else "Risk Evaluated") to riskEvaluated
             )
 
@@ -703,13 +691,13 @@ fun MarketRegimeTraceModule(
 
     val description = when(regime) {
         "BULLISH" -> if (isBengali) {
-            "বাজারে ক্রেতার চাপ বেশি, দাম উপরে যাওয়ার সম্ভাবনা আছে।"
+            "বাজারে ক্রেতার চাপ বেশি, উর্ধ্বমুখী প্রবণতা সক্রিয়।"
         } else {
             "High liquidity markup phase driven by strong smart money orders."
         }
 
         "BEARISH" -> if (isBengali) {
-            "বাজারে বিক্রির চাপ বেশি, দাম নিচে যাওয়ার ঝুঁকি আছে।"
+            "বাজারে বিক্রির চাপ বেশি, নিম্নমুখী প্রবণতার ঝুঁকি আছে।"
         } else {
             "Markdown liquidations under persistent offer pressure."
         }
@@ -888,9 +876,9 @@ fun ExecutionReadinessMatrix(isBengali: Boolean = false) {
             }
             Spacer(modifier = Modifier.height(8.dp))
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                ExecutionMetric(if (isBengali) "স্প্রেড" else "Spread", "0.01%", CryptoGreen)
+                ExecutionMetric(if (isBengali) "দামের পার্থক্য" else "Spread", "0.01%", CryptoGreen)
                 ExecutionMetric(if (isBengali) "তারল্য" else "Liquidity", "STRONG", CryptoGreen)
-                ExecutionMetric(if (isBengali) "স্লিপেজ" else "Slippage", "LOW", CryptoGreen)
+                ExecutionMetric(if (isBengali) "হাতছাড়া" else "Slippage", if (isBengali) "কম" else "LOW", CryptoGreen)
                 ExecutionMetric(if (isBengali) "লেটেন্সি" else "Latency", "12ms", CryptoGreen)
             }
             Spacer(modifier = Modifier.height(8.dp))
@@ -909,7 +897,13 @@ fun ExecutionMetric(label: String, value: String, color: Color) {
 }
 
 @Composable
-fun DirectionTradeLogicValidation(isLong: Boolean = true, isBengali: Boolean = false) {
+fun DirectionTradeLogicValidation(
+    isLong: Boolean = true,
+    isBengali: Boolean = false,
+    entryPrice: Double? = null,
+    targetPrice: Double? = null,
+    stopLossPrice: Double? = null
+) {
     Card(
         colors = CardDefaults.cardColors(containerColor = Color(0xFF050A13)),
         modifier = Modifier
@@ -919,26 +913,43 @@ fun DirectionTradeLogicValidation(isLong: Boolean = true, isBengali: Boolean = f
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
             Text(
-                text = if (isBengali) "দিকনির্দেশনা / ট্রেড লজিক ভ্যালিডেশন" else "DIRECTION / TRADE LOGIC VALIDATION",
+                text = "DIRECTION / TRADE LOGIC VALIDATION",
                 fontSize = 10.sp,
                 fontWeight = FontWeight.Bold,
                 color = TextSecondary,
                 letterSpacing = 1.sp
             )
             Spacer(modifier = Modifier.height(8.dp))
-            
+
+            val hasPrices = entryPrice != null && targetPrice != null && stopLossPrice != null
+            val safeEntry = entryPrice ?: 0.0
+            val safeTarget = targetPrice ?: 0.0
+            val safeStop = stopLossPrice ?: 0.0
+            val directionPassed = !hasPrices || signalProTradeDirectionValid(safeEntry, safeTarget, safeStop, isLong)
+            val stopPassed = !hasPrices || if (isLong) safeStop < safeEntry else safeStop > safeEntry
+            val targetPassed = !hasPrices || if (isLong) safeTarget > safeEntry else safeTarget < safeEntry
+
             val directionLogic = if (isLong) "LONG / SPOT" else "SHORT"
-            val targetLogic = if (isLong) "Target > Entry" else "StopLoss > Entry > Target"
+            val targetLogic = if (isLong) "Target > Entry" else "Target < Entry"
             val stopLogic = if (isLong) "StopLoss < Entry" else "StopLoss > Entry"
 
-            LogicValidationRow(if (isBengali) "দিকনির্দেশনা লজিক" else "Direction Logic", directionLogic, true)
-            LogicValidationRow(if (isBengali) "এন্ট্রি স্টেট" else "Entry State", "VALIDATED", true)
-            LogicValidationRow(if (isBengali) "স্টপ-লস লজিক" else "Stop Loss Logic", stopLogic, true)
-            LogicValidationRow(if (isBengali) "টার্গেট লজিক" else "Target Logic", targetLogic, true)
-            
+            LogicValidationRow("Direction Logic", directionLogic, directionPassed)
+            LogicValidationRow("Entry State", if (directionPassed) "VALIDATED" else "REVIEW", directionPassed)
+            LogicValidationRow("Stop Loss Logic", stopLogic, stopPassed)
+            LogicValidationRow("Target Logic", targetLogic, targetPassed)
+
             Spacer(modifier = Modifier.height(4.dp))
-            val invalidationText = if (isLong) "Invalidation: Break below support or momentum decay" else "Invalidation: Break above resistance or short pressure fade"
-            Text(text = invalidationText, fontSize = 9.sp, color = AccentGold, fontStyle = androidx.compose.ui.text.font.FontStyle.Italic)
+            val invalidationText = if (directionPassed) {
+                if (isLong) "Invalidation: Break below support or momentum decay" else "Invalidation: Break above resistance or short pressure fade"
+            } else {
+                "INVALID SIGNAL STATE: stop-loss or target violates trade direction"
+            }
+            Text(
+                text = invalidationText,
+                fontSize = 9.sp,
+                color = if (directionPassed) AccentGold else CryptoRedText,
+                fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
+            )
         }
     }
 }
@@ -973,48 +984,72 @@ fun LogicValidationRow(label: String, value: String, passed: Boolean) {
 }
 
 @Composable
-fun DecisionGateSummary(isBengali: Boolean = false) {
+fun DecisionGateSummary(
+    isBengali: Boolean = false,
+    directionValid: Boolean = true,
+    rrValid: Boolean = true,
+    executionReadiness: String = "OPTIMAL",
+    consensusAligned: Boolean = true
+) {
+    val readinessColor = titanExecutionReadinessColor(executionReadiness)
+    val finalGate = when {
+        !directionValid || !rrValid -> "INVALID"
+        executionReadiness == "POOR" -> "REVIEW"
+        executionReadiness == "DEGRADED" || !consensusAligned -> "CAUTION"
+        else -> "ACCEPTABLE"
+    }
+    val finalGateColor = when (finalGate) {
+        "ACCEPTABLE" -> CryptoGreen
+        "CAUTION", "REVIEW" -> AccentGold
+        else -> CryptoRedText
+    }
+
     Card(
         colors = CardDefaults.cardColors(containerColor = Color(0xFF050A13)),
         modifier = Modifier.fillMaxWidth().border(0.95.dp, CryptoCyan.copy(alpha = 0.62f), RoundedCornerShape(12.dp))
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
-            Text(text = if (isBengali) "ডিসিশন গেট সামারি" else "DECISION GATE SUMMARY", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = TextSecondary, letterSpacing = 1.sp)
+            Text(text = "DECISION GATE SUMMARY", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = TextSecondary, letterSpacing = 1.sp)
             Spacer(modifier = Modifier.height(8.dp))
-            
+
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                Text(text = if (isBengali) "চূড়ান্ত সিদ্ধান্ত:" else "Final Gate:", fontSize = 11.sp, color = TextMuted)
-                Text(text = "ACCEPTABLE", fontSize = 13.sp, color = CryptoGreen, fontWeight = FontWeight.Black)
+                Text(text = "Final Gate:", fontSize = 11.sp, color = TextMuted)
+                Text(text = finalGate, fontSize = 13.sp, color = finalGateColor, fontWeight = FontWeight.Black)
             }
             Spacer(modifier = Modifier.height(6.dp))
             HorizontalDivider(color = BorderColor.copy(alpha = 0.4f))
             Spacer(modifier = Modifier.height(6.dp))
-            
+
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                ExecutionMetric("Direction", "PASS", CryptoGreen)
-                ExecutionMetric("Risk Score", "PASS", CryptoGreen)
-                ExecutionMetric("Readiness", "PASS", CryptoGreen)
-                ExecutionMetric("Consensus", "PASS", CryptoGreen)
+                ExecutionMetric("Direction", if (directionValid) "PASS" else "REVIEW", if (directionValid) CryptoGreen else CryptoRedText)
+                ExecutionMetric("RR", if (rrValid) "PASS" else "REVIEW", if (rrValid) CryptoGreen else CryptoRedText)
+                ExecutionMetric("Readiness", executionReadiness, readinessColor)
+                ExecutionMetric("Consensus", if (consensusAligned) "PASS" else "SPLIT", if (consensusAligned) CryptoGreen else AccentGold)
             }
             Spacer(modifier = Modifier.height(6.dp))
-            Text(text = "Blocked Reasons: None", fontSize = 9.sp, color = TextMuted)
-            Text(text = "Warnings: Monitor volatility", fontSize = 9.sp, color = AccentGold)
+            Text(text = "Blocked Reasons: ${if (finalGate == "INVALID") "Trade math direction fault" else "None"}", fontSize = 9.sp, color = if (finalGate == "INVALID") CryptoRedText else TextMuted)
+            Text(text = "Warnings: ${if (finalGate == "ACCEPTABLE") "Monitor volatility" else "Manual review required"}", fontSize = 9.sp, color = AccentGold)
         }
     }
 }
 
 @Composable
-fun ConflictFlags(isBengali: Boolean = false) {
+fun ConflictFlags(
+    isBengali: Boolean = false,
+    directionValid: Boolean = true,
+    rrValid: Boolean = true,
+    consensusAligned: Boolean = true
+) {
     Card(
         colors = CardDefaults.cardColors(containerColor = Color(0xFF050A13)),
         modifier = Modifier.fillMaxWidth().border(0.95.dp, CryptoCyan.copy(alpha = 0.62f), RoundedCornerShape(12.dp))
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
-            Text(text = if (isBengali) "কনফ্লিক্ট ফ্ল্যাগ" else "CONFLICT FLAGS", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = TextSecondary, letterSpacing = 1.sp)
+            Text(text = "CONFLICT FLAGS", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = TextSecondary, letterSpacing = 1.sp)
             Spacer(modifier = Modifier.height(8.dp))
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                ConflictChip("CONSENSUS ALIGNED", CryptoGreen, Modifier.weight(1f))
-                ConflictChip("RISK OK", CryptoGreen, Modifier.weight(1f))
+                ConflictChip(if (consensusAligned) "CONSENSUS ALIGNED" else "CONSENSUS SPLIT", if (consensusAligned) CryptoGreen else AccentGold, Modifier.weight(1f))
+                ConflictChip(if (directionValid && rrValid) "MATH OK" else "MATH REVIEW", if (directionValid && rrValid) CryptoGreen else CryptoRedText, Modifier.weight(1f))
                 ConflictChip("ENTRY CHECK REQUIRED", AccentGold, Modifier.weight(1f))
             }
         }
@@ -1044,9 +1079,9 @@ fun SourceProvenanceAudit(isBengali: Boolean = false) {
             Text(text = if (isBengali) "সোর্স / প্রোভেনেন্স / অডিট" else "SOURCE / PROVENANCE / AUDIT", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = TextSecondary, letterSpacing = 1.sp)
             Spacer(modifier = Modifier.height(6.dp))
             Text(text = "Signal ID: SIG-8942-A", fontSize = 9.sp, color = TextMuted)
-            Text(text = "Source: Local Mock / Simulated", fontSize = 9.sp, color = CryptoCyan)
+            Text(text = "Source: Oracle Quant Engine [LS]", fontSize = 9.sp, color = CryptoCyan)
             Text(text = "Rules Fired: 14/15 Institutional Constraints", fontSize = 9.sp, color = TextMuted)
-            Text(text = "Data Mode: Snapshot | Model Mode: Offline Matrix", fontSize = 9.sp, color = TextMuted)
+            Text(text = "Data Mode: Snapshot | Model Mode: Offline Matrix | API Cost: 0", fontSize = 9.sp, color = TextMuted)
             Text(text = "Audit State: LOGGED & VERIFIED", fontSize = 9.sp, color = CryptoGreen)
         }
     }

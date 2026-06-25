@@ -1,15 +1,3 @@
-AGENTS.md — GEMINI ONLY ROOT GUARDRAILS FOR TITAN ORACLE
-
-Document Authority
-
-This "AGENTS.md" is for Google AI Studio / Gemini only.
-
-Gemini must treat this file as the root behavior contract when working inside this repository.
-
-This file does not replace the project roadmap. It enforces how Gemini must operate while following the roadmap.
-
----
-
 1. Project Identity
 
 Project name:
@@ -38,7 +26,7 @@ No agent may claim guaranteed profit, guaranteed accuracy, or guaranteed market 
 
 2. Mandatory Files To Read Before Work
 
-Before modifying code, Gemini must read these files when they exist:
+Before modifying code, CODEX must read these files when they exist:
 
 1. "PROJECT_MASTER_DOCUMENTATION_&_ROADMAP.md"
 2. "AGENTS.md"
@@ -47,13 +35,9 @@ Before modifying code, Gemini must read these files when they exist:
 5. "docs/GOOGLE_AI_STUDIO_BUILD_RULES.md"
 6. "docs/bengali_translation_glossary.md"
 7. "docs/PACKAGE_BY_FEATURE_SOURCE_MAPPING.md"
-
-If any required file is missing, Gemini must report it.
-
+If any required file is missing, CODEX must report it.
 Do not contradict "PROJECT_MASTER_DOCUMENTATION_&_ROADMAP.md".
-
 Do not delete, rename, rewrite, or replace project roadmap documents unless explicitly requested by the owner.
-
 ---
 
 3. Owner Context
@@ -138,7 +122,7 @@ Never sacrifice protected working UI for new feature insertion.
 
 6. Global Execution Rules
 
-Gemini must follow these rules for every task:
+CODEX must follow these rules for every task:
 
 - Do not simplify features unless explicitly instructed.
 - Do not remove working functionality.
@@ -705,9 +689,9 @@ The correct sequence remains:
 
 ---
 
-22. Gemini-Specific Behavior
+22. CODEX-Specific Behavior
 
-Gemini must be conservative with source edits.
+CODEX must be conservative with source edits.
 
 Do not "improve" by replacing.
 

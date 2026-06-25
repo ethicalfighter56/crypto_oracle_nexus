@@ -131,20 +131,20 @@ fun AiAutoPilotMockupSection(isBengali: Boolean) {
                 .padding(12.dp),
             verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-            HardGateRow("Signal Direction", "STANDBY", CryptoCyan)
+            HardGateRow(if (isBengali) "SIGNAL দিকনির্দেশনা" else "Signal Direction", "STANDBY", CryptoCyan)
             HardGateRow("Stop-Loss Validity", "STANDBY", CryptoCyan)
             HardGateRow("Risk / Reward", "STANDBY", CryptoCyan)
-            HardGateRow("Risk Score", "STANDBY", CryptoCyan)
+            HardGateRow(if (isBengali) "ঝুঁকির স্কোর" else "Risk Score", "STANDBY", CryptoCyan)
             HardGateRow("Execution Readiness", "STANDBY", CryptoCyan)
             HardGateRow("Data Freshness", "STANDBY", CryptoCyan)
-            HardGateRow("Spread", "STANDBY", CryptoCyan)
-            HardGateRow("Slippage", "STANDBY", CryptoCyan)
+            HardGateRow(if (isBengali) "দামের পার্থক্য" else "Spread", "STANDBY", CryptoCyan)
+            HardGateRow(if (isBengali) "হাতছাড়া" else "Slippage", "STANDBY", CryptoCyan)
             HardGateRow("Liquidity", "STANDBY", CryptoCyan)
-            HardGateRow("Consensus Confidence", "STANDBY", CryptoCyan)
-            HardGateRow("Consensus Disagreement", "STANDBY", CryptoCyan)
+            HardGateRow(if (isBengali) "সম্মিলিত আস্থা" else "Consensus Confidence", "STANDBY", CryptoCyan)
+            HardGateRow(if (isBengali) "সম্মিলিত দ্বিমত" else "Consensus Disagreement", "STANDBY", CryptoCyan)
             HardGateRow("Conflict Flag", "STANDBY", CryptoCyan)
-            HardGateRow("Portfolio Exposure", "STANDBY", CryptoCyan)
-            HardGateRow("Validity Window", "STANDBY", CryptoCyan)
+            HardGateRow(if (isBengali) "ঝুঁকির পরিমাণ" else "Portfolio Exposure", "STANDBY", CryptoCyan)
+            HardGateRow(if (isBengali) "বৈধতার নির্দিষ্ট মেয়াদ" else "Validity Window", "STANDBY", CryptoCyan)
         }
 
         Spacer(modifier = Modifier.height(16.dp))

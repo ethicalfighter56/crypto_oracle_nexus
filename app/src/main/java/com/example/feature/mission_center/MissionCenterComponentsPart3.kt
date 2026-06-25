@@ -182,9 +182,9 @@ fun MissionTerminalCard(
             Spacer(modifier = Modifier.height(SpacingMedium))
             Row(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.weight(1f).padding(end = SpacingNormal)) {
-                    CompactDataRow("PROBABILITY", "85 / HIGH", T_Green)
+                    CompactDataRow(if (isBengali) "সম্ভাবনা" else "PROBABILITY", if (isBengali) "85 / বেশি" else "85 / HIGH", T_Green)
                     Spacer(modifier = Modifier.height(SpacingCompact))
-                    CompactDataRow("RISK SCORE", "15 / LOW", T_Green)
+                    CompactDataRow(if (isBengali) "ঝুঁকির স্কোর" else "RISK SCORE", if (isBengali) "15 / কম" else "15 / LOW", T_Green)
                 }
                 Column(modifier = Modifier.weight(1f).padding(start = SpacingNormal)) {
                     CompactDataRow("EXEC READINESS", "OPTIMAL", T_Green)
@@ -337,11 +337,11 @@ fun MissionTerminalCard(
                 val levValue = (leverage?.uppercase() ?: if (isFutures) "NOT SET" else "1X").replace("SPOT / 1X", "1X").replace("SPOT", "1X")
                 CompactDataRow("LEVERAGE", levValue, T_TextSecondary)
                 Spacer(modifier = Modifier.height(SpacingCompact))
-                CompactDataRow("ALLOCATION", mission?.positionSize?.uppercase() ?: "NOT SET", T_TextPrimary)
+                CompactDataRow(if (isBengali) "পুঁজি বণ্টন" else "ALLOCATION", mission?.positionSize?.uppercase() ?: "NOT SET", T_TextPrimary)
                 Spacer(modifier = Modifier.height(SpacingCompact))
                 val profUpper = mission?.riskProfile?.uppercase() ?: "NOT SET"
                 val profColor = mcRiskProfileColor(profUpper)
-                CompactDataRow("RISK PROFILE", profUpper, profColor)
+                CompactDataRow("CONSENSUS BIAS", profUpper, profColor)
                 Spacer(modifier = Modifier.height(SpacingCompact))
                 val isAutoActive = mission?.autoCloseEnabled == true
                 val isConditionValid = mission?.conditionValidity == "VALID"
@@ -447,7 +447,7 @@ fun MissionTerminalCard(
 
         // 6. VALIDITY WINDOW
         Column(modifier = Modifier.fillMaxWidth().padding(horizontal = SpacingMedium, vertical = SpacingNormal)) {
-            Text("VALIDITY WINDOW", color = T_TextPrimary, fontSize = 9.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
+            Text(if (isBengali) "বৈধতার নির্দিষ্ট মেয়াদ" else "VALIDITY WINDOW", color = T_TextPrimary, fontSize = 9.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
             Spacer(modifier = Modifier.height(SpacingCompact))
             Row(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.weight(1f).padding(end = SpacingNormal)) {
@@ -629,8 +629,8 @@ fun MissionTerminalCard(
                             Text("TP1: ${mcFormatMissionPriceText(tp1)} | TP2: ${mcFormatMissionPriceText(tp2)} | TP3: ${mcFormatMissionPriceText(tp3)}", color = T_Green, fontSize = 11.sp, fontFamily = FontFamily.SansSerif)
                             Text("SL1: ${mcFormatMissionPriceText(manualStopLoss ?: stopLoss)} | SL2: ${mcFormatMissionPriceText(mission?.sl2)}", color = T_Red, fontSize = 11.sp, fontFamily = FontFamily.SansSerif)
                             Text("Leverage: ${leverage ?: if (marketType.equals("Spot", ignoreCase = true)) "1X" else "Not Set"}", color = T_TextPrimary, fontSize = 11.sp, fontFamily = FontFamily.SansSerif)
-                            Text("Allocation: ${mission?.positionSize ?: "Not Set"}", color = T_TextPrimary, fontSize = 11.sp, fontFamily = FontFamily.SansSerif)
-                            Text("Risk Profile: ${mission?.riskProfile ?: "Not Set"}", color = T_Gold, fontSize = 11.sp, fontFamily = FontFamily.SansSerif)
+                            Text("${if (isBengali) "পুঁজি বণ্টন" else "Allocation"}: ${mission?.positionSize ?: "Not Set"}", color = T_TextPrimary, fontSize = 11.sp, fontFamily = FontFamily.SansSerif)
+                            Text("Consensus Bias: ${mission?.riskProfile ?: "Not Set"}", color = T_Gold, fontSize = 11.sp, fontFamily = FontFamily.SansSerif)
                             Text("Remark: ${mission?.setupRemark ?: "None"}", color = T_TextSecondary, fontSize = 11.sp, fontFamily = FontFamily.SansSerif)
                             Text("Time in Trade: $timeElapsed", color = T_TextSecondary, fontSize = 11.sp, fontFamily = FontFamily.SansSerif)
                             Spacer(modifier = Modifier.height(8.dp))
@@ -763,8 +763,8 @@ fun MissionTerminalCard(
                                 item { androidx.compose.material3.OutlinedTextField(value = overrideTp3, onValueChange = { overrideTp3 = it }, label = { Text("TP3", fontSize = 10.sp) }, modifier = Modifier.fillMaxWidth(), singleLine = true, colors = textFieldColors) }
                                 item { androidx.compose.material3.OutlinedTextField(value = overrideSl, onValueChange = { overrideSl = it }, label = { Text("Stop Loss", fontSize = 10.sp) }, modifier = Modifier.fillMaxWidth(), singleLine = true, colors = textFieldColors) }
                                 item { androidx.compose.material3.OutlinedTextField(value = overrideLev, onValueChange = { overrideLev = it }, label = { Text("Leverage", fontSize = 10.sp) }, modifier = Modifier.fillMaxWidth(), singleLine = true, colors = textFieldColors) }
-                                item { androidx.compose.material3.OutlinedTextField(value = overrideRisk, onValueChange = { overrideRisk = it }, label = { Text("Risk Profile", fontSize = 10.sp) }, modifier = Modifier.fillMaxWidth(), singleLine = true, colors = textFieldColors) }
-                                item { androidx.compose.material3.OutlinedTextField(value = overrideAlloc, onValueChange = { overrideAlloc = it }, label = { Text("Allocation", fontSize = 10.sp) }, modifier = Modifier.fillMaxWidth(), singleLine = true, colors = textFieldColors) }
+                                item { androidx.compose.material3.OutlinedTextField(value = overrideRisk, onValueChange = { overrideRisk = it }, label = { Text("Consensus Bias", fontSize = 10.sp) }, modifier = Modifier.fillMaxWidth(), singleLine = true, colors = textFieldColors) }
+                                item { androidx.compose.material3.OutlinedTextField(value = overrideAlloc, onValueChange = { overrideAlloc = it }, label = { Text(if (isBengali) "পুঁজি বণ্টন" else "Allocation", fontSize = 10.sp) }, modifier = Modifier.fillMaxWidth(), singleLine = true, colors = textFieldColors) }
                                 item { androidx.compose.material3.OutlinedTextField(value = overrideRemark, onValueChange = { overrideRemark = it }, label = { Text("Remark", fontSize = 10.sp) }, modifier = Modifier.fillMaxWidth(), singleLine = true, colors = textFieldColors) }
                                 item {
                                     Spacer(modifier = Modifier.height(10.dp))

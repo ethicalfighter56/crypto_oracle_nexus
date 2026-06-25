@@ -68,10 +68,12 @@ fun OracleFeedScreen(
     val newsFeed by viewModel.newsFeedData.collectAsState()
     val isBengali by viewModel.isBengali.collectAsState()
     val livePrices by viewModel.livePrices.collectAsState()
+    val isLiveConnected by viewModel.isLiveConnected.collectAsState()
+    val marketRegime by viewModel.marketRegime.collectAsState()
 
     var activeTimeframe by remember { mutableStateOf("15M") }
     var activeTab by remember { mutableStateOf("TERMINAL") }
-    var feedState by remember { mutableStateOf("LIVE") } // LIVE, CACHED, LOCAL, SYNCING
+    val feedState = if (isLiveConnected) "LIVE" else "LOCAL"
 
     val tabs = listOf("TERMINAL", "COCKPIT", "MOVERS", "ALERTS", "SYSTEM")
 
@@ -82,7 +84,12 @@ fun OracleFeedScreen(
         contentPadding = PaddingValues(bottom = 16.dp)
     ) {
         item {
-            OracleFeedHeaderBlock(viewModel, feedState)
+            OracleFeedHeaderBlock(
+                viewModel = viewModel,
+                feedState = feedState,
+                marketRegime = marketRegime,
+                isLiveConnected = isLiveConnected
+            )
         }
 
         item {
@@ -196,7 +203,13 @@ fun OracleFeedScreen(
 }
 
 @Composable
-fun OracleFeedHeaderBlock(viewModel: CryptoViewModel, feedState: String) {
+fun OracleFeedHeaderBlock(
+    viewModel: CryptoViewModel,
+    feedState: String,
+    marketRegime: String,
+    isLiveConnected: Boolean
+) {
+    val regimeColor = titanMarketRegimeColor(marketRegime)
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -211,7 +224,7 @@ fun OracleFeedHeaderBlock(viewModel: CryptoViewModel, feedState: String) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
                     modifier = Modifier
-                        .background(T_TextPrimary, RoundedCornerShape(2.dp))
+                        .background(regimeColor, RoundedCornerShape(2.dp))
                         .padding(horizontal = 4.dp, vertical = 2.dp)
                 ) {
                     Text(
@@ -234,7 +247,7 @@ fun OracleFeedHeaderBlock(viewModel: CryptoViewModel, feedState: String) {
                     )
                     Text(
                         text = "AI Market Intelligence Cockpit",
-                        color = T_Cyan,
+                        color = regimeColor,
                         fontSize = 9.sp,
                         fontFamily = FontFamily.Monospace,
                         letterSpacing = 0.5.sp
@@ -259,8 +272,8 @@ fun OracleFeedHeaderBlock(viewModel: CryptoViewModel, feedState: String) {
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = "BINANCE WSS : ACTIVE",
-                    color = T_Green,
+                    text = if (isLiveConnected) "BINANCE WSS : ACTIVE" else "LOCAL SNAPSHOT : ACTIVE",
+                    color = if (isLiveConnected) T_Green else T_Cyan,
                     fontSize = 11.sp,
                     fontFamily = FontFamily.Monospace,
                     fontWeight = FontWeight.Bold
@@ -275,7 +288,7 @@ fun OracleFeedHeaderBlock(viewModel: CryptoViewModel, feedState: String) {
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = "GEMINI PRO : ONLINE",
+                    text = "LOCAL MATRIX : ACTIVE",
                     color = T_Cyan,
                     fontSize = 11.sp,
                     fontFamily = FontFamily.Monospace,
@@ -739,7 +752,7 @@ fun StateBox(message: String, color: Color) {
 fun OracleReferenceIndexPanel() {
     Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp)) {
         Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth().padding(bottom = 6.dp)) {
-            Text("Source: Simulated", color = T_TextMuted, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
+            Text("Source: Oracle Quant Engine [LS]", color = T_TextMuted, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
             Text("Last update: 12s", color = T_TextMuted, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
         }
         val indexList = listOf(
@@ -820,7 +833,7 @@ fun OracleAnalyticalInsightsPanel() {
         modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp).border(0.5.dp, T_BorderMedium, RoundedCornerShape(4.dp)).background(T_Surface).padding(12.dp)
     ) {
         Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth().padding(bottom = 6.dp)) {
-            Text("Source: Cached Model", color = T_TextMuted, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
+            Text("Source: Offline Matrix [LS]", color = T_TextMuted, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
             Text("Last update: 45s", color = T_TextMuted, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
         }
         val insights = listOf(
@@ -851,7 +864,7 @@ fun OracleAnalyticalInsightsPanel() {
 fun MarketFeedIntelligencePanel() {
     Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp)) {
         Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth().padding(bottom = 6.dp)) {
-            Text("Source: Simulated Feed", color = T_TextMuted, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
+            Text("Source: Curated Static Feed [LS]", color = T_TextMuted, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
             Text("Feed status: Stable", color = T_TextMuted, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
         }
         val articles = listOf(

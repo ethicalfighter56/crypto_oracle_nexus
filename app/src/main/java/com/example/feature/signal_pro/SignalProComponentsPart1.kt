@@ -216,6 +216,65 @@ internal fun signalProFuturesPriceChangeMultiplier(index: Int): Double = when (s
     "3D" -> 3.8
     else -> 5.5
 }
+internal fun signalProValidatedStopLoss(
+    currentPrice: Double,
+    priceChangePct: Double,
+    invalidationPrice: Double,
+    isLong: Boolean
+): Double {
+    if (invalidationPrice > 0.0) return invalidationPrice
+    val stopDistancePct = (priceChangePct.absoluteValue * 0.4).coerceAtLeast(0.15)
+    return if (isLong) {
+        currentPrice * (1.0 - stopDistancePct / 100.0)
+    } else {
+        currentPrice * (1.0 + stopDistancePct / 100.0)
+    }
+}
+internal fun signalProTradeDirectionValid(
+    entryPrice: Double,
+    targetPrice: Double,
+    stopLossPrice: Double,
+    isLong: Boolean
+): Boolean {
+    if (entryPrice <= 0.0 || targetPrice <= 0.0 || stopLossPrice <= 0.0) return false
+    return if (isLong) {
+        targetPrice > entryPrice && entryPrice > stopLossPrice
+    } else {
+        stopLossPrice > entryPrice && entryPrice > targetPrice
+    }
+}
+internal fun signalProRiskRewardRatio(
+    entryPrice: Double,
+    targetPrice: Double,
+    stopLossPrice: Double
+): Double {
+    val risk = (entryPrice - stopLossPrice).absoluteValue
+    val reward = (targetPrice - entryPrice).absoluteValue
+    return if (risk > 0.0) reward / risk else 0.0
+}
+internal fun signalProRiskRewardValid(
+    entryPrice: Double,
+    targetPrice: Double,
+    stopLossPrice: Double,
+    isLong: Boolean
+): Boolean {
+    return signalProTradeDirectionValid(entryPrice, targetPrice, stopLossPrice, isLong) &&
+        signalProRiskRewardRatio(entryPrice, targetPrice, stopLossPrice) > 0.0
+}
+internal fun signalProStopLossDistancePct(entryPrice: Double, stopLossPrice: Double): Double {
+    if (entryPrice <= 0.0 || stopLossPrice <= 0.0) return 0.0
+    return ((entryPrice - stopLossPrice).absoluteValue / entryPrice) * 100.0
+}
+internal fun signalProStopLossSanityLabel(distancePct: Double): String = when {
+    distancePct <= 5.0 -> "Standard"
+    distancePct <= 10.0 -> "Elevated"
+    else -> "Extreme / Review Sizing"
+}
+internal fun signalProStopLossSanityColor(distancePct: Double): Color = when {
+    distancePct <= 5.0 -> CryptoGreen
+    distancePct <= 10.0 -> AccentGold
+    else -> TitanOrange
+}
 internal fun signalProfileConfidenceColor(score: Int): Color = titanPositiveScoreColor(score)
 internal fun signalProfileRiskColor(value: String): Color = titanRiskProfileColor(value)
 internal fun signalProfileAllocationColor(value: String): Color = titanAllocationProfileColor(value)
@@ -410,7 +469,7 @@ fun PredictionDashboard(
                         color = Color.White
                     )
                     Text(
-                        text = if (useAiOracle) "Deep Gemini Sentient API" else "Fast Technical Simulator local",
+                        text = if (useAiOracle) "Guarded API mode (manual)" else "Local simulator - API cost 0",
                         fontSize = 9.sp,
                         color = if (useAiOracle) CryptoCyan else TextSecondary
                     )
@@ -619,7 +678,9 @@ fun TabButton(
             fontSize = 12.sp,
             fontWeight = FontWeight.ExtraBold,
             color = if (isSelected) CryptoCyan else TextSecondary,
-            letterSpacing = 0.5.sp
+            letterSpacing = 0.5.sp,
+            maxLines = 1,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
         )
     }
 }
@@ -663,7 +724,9 @@ fun SubTabButton(
             fontSize = 11.sp,
             fontWeight = FontWeight.ExtraBold,
             color = textColor,
-            letterSpacing = 0.5.sp
+            letterSpacing = 0.5.sp,
+            maxLines = 1,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
         )
     }
 }

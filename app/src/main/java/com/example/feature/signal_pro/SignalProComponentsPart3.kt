@@ -87,7 +87,7 @@ fun StartTradeFlow(
 
     val recommendationText = when {
         isBengali && highConfidence && isLong -> "উচ্চ আস্থা | এন্ট্রি যাচাই"
-        isBengali && highConfidence && !isLong -> "উচ্চ আস্থা | শর্ট যাচাই"
+        isBengali && highConfidence && !isLong -> "উচ্চ আস্থা | SHORT যাচাই"
         isBengali && !highConfidence -> "সতর্কভাবে যাচাই করুন"
         !isBengali && highConfidence -> "HIGH CONFIDENCE | VERIFY ENTRY |"
         else -> "REVIEW CAREFULLY | VERIFY ENTRY |"
@@ -101,29 +101,29 @@ fun StartTradeFlow(
     }
 
     val whyText = if (isBengali) {
-        "ট্রেন্ড, মতিগতি, লেনদেন, AI consensus এবং risk profile মিলিয়ে এই setup তৈরি হয়েছে।"
+        "প্রবণতা, মতিগতি, লেনদেন, AI consensus এবং consensus bias মিলিয়ে এই setup তৈরি হয়েছে।"
     } else {
-        "This setup combines trend, momentum, volume, AI consensus, and risk profile signals."
+        "This setup combines trend, momentum, volume, AI consensus, and consensus bias signals."
     }
 
     val riskText = if (isBengali) {
-        if (highConfidence) "রিস্ক কম থেকে মাঝারি। Stop loss এবং position size মেনে চলুন।"
-        else "রিস্ক মাঝারি। দেরিতে entry নিলে signal quality কমতে পারে।"
+        if (highConfidence) "ঝুঁকি কম থেকে মাঝারি। STOP LOSS এবং position size মেনে চলুন।"
+        else "ঝুঁকি মাঝারি। দেরিতে ENTRY নিলে signal quality কমতে পারে।"
     } else {
         if (highConfidence) "Risk is low to medium. Follow stop loss and position sizing."
         else "Risk is medium. Late entry may reduce signal quality."
     }
 
     val actionText = if (isBengali) {
-        if (isLong) "এন্ট্রি price, stop loss এবং target মিলিয়ে তারপর Accept Signal করুন।"
-        else "শর্ট এন্ট্রি, stop loss এবং target মিলিয়ে তারপর Accept Signal করুন।"
+        if (isLong) "ENTRY price, STOP LOSS এবং TARGET মিলিয়ে তারপর Accept Signal করুন।"
+        else "SHORT ENTRY, STOP LOSS এবং TARGET মিলিয়ে তারপর Accept Signal করুন।"
     } else {
         if (isLong) "Verify entry price, stop loss, and target before accepting the signal."
         else "Verify short entry, stop loss, and target before accepting the signal."
     }
 
     val disclaimerText = if (isBengali) {
-        "এআই সিদ্ধান্তে সহায়তা করে; চূড়ান্ত ট্রেডিং সিদ্ধান্ত আপনার।"
+        "AI সিদ্ধান্তে সহায়তা করে; চূড়ান্ত ট্রেডিং সিদ্ধান্ত আপনার।"
     } else {
         "AI assists decision-making; the final trading decision is yours."
     }
@@ -202,20 +202,20 @@ fun StartTradeFlow(
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 Text(
-                    text = if (isBengali) "AI সিদ্ধান্ত সংক্ষেপ" else "AI Decision Brief",
+                    text = if (isBengali) "AI এর সংক্ষিপ্ত সিদ্ধান্ত" else "AI Decision Brief",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Black,
                     color = CryptoCyan
                 )
 
                 Text(
-                    text = if (isBengali) "দ্রুত সিদ্ধান্ত নেওয়ার জন্য সংক্ষিপ্ত সারাংশ" else "Compact signal summary for faster decision-making",
+                    text = if (isBengali) "দ্রুত সিদ্ধান্তের জন্য সংক্ষিপ্ত সারাংশ" else "Compact signal summary for faster decision-making",
                     fontSize = 12.5.sp,
                     color = TextSecondary
                 )
 
                 DecisionBriefBlock(
-                    title = if (isBengali) "সিগন্যাল রায়" else "Signal Verdict",
+                    title = if (isBengali) "সিগন্যাল রায়" else "Signal Verdict",
                     value = verdictText,
                     accentColor = if (highConfidence) CryptoGreen else AccentGold
                 )
@@ -266,7 +266,7 @@ fun StartTradeFlow(
                             modifier = Modifier.weight(1f).height(46.dp)
                         ) {
                             Text(
-                                text = if (isBengali) "সেটআপ সিগন্যাল" else "SIGNAL SETUP",
+                                text = if (isBengali) "সিগন্যাল সেটআপ" else "SIGNAL SETUP",
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Black,
                                 maxLines = 1,
@@ -337,7 +337,7 @@ fun StartTradeFlow(
                     color = CryptoCyan
                 )
                 Text(
-                    text = if (isBengali) "বর্তমান সিগন্যাল থেকে Target, TP এবং SL অটো-ফিল করা হয়েছে।" else "Auto-filled from the current signal. Review before accepting.",
+                    text = if (isBengali) "বর্তমান সিগন্যাল থেকে TARGET, TP এবং SL অটো-ফিল করা হয়েছে।" else "Auto-filled from the current signal. Review before accepting.",
                     fontSize = 12.sp,
                     color = TextSecondary,
                     lineHeight = 16.sp
@@ -350,8 +350,8 @@ fun StartTradeFlow(
                 OutlinedTextField(value = setupSl1, onValueChange = { setupSl1 = it }, label = { Text("SL1 / STOP LOSS") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
                 OutlinedTextField(value = setupSl2, onValueChange = { setupSl2 = it }, label = { Text("SL2") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
                 OutlinedTextField(value = setupLeverage, onValueChange = { setupLeverage = it }, label = { Text("LEVERAGE") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
-                OutlinedTextField(value = setupAllocation, onValueChange = { setupAllocation = it }, label = { Text("ALLOCATION") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
-                OutlinedTextField(value = setupRiskProfile, onValueChange = { setupRiskProfile = it }, label = { Text("RISK PROFILE") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
+                OutlinedTextField(value = setupAllocation, onValueChange = { setupAllocation = it }, label = { Text(if (isBengali) "পুঁজি বণ্টন" else "ALLOCATION") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
+                OutlinedTextField(value = setupRiskProfile, onValueChange = { setupRiskProfile = it }, label = { Text("CONSENSUS BIAS") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
                 OutlinedTextField(value = setupRemark, onValueChange = { setupRemark = it }, label = { Text("REMARK") }, modifier = Modifier.fillMaxWidth(), minLines = 2)
 
                 Row(
@@ -395,13 +395,13 @@ fun StartTradeFlow(
             text = {
                 Column {
                     Text(
-                        text = if (isBengali) "দিক: ${mission.type} (${mission.marketType})" else "Direction: ${mission.type} (${mission.marketType})",
+                        text = if (isBengali) "দিকনির্দেশনা: ${mission.type} (${mission.marketType})" else "Direction: ${mission.type} (${mission.marketType})",
                         color = TextSecondary,
                         fontSize = 14.sp
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = if (isBengali) "লকড এন্ট্রি প্রাইস:" else "Locked Entry Price:",
+                        text = if (isBengali) "লকড ENTRY Price:" else "Locked Entry Price:",
                         color = TextSecondary,
                         fontSize = 12.sp
                     )
@@ -415,7 +415,7 @@ fun StartTradeFlow(
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
                         text = if (isBengali) {
-                            "Accept করার পর এই entry personal mission হিসেবে track হবে।"
+                            "Accept করার পর এই ENTRY personal mission হিসেবে track হবে।"
                         } else {
                             "Once accepted, this entry will activate personal mission tracking."
                         },
@@ -559,7 +559,11 @@ fun StartTradeFlow(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
-                        text = if (highConfidence) "HIGH CONFIDENCE" else "REVIEW CAREFULLY",
+                        text = if (isBengali) {
+                            if (highConfidence) "উচ্চ আস্থা" else "সতর্কভাবে দেখুন"
+                        } else {
+                            if (highConfidence) "HIGH CONFIDENCE" else "REVIEW CAREFULLY"
+                        },
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Black,
                         color = Color(0xFFF4F8FF),
@@ -568,7 +572,7 @@ fun StartTradeFlow(
                         softWrap = false
                     )
                     Text(
-                        text = "| VERIFY ENTRY |",
+                        text = if (isBengali) "| এন্ট্রি যাচাই |" else "| VERIFY ENTRY |",
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Black,
                         color = Color(0xFFF4F8FF),

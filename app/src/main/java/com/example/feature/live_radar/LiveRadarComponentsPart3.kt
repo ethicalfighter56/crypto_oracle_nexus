@@ -103,7 +103,7 @@ internal fun ConsensusSummaryStrip(
             modifier = Modifier.weight(1f)
         )
         ConsensusSummaryMetric(
-            label = if (isBengali) "রিস্ক" else "Risk Profile",
+            label = if (isBengali) "CONSENSUS BIAS" else "Consensus Bias",
             value = riskProfile,
             valueColor = riskProfileColor(riskProfile),
             modifier = Modifier.weight(1f)

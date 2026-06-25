@@ -365,7 +365,21 @@ fun SpotItemCard(coin: SpotSignal, timeframeIndex: Int, viewModel: CryptoViewMod
                         isBengali = isBengali)
 
                     Spacer(modifier = Modifier.height(10.dp))
-                    DirectionTradeLogicValidation(isLong = true, isBengali = isBengali)
+                    val stopLossPrice = signalProValidatedStopLoss(
+                        currentPrice = coin.currentPrice,
+                        priceChangePct = growthPotential,
+                        invalidationPrice = coin.invalidationPrice,
+                        isLong = true
+                    )
+                    val directionValid = signalProTradeDirectionValid(coin.currentPrice, projectedPrice, stopLossPrice, true)
+                    val rrValid = signalProRiskRewardValid(coin.currentPrice, projectedPrice, stopLossPrice, true)
+                    DirectionTradeLogicValidation(
+                        isLong = true,
+                        isBengali = isBengali,
+                        entryPrice = coin.currentPrice,
+                        targetPrice = projectedPrice,
+                        stopLossPrice = stopLossPrice
+                    )
 
                     Spacer(modifier = Modifier.height(10.dp))
 
@@ -395,10 +409,21 @@ fun SpotItemCard(coin: SpotSignal, timeframeIndex: Int, viewModel: CryptoViewMod
                     AiExplanationModule(coin.whyThisSignalEnglish, coin.whyThisSignalBengali, coin.coinSymbol, isBengali) { viewModel.toggleLanguage() }
 
                     Spacer(modifier = Modifier.height(10.dp))
-                    DecisionGateSummary(isBengali)
+                    DecisionGateSummary(
+                        isBengali = isBengali,
+                        directionValid = directionValid,
+                        rrValid = rrValid,
+                        executionReadiness = "OPTIMAL",
+                        consensusAligned = true
+                    )
 
                     Spacer(modifier = Modifier.height(10.dp))
-                    ConflictFlags(isBengali)
+                    ConflictFlags(
+                        isBengali = isBengali,
+                        directionValid = directionValid,
+                        rrValid = rrValid,
+                        consensusAligned = true
+                    )
 
                     Spacer(modifier = Modifier.height(10.dp))
                     SourceProvenanceAudit(isBengali)
@@ -408,7 +433,7 @@ fun SpotItemCard(coin: SpotSignal, timeframeIndex: Int, viewModel: CryptoViewMod
 
                     Spacer(modifier = Modifier.height(12.dp))
                     
-                    val mission = remember(coin, projectedPrice, timeframeIndex) {
+                    val mission = remember(coin, projectedPrice, timeframeIndex, stopLossPrice) {
                         com.example.model.Mission(
                             coinSymbol = coin.coinSymbol,
                             type = "LONG",
@@ -417,7 +442,7 @@ fun SpotItemCard(coin: SpotSignal, timeframeIndex: Int, viewModel: CryptoViewMod
                             entryPrice = coin.currentPrice,
                             currentPrice = coin.currentPrice,
                             targets = formatPrice(projectedPrice),
-                            stopLoss = formatPrice(coin.invalidationPrice),
+                            stopLoss = formatPrice(stopLossPrice),
                             confidence = confidence,
                             aiStatusEnglish = "Spot trade holding strong.\nNo signs of reversal.",
                             aiStatusBengali = "স্পট ট্রেড মজবুত রয়েছে।\nরিভার্সালের কোনো লক্ষণ নেই।"

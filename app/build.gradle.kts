@@ -87,8 +87,9 @@ dependencies {
 }
 
 tasks.register<Copy>("copyApkToRoot") {
+    doNotTrackState("Copies the debug APK into the project delivery directory.")
     from(layout.buildDirectory.dir("outputs/apk/debug"))
-    into(rootProject.layout.projectDirectory)
+    into(rootProject.layout.projectDirectory.dir(".build-outputs"))
     include("app-debug.apk")
 }
 

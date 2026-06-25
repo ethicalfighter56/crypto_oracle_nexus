@@ -161,7 +161,7 @@ Implementation Notes
 5. Use mixed English-Bengali for trading action labels such as "SHORT অনুকূল" and "LONG অনুকূল".
 6. Do not use "দাম কমছে" as a replacement for "BEARISH"; use "নিম্নমুখী প্রবণতা".
 7. Do not use "দাম বাড়ছে" as a replacement for "BULLISH"; use "উর্ধ্বমুখী প্রবণতা".
- 8. Only those articles that correspond to the current text of the project will be changed, and those that are not on this list but are displaying Bangla in the project, will remain as it is.
+8. Only those articles that correspond to the current text of the project will be changed, and those that are not on this list but are displaying Bangla in the project, will remain as it is.
 
 Project Risk/Score Color Rules
 

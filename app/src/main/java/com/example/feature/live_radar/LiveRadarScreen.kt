@@ -143,6 +143,7 @@ private fun LiveRadarStickyControlCluster(
     onLanguageToggle: () -> Unit,
     onSelect: (Int) -> Unit
 ) {
+    val regimeColor = titanMarketRegimeColor(marketRegime)
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -198,7 +199,7 @@ private fun LiveRadarStickyControlCluster(
         Card(
             colors = CardDefaults.cardColors(containerColor = DarkSurface),
             shape = RoundedCornerShape(12.dp),
-            border = BorderStroke(0.85.dp, CryptoCyan.copy(alpha = 0.28f)),
+            border = BorderStroke(0.85.dp, regimeColor.copy(alpha = 0.38f)),
             modifier = Modifier.fillMaxWidth()
         ) {
             Row(
@@ -210,7 +211,7 @@ private fun LiveRadarStickyControlCluster(
                 Box(
                     modifier = Modifier
                         .size(10.dp)
-                        .background(LiveRadarInstitutionalGreen, CircleShape)
+                        .background(regimeColor, CircleShape)
                 )
                 Spacer(modifier = Modifier.width(10.dp))
                 Column(modifier = Modifier.weight(1f)) {
@@ -227,7 +228,7 @@ private fun LiveRadarStickyControlCluster(
                         text = marketRegime,
                         fontSize = 13.2.sp,
                         fontWeight = FontWeight.Bold,
-                        color = LiveRadarInstitutionalGreen,
+                        color = regimeColor,
                         fontFamily = FontFamily.Monospace,
                         modifier = Modifier.padding(top = 1.dp),
                         maxLines = 2,

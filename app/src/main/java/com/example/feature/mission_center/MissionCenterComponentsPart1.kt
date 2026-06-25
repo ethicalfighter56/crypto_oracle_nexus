@@ -444,7 +444,7 @@ fun MissionSetupSummary(isBengali: Boolean) {
                 SetupRow("SOURCE", "SIGNAL PRO", T_TextPrimary)
             }
             Column(modifier = Modifier.weight(1f)) {
-                SetupRow("RISK PROFILE", "MODERATE", T_Green)
+                SetupRow("CONSENSUS BIAS", "MODERATE", T_Green)
                 Spacer(modifier = Modifier.height(8.dp))
                 SetupRow("COPILOT MODE", "ALERT-ONLY", T_Cyan)
                 Spacer(modifier = Modifier.height(8.dp))

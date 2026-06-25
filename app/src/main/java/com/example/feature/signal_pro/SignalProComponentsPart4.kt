@@ -367,7 +367,21 @@ fun FuturesItemCard(coin: FuturesSignal, timeframeIndex: Int, viewModel: CryptoV
                         isBengali = isBengali)
 
                     Spacer(modifier = Modifier.height(10.dp))
-                    DirectionTradeLogicValidation(isLong = isLong, isBengali = isBengali)
+                    val stopLossPrice = signalProValidatedStopLoss(
+                        currentPrice = coin.currentPrice,
+                        priceChangePct = priceChange,
+                        invalidationPrice = coin.invalidationPrice,
+                        isLong = isLong
+                    )
+                    val directionValid = signalProTradeDirectionValid(coin.currentPrice, targetPrice, stopLossPrice, isLong)
+                    val rrValid = signalProRiskRewardValid(coin.currentPrice, targetPrice, stopLossPrice, isLong)
+                    DirectionTradeLogicValidation(
+                        isLong = isLong,
+                        isBengali = isBengali,
+                        entryPrice = coin.currentPrice,
+                        targetPrice = targetPrice,
+                        stopLossPrice = stopLossPrice
+                    )
 
                     Spacer(modifier = Modifier.height(10.dp))
 
@@ -397,10 +411,21 @@ fun FuturesItemCard(coin: FuturesSignal, timeframeIndex: Int, viewModel: CryptoV
                     AiExplanationModule(coin.whyThisSignalEnglish, coin.whyThisSignalBengali, coin.coinSymbol, isBengali) { viewModel.toggleLanguage() }
 
                     Spacer(modifier = Modifier.height(10.dp))
-                    DecisionGateSummary(isBengali)
+                    DecisionGateSummary(
+                        isBengali = isBengali,
+                        directionValid = directionValid,
+                        rrValid = rrValid,
+                        executionReadiness = "OPTIMAL",
+                        consensusAligned = true
+                    )
 
                     Spacer(modifier = Modifier.height(10.dp))
-                    ConflictFlags(isBengali)
+                    ConflictFlags(
+                        isBengali = isBengali,
+                        directionValid = directionValid,
+                        rrValid = rrValid,
+                        consensusAligned = true
+                    )
 
                     Spacer(modifier = Modifier.height(10.dp))
                     SourceProvenanceAudit(isBengali)
@@ -410,7 +435,7 @@ fun FuturesItemCard(coin: FuturesSignal, timeframeIndex: Int, viewModel: CryptoV
 
                     Spacer(modifier = Modifier.height(12.dp))
                     
-                    val mission = remember(coin, targetPrice, isLong, timeframeIndex) {
+                    val mission = remember(coin, targetPrice, isLong, timeframeIndex, stopLossPrice) {
                         com.example.model.Mission(
                             coinSymbol = coin.coinSymbol,
                             type = if (isLong) "LONG" else "SHORT",
@@ -419,7 +444,7 @@ fun FuturesItemCard(coin: FuturesSignal, timeframeIndex: Int, viewModel: CryptoV
                             entryPrice = coin.currentPrice,
                             currentPrice = coin.currentPrice,
                             targets = formatPrice(targetPrice),
-                            stopLoss = formatPrice(coin.invalidationPrice),
+                            stopLoss = formatPrice(stopLossPrice),
                             confidence = probability,
                             aiStatusEnglish = if (isLong) "Bullish convergence intact." else "Bearish momentum building.",
                             aiStatusBengali = if (isLong) "উর্ধ্বমুখী প্রবণতা অটুট রয়েছে।" else "নিম্নমুখী প্রবণতার মতিগতি তৈরি হচ্ছে।"
@@ -677,7 +702,7 @@ fun OraclePickCard(asset: Any, timeframeIndex: Int, viewModel: CryptoViewModel, 
                     ExecutionReadinessMatrix(isBengali)
                     Spacer(modifier = Modifier.height(10.dp))
 
-                    if (isFutures && asset is FuturesSignal) {
+                    if (asset is FuturesSignal) {
                         LeverageIntelligenceModule(asset)
                         Spacer(modifier = Modifier.height(10.dp))
                     }
@@ -689,7 +714,26 @@ fun OraclePickCard(asset: Any, timeframeIndex: Int, viewModel: CryptoViewModel, 
                     }, isLong, isBengali)
 
                     Spacer(modifier = Modifier.height(10.dp))
-                    DirectionTradeLogicValidation(isLong = isLong, isBengali = isBengali)
+                    val oraclePickInvalidation = when (asset) {
+                        is SpotSignal -> asset.invalidationPrice
+                        is FuturesSignal -> asset.invalidationPrice
+                        else -> 0.0
+                    }
+                    val stopLossPrice = signalProValidatedStopLoss(
+                        currentPrice = curPrice,
+                        priceChangePct = potential,
+                        invalidationPrice = oraclePickInvalidation,
+                        isLong = isLong
+                    )
+                    val directionValid = signalProTradeDirectionValid(curPrice, projPrice, stopLossPrice, isLong)
+                    val rrValid = signalProRiskRewardValid(curPrice, projPrice, stopLossPrice, isLong)
+                    DirectionTradeLogicValidation(
+                        isLong = isLong,
+                        isBengali = isBengali,
+                        entryPrice = curPrice,
+                        targetPrice = projPrice,
+                        stopLossPrice = stopLossPrice
+                    )
 
                     Spacer(modifier = Modifier.height(10.dp))
 
@@ -697,11 +741,7 @@ fun OraclePickCard(asset: Any, timeframeIndex: Int, viewModel: CryptoViewModel, 
                         currentPrice = curPrice,
                         projectedPrice = projPrice,
                         priceChangePct = potential,
-                        invalidationPrice = when (asset) {
-                            is SpotSignal -> asset.invalidationPrice
-                            is FuturesSignal -> asset.invalidationPrice
-                            else -> 0.0
-                        },
+                        invalidationPrice = oraclePickInvalidation,
                         isLong = isLong
                     )
 
@@ -724,10 +764,21 @@ fun OraclePickCard(asset: Any, timeframeIndex: Int, viewModel: CryptoViewModel, 
                     AiExplanationModule(whyEn, whyBn, symbol, isBengali) { viewModel.toggleLanguage() }
 
                     Spacer(modifier = Modifier.height(10.dp))
-                    DecisionGateSummary(isBengali)
+                    DecisionGateSummary(
+                        isBengali = isBengali,
+                        directionValid = directionValid,
+                        rrValid = rrValid,
+                        executionReadiness = "OPTIMAL",
+                        consensusAligned = true
+                    )
 
                     Spacer(modifier = Modifier.height(10.dp))
-                    ConflictFlags(isBengali)
+                    ConflictFlags(
+                        isBengali = isBengali,
+                        directionValid = directionValid,
+                        rrValid = rrValid,
+                        consensusAligned = true
+                    )
 
                     Spacer(modifier = Modifier.height(10.dp))
                     SourceProvenanceAudit(isBengali)
@@ -737,12 +788,7 @@ fun OraclePickCard(asset: Any, timeframeIndex: Int, viewModel: CryptoViewModel, 
 
                     Spacer(modifier = Modifier.height(12.dp))
                     
-                    val mission = remember(asset, projPrice, isLong, timeframeIndex) {
-                        val invalidation = when (asset) {
-                            is SpotSignal -> asset.invalidationPrice
-                            is FuturesSignal -> asset.invalidationPrice
-                            else -> 0.0
-                        }
+                    val mission = remember(asset, projPrice, isLong, timeframeIndex, stopLossPrice) {
                         val conf = when (asset) {
                             is SpotSignal -> asset.confidencePct
                             is FuturesSignal -> asset.probabilityPct
@@ -756,7 +802,7 @@ fun OraclePickCard(asset: Any, timeframeIndex: Int, viewModel: CryptoViewModel, 
                             entryPrice = entryPrice,
                             currentPrice = curPrice,
                             targets = formatPrice(projPrice),
-                            stopLoss = formatPrice(invalidation),
+                            stopLoss = formatPrice(stopLossPrice),
                             confidence = conf,
                             aiStatusEnglish = "Oracle Pick active monitoring.",
                             aiStatusBengali = "ওরাকল পিক সক্রিয় পর্যবেক্ষণ।"
