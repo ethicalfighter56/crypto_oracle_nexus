@@ -161,6 +161,19 @@ fun AccuracyCenterScreen(
         }
 
         item {
+            TrialApiCostAndDiagnosisPanel(
+                signalCount = filteredSignals.size,
+                radarCount = radarAlerts.size,
+                activeMissions = activeMissions.size,
+                completedMissions = userMissions.size,
+                signalLosses = filteredSignals.count { it.result.equals("LOSS", true) },
+                missionLosses = userMissions.count { it.isNegative },
+                pendingSignals = signalCoverage.third,
+                marketRegime = marketRegime
+            )
+        }
+
+        item {
             val filters = listOf("7D", "30D", "90D", "All")
             PerformanceChartPanel(
                 title = "PERFORMANCE CURVE (${filters[selectedFilterIndex]})",

@@ -308,6 +308,104 @@ private fun SpecializedTile(title: String, primary: String, secondary: String, t
 }
 
 @Composable
+internal fun TrialApiCostAndDiagnosisPanel(
+    signalCount: Int,
+    radarCount: Int,
+    activeMissions: Int,
+    completedMissions: Int,
+    signalLosses: Int,
+    missionLosses: Int,
+    pendingSignals: Int,
+    marketRegime: String
+) {
+    val totalApiCost = 0.0
+    val totalFailures = signalLosses + missionLosses
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        StatsHubSectionHeader(
+            title = "TRIAL COST + TITAN MODE DIAGNOSIS",
+            subtitle = "Temporary API-cost visibility and failure-reason surface before backend/live trial"
+        )
+        StatsGlassPanel {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                TrialTelemetryTile("ORACLE FEED", "API COST $0.0000", "Local snapshot", CryptoCyan, Modifier.weight(1f))
+                TrialTelemetryTile("SIGNAL PRO", "API COST $0.0000", "$signalCount signals", AccentGold, Modifier.weight(1f))
+            }
+            Spacer(Modifier.height(8.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                TrialTelemetryTile("LIVE RADAR", "API COST $0.0000", "$radarCount alerts", CryptoGreen, Modifier.weight(1f))
+                TrialTelemetryTile("MISSION CENTER", "API COST $0.0000", "$activeMissions active / $completedMissions closed", CryptoCyan, Modifier.weight(1f))
+            }
+            Spacer(Modifier.height(8.dp))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color(0xFF070B12), RoundedCornerShape(12.dp))
+                    .border(1.dp, AccentGold.copy(alpha = 0.42f), RoundedCornerShape(12.dp))
+                    .padding(10.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text("TOTAL API COST", fontSize = 8.sp, color = TextMuted, fontWeight = FontWeight.Black, letterSpacing = 0.8.sp)
+                    Text(String.format(java.util.Locale.US, "$%.4f", totalApiCost), fontSize = 15.sp, color = AccentGold, fontWeight = FontWeight.Black)
+                    Text("Temporary trial-mode viewer • no live billing feed connected", fontSize = 8.5.sp, color = TextSecondary, maxLines = 1)
+                }
+                SourceBadge("TRIAL", AccentGold)
+            }
+            Spacer(Modifier.height(8.dp))
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color(0xFF070B12), RoundedCornerShape(12.dp))
+                    .border(1.dp, if (totalFailures > 0) TitanRed.copy(alpha = 0.48f) else CryptoGreen.copy(alpha = 0.42f), RoundedCornerShape(12.dp))
+                    .padding(10.dp)
+            ) {
+                Text("TITAN MODE TEMPORARY DIAGNOSIS", fontSize = 9.sp, color = CryptoCyan, fontWeight = FontWeight.Black, letterSpacing = 0.8.sp)
+                Spacer(Modifier.height(5.dp))
+                SetupDiagnosisLine("Failure Events", totalFailures.toString(), if (totalFailures > 0) TitanRed else CryptoGreen)
+                SetupDiagnosisLine("Signal Loss Flags", signalLosses.toString(), if (signalLosses > 0) TitanRed else TextSecondary)
+                SetupDiagnosisLine("Mission Loss Flags", missionLosses.toString(), if (missionLosses > 0) TitanRed else TextSecondary)
+                SetupDiagnosisLine("Pending Signals", pendingSignals.toString(), if (pendingSignals > 0) AccentGold else TextSecondary)
+                SetupDiagnosisLine("Market Regime", marketRegime.take(24), if (marketRegime.contains("BEAR", true)) AccentGold else CryptoGreen)
+                Spacer(Modifier.height(5.dp))
+                Text(
+                    text = when {
+                        totalFailures > 0 -> "Failure reasons are flagged for backend diagnosis: validate entry timing, SL/TP hit path, data freshness, spread, slippage, and Mission Guard decisions."
+                        completedMissions == 0 -> "No completed mission yet. Failure-log reason output will activate after trial missions close."
+                        else -> "No failure reason logged in the current local ledger window."
+                    },
+                    fontSize = 8.8.sp,
+                    color = TextSecondary,
+                    lineHeight = 10.8.sp
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun TrialTelemetryTile(title: String, cost: String, detail: String, accent: Color, modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier
+            .background(Color(0xFF070B12), RoundedCornerShape(10.dp))
+            .border(1.dp, accent.copy(alpha = 0.38f), RoundedCornerShape(10.dp))
+            .padding(8.dp)
+    ) {
+        Text(title, fontSize = 7.8.sp, color = accent, fontWeight = FontWeight.Black, letterSpacing = 0.6.sp, maxLines = 1)
+        Text(cost, fontSize = 9.sp, color = TextPrimary, fontWeight = FontWeight.Black, maxLines = 1)
+        Text(detail, fontSize = 8.sp, color = TextMuted, maxLines = 1)
+    }
+}
+
+@Composable
+private fun SetupDiagnosisLine(label: String, value: String, color: Color) {
+    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+        Text(label.uppercase(), fontSize = 8.sp, color = TextMuted, fontWeight = FontWeight.Black, maxLines = 1)
+        Text(value, fontSize = 9.sp, color = color, fontWeight = FontWeight.Black, maxLines = 1)
+    }
+}
+
+@Composable
 internal fun PerformanceChartPanel(title: String, missions: List<Mission>, generatedSignals: List<SignalEntity>, selectedTab: String, isEmpty: Boolean) {
     Column {
         Text(title, fontSize = 12.sp, fontWeight = FontWeight.Black, color = TextPrimary)
