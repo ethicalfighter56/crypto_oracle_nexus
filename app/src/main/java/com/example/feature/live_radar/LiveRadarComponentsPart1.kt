@@ -292,6 +292,7 @@ fun ShortTermOpportunisticSignalsSection(timeframe: String, isBengali: Boolean, 
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .liveRadarSmoothExpansion()
                     .background(DarkBackground, RoundedCornerShape(8.dp))
                     .border(
                         1.dp,
@@ -410,6 +411,7 @@ fun ShortTermOpportunisticSignalsSection(timeframe: String, isBengali: Boolean, 
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .liveRadarSmoothExpansion()
                     .background(DarkBackground, RoundedCornerShape(8.dp))
                     .border(
                         1.dp,
@@ -528,6 +530,7 @@ fun ShortTermOpportunisticSignalsSection(timeframe: String, isBengali: Boolean, 
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .liveRadarSmoothExpansion()
                     .background(DarkBackground, RoundedCornerShape(8.dp))
                     .border(
                         1.dp,
