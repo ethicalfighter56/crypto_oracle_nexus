@@ -64,12 +64,6 @@ import com.example.viewmodel.AnalysisState
 import com.example.viewmodel.AppScreen
 import com.example.viewmodel.CryptoViewModel
 
-private fun spLeverageDigitsOnly(value: String?): String = value.orEmpty().filter { it.isDigit() }.take(3)
-
-private fun spLeverageDisplayValue(value: String?): String {
-    val digits = spLeverageDigitsOnly(value)
-    return if (digits.isBlank()) "" else "${digits}X"
-}
 import kotlinx.coroutines.delay
 import kotlin.math.absoluteValue
 import androidx.compose.foundation.rememberScrollState
@@ -78,6 +72,13 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.ui.draw.shadow
+
+private fun spLeverageDigitsOnly(value: String?): String = value.orEmpty().filter { it.isDigit() }.take(3)
+
+private fun spLeverageDisplayValue(value: String?): String {
+    val digits = spLeverageDigitsOnly(value)
+    return if (digits.isBlank()) "" else "${digits}X"
+}
 
 // Extracted from SignalProScreen.kt to keep the public screen entry point compact.
 @OptIn(ExperimentalMaterial3Api::class)
