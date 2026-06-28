@@ -69,8 +69,8 @@ fun SignalProMockupScreen(
                 .fillMaxSize()
                 .navigationBarsPadding()
                 .padding(horizontal = 10.dp),
-            contentPadding = PaddingValues(bottom = 42.dp, top = 2.dp),
-            verticalArrangement = Arrangement.spacedBy(5.dp)
+            contentPadding = PaddingValues(bottom = 72.dp, top = 2.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             item { SignalProHeader(onBack = { viewModel.navigateTo(AppScreen.Home) }) }
             item { PriceMatrixBlock() }
@@ -113,8 +113,8 @@ fun SignalProHeader(onBack: () -> Unit) {
             }
             Spacer(modifier = Modifier.width(8.dp))
             Column {
-                Text("TITAN ORACLE SIGNAL INSIGHT", color = T_TextPrimary, fontSize = 16.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
-                Text("Validation Cockpit", color = T_Cyan, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
+                Text("TITAN ORACLE SIGNAL INSIGHT", color = T_TextPrimary, fontSize = 15.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
+                Text("Validation Cockpit", color = T_Cyan, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
             }
         }
         
@@ -198,7 +198,7 @@ fun RiskScoreSurface() {
 fun ExecutionReadinessSurface() {
     SurfaceBlock("EXECUTION READINESS") {
         Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
-            Text("ACCEPTABLE", color = T_Cyan, fontSize = 16.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
+            Text("ACCEPTABLE", color = T_Cyan, fontSize = 15.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
             Spacer(modifier = Modifier.height(4.dp))
             Text("Spread: 0.04% | Liq: High", color = T_TextSecondary, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
             Text("Slip: Low | Latency: 180ms", color = T_TextSecondary, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
@@ -285,7 +285,7 @@ fun DirectionValidationSurface() {
 fun RRValidationSurface() {
     SurfaceBlock("RISK / REWARD") {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Text("RR: 2.4R", color = T_Cyan, fontSize = 16.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
+            Text("RR: 2.4R", color = T_Cyan, fontSize = 15.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
             Text("VALID", color = T_Green, fontSize = 11.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
         }
         Spacer(modifier = Modifier.height(4.dp))
@@ -297,7 +297,7 @@ fun RRValidationSurface() {
 fun SLSanitySurface() {
     SurfaceBlock("STOP-LOSS SANITY") {
         Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
-            Text("3.8%", color = T_Green, fontSize = 16.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
+            Text("3.8%", color = T_Green, fontSize = 15.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
             Spacer(modifier = Modifier.height(4.dp))
             Text("State: Standard", color = T_TextSecondary, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
         }
@@ -602,7 +602,7 @@ fun ActionButtonsSurface(onBack: () -> Unit) {
                     .padding(horizontal = 8.dp),
                 contentAlignment = Alignment.Center
             ) {
-                Text("⬅️ BACK", fontSize = 11.sp, fontWeight = FontWeight.Black, color = T_TextPrimary, letterSpacing = 0.8.sp)
+                Text("← BACK", fontSize = 11.sp, fontWeight = FontWeight.Black, color = T_TextPrimary, letterSpacing = 0.8.sp)
             }
 
             Box(
@@ -617,7 +617,7 @@ fun ActionButtonsSurface(onBack: () -> Unit) {
                 contentAlignment = Alignment.Center
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("➡️ ACCEPT SIGNAL", fontWeight = FontWeight.Black, fontSize = 11.sp, color = T_TextPrimary, letterSpacing = 0.8.sp)
+                    Text("ACCEPT SIGNAL →", fontWeight = FontWeight.Black, fontSize = 11.sp, color = T_TextPrimary, letterSpacing = 0.8.sp)
                 }
             }
         }

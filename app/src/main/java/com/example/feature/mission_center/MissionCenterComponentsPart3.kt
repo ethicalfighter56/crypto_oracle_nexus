@@ -13,16 +13,19 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.viewmodel.CryptoViewModel
@@ -37,6 +40,15 @@ import com.example.ui.theme.DarkBackground
 // Terminal Colors - Institutional Grade
 
 // Extracted from MissionCenterScreen.kt to keep the public screen entry point compact.
+
+private fun mcLeverageDigitsOnly(value: String?): String {
+    return value.orEmpty().filter { it.isDigit() }.take(3)
+}
+
+private fun mcLeverageDisplayValue(value: String?): String? {
+    val digits = mcLeverageDigitsOnly(value)
+    return digits.takeIf { it.isNotBlank() }?.let { "${it}X" }
+}
 @Composable
 fun MissionTerminalCard(
     missionId: String,
@@ -721,7 +733,8 @@ fun MissionTerminalCard(
                 var overrideTp2 by remember { mutableStateOf(mission.tp2 ?: "") }
                 var overrideTp3 by remember { mutableStateOf(mission.tp3 ?: "") }
                 var overrideSl by remember { mutableStateOf(mission.manualStopLoss?.replace(" / SIGNAL FALLBACK", "") ?: "") }
-                var overrideLev by remember { mutableStateOf(mission.leverage?.replace(" / SIGNAL FALLBACK", "") ?: "") }
+                var overrideLev by remember { mutableStateOf(mcLeverageDigitsOnly(mission.leverage?.replace(" / SIGNAL FALLBACK", ""))) }
+                var overrideLevFocused by remember { mutableStateOf(false) }
                 var overrideRisk by remember { mutableStateOf(mission.riskProfile ?: "") }
                 var overrideAlloc by remember { mutableStateOf(mission.positionSize ?: "") }
                 var overrideRemark by remember { mutableStateOf(mission.setupRemark ?: "") }
@@ -754,7 +767,7 @@ fun MissionTerminalCard(
                                                 overrideTp2 = profile.tp2
                                                 overrideTp3 = profile.tp3
                                                 overrideSl = profile.stopLoss
-                                                overrideLev = profile.leverage
+                                                overrideLev = mcLeverageDigitsOnly(profile.leverage)
                                                 overrideRisk = profile.riskProfile
                                                 overrideAlloc = profile.positionSize
                                                 overrideRemark = profile.remark
@@ -763,7 +776,7 @@ fun MissionTerminalCard(
                                                 overrideTp2 = ""
                                                 overrideTp3 = ""
                                                 overrideSl = mission.stopLoss
-                                                overrideLev = ""
+                                                overrideLev = if (isFutures) "2" else "1"
                                                 overrideRisk = ""
                                                 overrideAlloc = ""
                                                 overrideRemark = ""
@@ -788,7 +801,20 @@ fun MissionTerminalCard(
                                 item { androidx.compose.material3.OutlinedTextField(value = overrideTp2, onValueChange = { overrideTp2 = it }, label = { Text("TP2", fontSize = 10.sp) }, modifier = Modifier.fillMaxWidth(), singleLine = true, colors = textFieldColors) }
                                 item { androidx.compose.material3.OutlinedTextField(value = overrideTp3, onValueChange = { overrideTp3 = it }, label = { Text("TP3", fontSize = 10.sp) }, modifier = Modifier.fillMaxWidth(), singleLine = true, colors = textFieldColors) }
                                 item { androidx.compose.material3.OutlinedTextField(value = overrideSl, onValueChange = { overrideSl = it }, label = { Text("Stop Loss", fontSize = 10.sp) }, modifier = Modifier.fillMaxWidth(), singleLine = true, colors = textFieldColors) }
-                                item { androidx.compose.material3.OutlinedTextField(value = overrideLev, onValueChange = { overrideLev = it }, label = { Text("Leverage", fontSize = 10.sp) }, modifier = Modifier.fillMaxWidth(), singleLine = true, colors = textFieldColors) }
+                                item {
+                                    androidx.compose.material3.OutlinedTextField(
+                                        value = if (overrideLevFocused) overrideLev else mcLeverageDisplayValue(overrideLev).orEmpty(),
+                                        onValueChange = { overrideLev = mcLeverageDigitsOnly(it) },
+                                        label = { Text("Leverage", fontSize = 10.sp) },
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .onFocusChanged { focusState -> overrideLevFocused = focusState.isFocused },
+                                        singleLine = true,
+                                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                        supportingText = { Text("Digits only. X is restored after editing.", fontSize = 8.sp) },
+                                        colors = textFieldColors
+                                    )
+                                }
                                 item { androidx.compose.material3.OutlinedTextField(value = overrideRisk, onValueChange = { overrideRisk = it }, label = { Text("Consensus Bias", fontSize = 10.sp) }, modifier = Modifier.fillMaxWidth(), singleLine = true, colors = textFieldColors) }
                                 item { androidx.compose.material3.OutlinedTextField(value = overrideAlloc, onValueChange = { overrideAlloc = it }, label = { Text("Allocation", fontSize = 10.sp) }, modifier = Modifier.fillMaxWidth(), singleLine = true, colors = textFieldColors) }
                                 item { androidx.compose.material3.OutlinedTextField(value = overrideRemark, onValueChange = { overrideRemark = it }, label = { Text("Remark", fontSize = 10.sp) }, modifier = Modifier.fillMaxWidth(), singleLine = true, colors = textFieldColors) }
@@ -888,7 +914,7 @@ fun MissionTerminalCard(
                                 tp2 = overrideTp2.ifBlank { null },
                                 tp3 = overrideTp3.ifBlank { null },
                                 manualStopLoss = overrideSl.ifBlank { null },
-                                leverage = overrideLev.ifBlank { null },
+                                leverage = mcLeverageDisplayValue(overrideLev),
                                 riskProfile = overrideRisk.ifBlank { null },
                                 positionSize = overrideAlloc.ifBlank { null },
                                 copilotMode = aiPolicy,

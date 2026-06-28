@@ -12,6 +12,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -33,6 +34,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.testTag
@@ -42,6 +44,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.animation.core.tween
@@ -60,6 +63,13 @@ import com.example.ui.theme.*
 import com.example.viewmodel.AnalysisState
 import com.example.viewmodel.AppScreen
 import com.example.viewmodel.CryptoViewModel
+
+private fun spLeverageDigitsOnly(value: String?): String = value.orEmpty().filter { it.isDigit() }.take(3)
+
+private fun spLeverageDisplayValue(value: String?): String {
+    val digits = spLeverageDigitsOnly(value)
+    return if (digits.isBlank()) "" else "${digits}X"
+}
 import kotlinx.coroutines.delay
 import kotlin.math.absoluteValue
 import androidx.compose.foundation.rememberScrollState
@@ -561,7 +571,7 @@ fun StartTradeFlow(
 
                 SetupCompactPanel(title = "MISSION INTELLIGENCE") {
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(7.dp)) {
-                        CompactSetupTextField("LEVERAGE", setupLeverage, { setupLeverage = it.uppercase().replace(" ", "") }, Modifier.weight(1f), enabled = coreEditEnabled)
+                        CompactLeverageTextField("LEVERAGE", setupLeverage, { setupLeverage = spLeverageDisplayValue(it) }, Modifier.weight(1f), enabled = coreEditEnabled)
                         CompactSetupTextField("ALLOCATION", setupAllocation, { setupAllocation = it }, Modifier.weight(1f), enabled = coreEditEnabled)
                     }
                     Spacer(modifier = Modifier.height(7.dp))
@@ -1097,7 +1107,7 @@ private fun PremiumTitanInsightButton(
         initialValue = -420f,
         targetValue = 620f,
         animationSpec = infiniteRepeatable(
-            animation = tween(3600, easing = LinearEasing),
+            animation = tween(7200, easing = LinearEasing),
             repeatMode = RepeatMode.Restart
         ),
         label = "TitanInsightSweep"
@@ -1106,7 +1116,7 @@ private fun PremiumTitanInsightButton(
         initialValue = 0.28f,
         targetValue = 0.58f,
         animationSpec = infiniteRepeatable(
-            animation = tween(1400, easing = LinearEasing),
+            animation = tween(1800, easing = LinearEasing),
             repeatMode = RepeatMode.Reverse
         ),
         label = "TitanInsightGlow"
@@ -1207,6 +1217,45 @@ private fun CompactSetupTextField(
         modifier = modifier.height(52.dp),
         singleLine = true,
         readOnly = !enabled,
+        textStyle = androidx.compose.ui.text.TextStyle(
+            color = TextPrimary,
+            fontSize = 11.sp,
+            fontWeight = FontWeight.SemiBold,
+            fontFamily = FontFamily.SansSerif,
+            fontFeatureSettings = "tnum"
+        ),
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedBorderColor = CryptoCyan.copy(alpha = 0.78f),
+            unfocusedBorderColor = TextMuted.copy(alpha = 0.40f),
+            focusedLabelColor = CryptoCyan,
+            unfocusedLabelColor = TextMuted,
+            cursorColor = CryptoCyan,
+            focusedTextColor = TextPrimary,
+            unfocusedTextColor = TextPrimary
+        )
+    )
+}
+
+@Composable
+private fun CompactLeverageTextField(
+    label: String,
+    value: String,
+    onValueChange: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true
+) {
+    var focused by remember { mutableStateOf(false) }
+    val digits = spLeverageDigitsOnly(value)
+    OutlinedTextField(
+        value = if (focused) digits else spLeverageDisplayValue(digits),
+        onValueChange = { if (enabled) onValueChange(it) },
+        label = { Text(label, fontSize = 8.5.sp, maxLines = 1) },
+        modifier = modifier
+            .height(52.dp)
+            .onFocusChanged { focused = it.isFocused },
+        singleLine = true,
+        readOnly = !enabled,
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
         textStyle = androidx.compose.ui.text.TextStyle(
             color = TextPrimary,
             fontSize = 11.sp,
