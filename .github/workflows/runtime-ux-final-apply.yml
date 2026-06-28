@@ -1,0 +1,153 @@
+name: Runtime UX Final Apply
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - pre-backend-test-runtime-ux-final
+    paths:
+      - '.github/workflows/runtime-ux-final-apply.yml'
+
+permissions:
+  contents: write
+
+env:
+  GRADLE_OPTS: -Dorg.gradle.daemon=false -Dorg.gradle.jvmargs="-Xmx4096m -Dfile.encoding=UTF-8"
+
+jobs:
+  apply-runtime-ux:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout target branch
+        uses: actions/checkout@v4
+        with:
+          ref: pre-backend-test-runtime-ux-final
+          fetch-depth: 0
+
+      - name: Apply runtime UX patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 <<'PY'
+          from pathlib import Path
+          import re
+
+          def p(path):
+              return Path(path)
+
+          def read(path):
+              return p(path).read_text()
+
+          def write(path, text):
+              p(path).write_text(text)
+
+          def add_after(text, marker, insert):
+              if insert.strip() in text:
+                  return text
+              if marker not in text:
+                  raise SystemExit(f"marker not found: {marker[:80]}")
+              return text.replace(marker, marker + insert, 1)
+
+          def replace_once(text, old, new, label):
+              if new in text:
+                  return text
+              if old not in text:
+                  raise SystemExit(f"replace target not found: {label}")
+              return text.replace(old, new, 1)
+
+          # 22/23/24 Live Radar expansion parity + smooth expansion
+          live = 'app/src/main/java/com/example/feature/live_radar/LiveRadarComponentsPart1.kt'
+          s = read(live)
+          s = add_after(s, 'import androidx.compose.animation.*\n', 'import androidx.compose.animation.core.FastOutSlowInEasing\nimport androidx.compose.animation.core.tween\n')
+          s = add_after(s, '// Extracted from LiveRadarScreen.kt to keep the public screen entry point compact.\n', '\nprivate fun Modifier.liveRadarSmoothExpansion(): Modifier = this.animateContentSize(\n    animationSpec = tween(durationMillis = 320, easing = FastOutSlowInEasing)\n)\n')
+          old = 'modifier = Modifier\n                    .fillMaxWidth()\n                    .background(DarkBackground, RoundedCornerShape(8.dp))'
+          new = 'modifier = Modifier\n                    .fillMaxWidth()\n                    .liveRadarSmoothExpansion()\n                    .background(DarkBackground, RoundedCornerShape(8.dp))'
+          if '.liveRadarSmoothExpansion()' not in s:
+              if s.count(old) != 3:
+                  raise SystemExit(f'expected 3 Live Radar card modifiers, found {s.count(old)}')
+              s = s.replace(old, new)
+          write(live, s)
+
+          # 13 Mission Center leverage: digits while focused, X suffix after focus loss/save
+          mission = 'app/src/main/java/com/example/feature/mission_center/MissionCenterComponentsPart3.kt'
+          s = read(mission)
+          s = add_after(s, 'import androidx.compose.foundation.shape.RoundedCornerShape\n', 'import androidx.compose.foundation.text.KeyboardOptions\n')
+          s = add_after(s, 'import androidx.compose.ui.draw.clip\n', 'import androidx.compose.ui.focus.onFocusChanged\n')
+          s = add_after(s, 'import androidx.compose.ui.text.style.TextAlign\n', 'import androidx.compose.ui.text.input.KeyboardType\n')
+          s = add_after(s, '// Extracted from MissionCenterScreen.kt to keep the public screen entry point compact.\n', '\nprivate fun mcLeverageDigitsOnly(value: String?): String {\n    return value.orEmpty().filter { it.isDigit() }.take(3)\n}\n\nprivate fun mcLeverageDisplayValue(value: String?): String? {\n    val digits = mcLeverageDigitsOnly(value)\n    return digits.takeIf { it.isNotBlank() }?.let { "${it}X" }\n}\n')
+          s = replace_once(s, 'var overrideLev by remember { mutableStateOf(mission.leverage?.replace(" / SIGNAL FALLBACK", "") ?: "") }', 'var overrideLev by remember { mutableStateOf(mcLeverageDigitsOnly(mission.leverage?.replace(" / SIGNAL FALLBACK", ""))) }\n                var overrideLevFocused by remember { mutableStateOf(false) }', 'mission leverage state')
+          s = s.replace('overrideLev = profile.leverage', 'overrideLev = mcLeverageDigitsOnly(profile.leverage)')
+          s = s.replace('overrideLev = ""\n                                                overrideRisk = ""', 'overrideLev = if (isFutures) "2" else "1"\n                                                overrideRisk = ""')
+          s = replace_once(s, 'item { androidx.compose.material3.OutlinedTextField(value = overrideLev, onValueChange = { overrideLev = it }, label = { Text("Leverage", fontSize = 10.sp) }, modifier = Modifier.fillMaxWidth(), singleLine = true, colors = textFieldColors) }', 'item {\n                                    androidx.compose.material3.OutlinedTextField(\n                                        value = if (overrideLevFocused) overrideLev else mcLeverageDisplayValue(overrideLev).orEmpty(),\n                                        onValueChange = { overrideLev = mcLeverageDigitsOnly(it) },\n                                        label = { Text("Leverage", fontSize = 10.sp) },\n                                        modifier = Modifier\n                                            .fillMaxWidth()\n                                            .onFocusChanged { focusState -> overrideLevFocused = focusState.isFocused },\n                                        singleLine = true,\n                                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),\n                                        supportingText = { Text("Digits only. X is restored after editing.", fontSize = 8.sp) },\n                                        colors = textFieldColors\n                                    )\n                                }', 'mission leverage field')
+          s = s.replace('leverage = overrideLev.ifBlank { null },', 'leverage = mcLeverageDisplayValue(overrideLev),')
+          write(mission, s)
+
+          # 13/27 Signal Pro leverage field and TITAN Insight animation pacing
+          signal = 'app/src/main/java/com/example/feature/signal_pro/SignalProComponentsPart3.kt'
+          s = read(signal)
+          s = add_after(s, 'import androidx.compose.foundation.clickable\n', 'import androidx.compose.foundation.text.KeyboardOptions\n')
+          s = add_after(s, 'import androidx.compose.ui.draw.clip\n', 'import androidx.compose.ui.focus.onFocusChanged\n')
+          s = add_after(s, 'import androidx.compose.ui.text.style.TextAlign\n', 'import androidx.compose.ui.text.input.KeyboardType\n')
+          s = add_after(s, 'import com.example.viewmodel.CryptoViewModel\n', '\nprivate fun spLeverageDigitsOnly(value: String?): String = value.orEmpty().filter { it.isDigit() }.take(3)\n\nprivate fun spLeverageDisplayValue(value: String?): String {\n    val digits = spLeverageDigitsOnly(value)\n    return if (digits.isBlank()) "" else "${digits}X"\n}\n')
+          s = replace_once(s, 'CompactSetupTextField("LEVERAGE", setupLeverage, { setupLeverage = it.uppercase().replace(" ", "") }, Modifier.weight(1f), enabled = coreEditEnabled)', 'CompactLeverageTextField("LEVERAGE", setupLeverage, { setupLeverage = spLeverageDisplayValue(it) }, Modifier.weight(1f), enabled = coreEditEnabled)', 'signal pro leverage call')
+          s = s.replace('animation = tween(3600, easing = LinearEasing)', 'animation = tween(7200, easing = LinearEasing)')
+          s = s.replace('animation = tween(1400, easing = LinearEasing)', 'animation = tween(1800, easing = LinearEasing)')
+          helper = '''\n@Composable\nprivate fun CompactLeverageTextField(\n    label: String,\n    value: String,\n    onValueChange: (String) -> Unit,\n    modifier: Modifier = Modifier,\n    enabled: Boolean = true\n) {\n    var focused by remember { mutableStateOf(false) }\n    val digits = spLeverageDigitsOnly(value)\n    OutlinedTextField(\n        value = if (focused) digits else spLeverageDisplayValue(digits),\n        onValueChange = { if (enabled) onValueChange(it) },\n        label = { Text(label, fontSize = 8.5.sp, maxLines = 1) },\n        modifier = modifier\n            .height(52.dp)\n            .onFocusChanged { focused = it.isFocused },\n        singleLine = true,\n        readOnly = !enabled,\n        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),\n        textStyle = androidx.compose.ui.text.TextStyle(\n            color = TextPrimary,\n            fontSize = 11.sp,\n            fontWeight = FontWeight.SemiBold,\n            fontFamily = FontFamily.SansSerif,\n            fontFeatureSettings = "tnum"\n        ),\n        colors = OutlinedTextFieldDefaults.colors(\n            focusedBorderColor = CryptoCyan.copy(alpha = 0.78f),\n            unfocusedBorderColor = TextMuted.copy(alpha = 0.40f),\n            focusedLabelColor = CryptoCyan,\n            unfocusedLabelColor = TextMuted,\n            cursorColor = CryptoCyan,\n            focusedTextColor = TextPrimary,\n            unfocusedTextColor = TextPrimary\n        )\n    )\n}\n'''
+          if 'private fun CompactLeverageTextField(' not in s:
+              s = s.replace('\n@Composable\nprivate fun SetupPresetChip(', helper + '\n@Composable\nprivate fun SetupPresetChip(', 1)
+          write(signal, s)
+
+          # 26/27 Signal Insight compact page and clean arrows
+          mock = 'app/src/main/java/com/example/feature/signal_pro/SignalProMockupScreen.kt'
+          s = read(mock)
+          s = s.replace('contentPadding = PaddingValues(bottom = 42.dp, top = 2.dp)', 'contentPadding = PaddingValues(bottom = 72.dp, top = 2.dp)')
+          s = s.replace('verticalArrangement = Arrangement.spacedBy(5.dp)', 'verticalArrangement = Arrangement.spacedBy(4.dp)')
+          s = s.replace('fontSize = 16.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)', 'fontSize = 15.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)')
+          s = s.replace('fontSize = 10.sp, fontFamily = FontFamily.Monospace)', 'fontSize = 9.sp, fontFamily = FontFamily.Monospace)', 1)
+          s = s.replace('Text("⬅️ BACK", fontSize = 11.sp', 'Text("← BACK", fontSize = 11.sp')
+          s = s.replace('Text("➡️ ACCEPT SIGNAL", fontWeight = FontWeight.Black, fontSize = 11.sp', 'Text("ACCEPT SIGNAL →", fontWeight = FontWeight.Black, fontSize = 11.sp')
+          write(mock, s)
+
+          print('Runtime UX patch applied to approved Kotlin files only.')
+          PY
+
+      - name: Verify diff scope
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "Changed files:"
+          git diff --name-only
+          git diff --check
+          allowed='^(app/src/main/java/com/example/feature/live_radar/LiveRadarComponentsPart1\.kt|app/src/main/java/com/example/feature/mission_center/MissionCenterComponentsPart3\.kt|app/src/main/java/com/example/feature/signal_pro/SignalProComponentsPart3\.kt|app/src/main/java/com/example/feature/signal_pro/SignalProMockupScreen\.kt)$'
+          bad=$(git diff --name-only | grep -Ev "$allowed" || true)
+          if [ -n "$bad" ]; then
+            echo "Unauthorized changed files:" >&2
+            echo "$bad" >&2
+            exit 1
+          fi
+
+      - name: Commit patched files and remove temporary workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/runtime-ux-final-apply.yml
+          git add app/src/main/java/com/example/feature/live_radar/LiveRadarComponentsPart1.kt
+          git add app/src/main/java/com/example/feature/mission_center/MissionCenterComponentsPart3.kt
+          git add app/src/main/java/com/example/feature/signal_pro/SignalProComponentsPart3.kt
+          git add app/src/main/java/com/example/feature/signal_pro/SignalProMockupScreen.kt
+          git commit -m "fix: apply runtime UX stabilization tasks" -m "- Apply remaining tasks 13, 21, 22, 23, 24, 26, and 27 on runtime UX final branch" -m "- Add digits-only leverage editing with restored X suffix" -m "- Smooth Live Radar expansion and reduce Signal Insight bottom clipping" -m "- Preserve backend, API, database, Gradle, Manifest, and execution logic"
+          git push origin HEAD:pre-backend-test-runtime-ux-final
+
+      - name: Build debug APK
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -f ./gradlew ]; then
+            chmod +x ./gradlew
+            ./gradlew assembleDebug --stacktrace --no-daemon
+          else
+            gradle assembleDebug --stacktrace --no-daemon
+          fi
