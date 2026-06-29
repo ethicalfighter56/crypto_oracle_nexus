@@ -46,7 +46,7 @@ jobs:
       - name: Install Android SDK packages
         run: |
           sdkmanager --install "platform-tools" "platforms;android-36" "build-tools;36.0.0"
-          yes | sdkmanager --licenses >/dev/null
+          yes | sdkmanager --licenses >/dev/null || true
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
@@ -70,35 +70,21 @@ jobs:
             gradle ${{ github.event.inputs.build_type || 'assembleDebug' }} --stacktrace --no-daemon
           fi
 
-
       - name: Generate timestamped artifact name
-
         id: artifact_name
-
         shell: bash
-
         run: |
-
           FILE_TS="$(TZ='Asia/Dhaka' date '+%H-%M-%S-%d-%B-%y')"
-
           ARTIFACT_NAME="crypto-oracle-nexus-debug-[${FILE_TS}]-apk"
-
           echo "artifact_name=$ARTIFACT_NAME" >> "$GITHUB_OUTPUT"
-
           echo "ZIP download name will be: $ARTIFACT_NAME.zip"
 
       - name: Upload debug APK artifact
-
         uses: actions/upload-artifact@v4
-
         with:
-
           name: ${{ steps.artifact_name.outputs.artifact_name }}
-
           path: app/build/outputs/apk/debug/app-debug.apk
-
           if-no-files-found: error
-
           retention-days: 30
 
       - name: Upload build reports on failure

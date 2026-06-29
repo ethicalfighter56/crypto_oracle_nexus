@@ -69,8 +69,8 @@ fun SignalProMockupScreen(
                 .fillMaxSize()
                 .navigationBarsPadding()
                 .padding(horizontal = 10.dp),
-            contentPadding = PaddingValues(bottom = 42.dp, top = 2.dp),
-            verticalArrangement = Arrangement.spacedBy(5.dp)
+            contentPadding = PaddingValues(bottom = 72.dp, top = 2.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             item { SignalProHeader(onBack = { viewModel.navigateTo(AppScreen.Home) }) }
             item { PriceMatrixBlock() }
@@ -113,8 +113,8 @@ fun SignalProHeader(onBack: () -> Unit) {
             }
             Spacer(modifier = Modifier.width(8.dp))
             Column {
-                Text("TITAN ORACLE SIGNAL INSIGHT", color = T_TextPrimary, fontSize = 16.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
-                Text("Validation Cockpit", color = T_Cyan, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
+                Text("TITAN ORACLE SIGNAL INSIGHT", color = T_TextPrimary, fontSize = 15.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
+                Text("Validation Cockpit", color = T_Cyan, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
             }
         }
         
@@ -251,8 +251,8 @@ fun EngineCard(name: String, score: String, vote: String, status: String, color:
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column {
-            Text(name, color = T_TextPrimary, fontSize = 11.sp, fontFamily = FontFamily.Monospace)
-            Text("Status: $status", color = T_TextSecondary, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
+            Text(name, color = T_TextPrimary, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
+            Text("Status: $status", color = T_TextSecondary, fontSize = 8.5.sp, fontFamily = FontFamily.Monospace)
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(score, color = color, fontSize = 12.5.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
@@ -602,7 +602,7 @@ fun ActionButtonsSurface(onBack: () -> Unit) {
                     .padding(horizontal = 8.dp),
                 contentAlignment = Alignment.Center
             ) {
-                Text("⬅️ BACK", fontSize = 11.sp, fontWeight = FontWeight.Black, color = T_TextPrimary, letterSpacing = 0.8.sp)
+                Text("← BACK", fontSize = 11.sp, fontWeight = FontWeight.Black, color = T_TextPrimary, letterSpacing = 0.8.sp)
             }
 
             Box(
@@ -617,7 +617,7 @@ fun ActionButtonsSurface(onBack: () -> Unit) {
                 contentAlignment = Alignment.Center
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("➡️ ACCEPT SIGNAL", fontWeight = FontWeight.Black, fontSize = 11.sp, color = T_TextPrimary, letterSpacing = 0.8.sp)
+                    Text("ACCEPT SIGNAL →", fontWeight = FontWeight.Black, fontSize = 11.sp, color = T_TextPrimary, letterSpacing = 0.8.sp)
                 }
             }
         }

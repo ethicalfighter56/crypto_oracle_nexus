@@ -68,6 +68,16 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.ui.draw.shadow
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.text.input.KeyboardType
+
+private fun spLeverageDigitsOnly(value: String?): String = value.orEmpty().filter { it.isDigit() }.take(3)
+
+private fun spLeverageDisplayValue(value: String?): String {
+    val digits = spLeverageDigitsOnly(value)
+    return if (digits.isBlank()) "" else "${digits}X"
+}
 
 // Extracted from SignalProScreen.kt to keep the public screen entry point compact.
 @OptIn(ExperimentalMaterial3Api::class)
@@ -336,7 +346,7 @@ fun StartTradeFlow(
         tp3 = nullableSetupValue(setupTp3),
         manualStopLoss = nullableSetupValue(setupSl1),
         sl2 = nullableSetupValue(setupSl2),
-        leverage = nullableSetupValue(setupLeverage),
+        leverage = nullableSetupValue(spLeverageDisplayValue(setupLeverage)),
         positionSize = nullableSetupValue(setupAllocation),
         riskProfile = nullableSetupValue(setupRiskProfile),
         setupRemark = nullableSetupValue(setupRemarkWithContext()),
@@ -576,7 +586,7 @@ fun StartTradeFlow(
 
                 SetupCompactPanel(title = "MISSION INTELLIGENCE") {
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(7.dp)) {
-                        CompactSetupTextField("LEVERAGE", setupLeverage, { setupLeverage = it.uppercase().replace(" ", "") }, Modifier.weight(1f), enabled = coreEditEnabled)
+                        CompactLeverageTextField("LEVERAGE", setupLeverage, { setupLeverage = it }, Modifier.weight(1f), enabled = coreEditEnabled)
                         CompactSetupTextField("ALLOCATION", setupAllocation, { setupAllocation = it }, Modifier.weight(1f), enabled = coreEditEnabled)
                     }
                     Spacer(modifier = Modifier.height(7.dp))
@@ -1205,6 +1215,49 @@ private fun SetupCompactPanel(
         Spacer(modifier = Modifier.height(6.dp))
         content()
     }
+}
+
+
+@Composable
+private fun CompactLeverageTextField(
+    label: String,
+    value: String,
+    onValueChange: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true
+) {
+    var focused by remember { mutableStateOf(false) }
+    val displayValue = if (focused) spLeverageDigitsOnly(value) else spLeverageDisplayValue(value)
+    OutlinedTextField(
+        value = displayValue,
+        onValueChange = { if (enabled) onValueChange(spLeverageDisplayValue(it)) },
+        label = { Text(label, fontSize = 8.5.sp, maxLines = 1) },
+        modifier = modifier
+            .height(52.dp)
+            .onFocusChanged { focused = it.isFocused },
+        singleLine = true,
+        readOnly = !enabled,
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+        textStyle = androidx.compose.ui.text.TextStyle(
+            color = TextPrimary,
+            fontSize = 11.sp,
+            fontWeight = FontWeight.SemiBold,
+            fontFamily = FontFamily.SansSerif,
+            fontFeatureSettings = "tnum"
+        ),
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedBorderColor = CryptoCyan.copy(alpha = 0.78f),
+            unfocusedBorderColor = TextMuted.copy(alpha = 0.40f),
+            focusedLabelColor = CryptoCyan,
+            unfocusedLabelColor = TextMuted,
+            cursorColor = CryptoCyan,
+            focusedTextColor = TextPrimary,
+            unfocusedTextColor = TextPrimary,
+            disabledTextColor = TextPrimary,
+            disabledBorderColor = TextMuted.copy(alpha = 0.24f),
+            disabledLabelColor = TextMuted.copy(alpha = 0.62f)
+        )
+    )
 }
 
 @Composable
