@@ -13,16 +13,19 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.viewmodel.CryptoViewModel
@@ -35,6 +38,38 @@ import kotlin.math.absoluteValue
 import com.example.ui.theme.DarkBackground
 
 // Terminal Colors - Institutional Grade
+
+
+private fun mcLeverageDigits(raw: String?): String = raw.orEmpty().filter { it.isDigit() }.take(3)
+
+private fun mcLeverageDisplay(raw: String?, fallback: String = "2X"): String {
+    val digits = mcLeverageDigits(raw).ifBlank { mcLeverageDigits(fallback) }
+    return if (digits.isBlank()) "" else "${digits}X"
+}
+
+private fun mcAllocationDigits(raw: String?): String {
+    val normalized = raw.orEmpty().replace(",", ".")
+    val cleaned = StringBuilder()
+    var decimalUsed = false
+    normalized.forEach { ch ->
+        when {
+            ch.isDigit() -> cleaned.append(ch)
+            ch == '.' && !decimalUsed -> {
+                cleaned.append(ch)
+                decimalUsed = true
+            }
+        }
+    }
+    return cleaned.toString().take(5)
+}
+
+private fun mcAllocationDisplay(raw: String?, fallback: String = "2.0% Cap"): String {
+    val source = raw.orEmpty().ifBlank { fallback }
+    val numeric = mcAllocationDigits(source).trimEnd('.')
+    if (numeric.isBlank()) return ""
+    val suffix = if (source.contains("MAX", ignoreCase = true) || numeric.toDoubleOrNull()?.let { it >= 10.0 } == true) "Max" else "Cap"
+    return "$numeric% $suffix"
+}
 
 // Extracted from MissionCenterScreen.kt to keep the public screen entry point compact.
 @Composable
@@ -274,7 +309,7 @@ fun MissionTerminalCard(
                     Column(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.End) {
                         Text("LEVERAGE", color = T_TextMuted, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
                         Spacer(modifier = Modifier.height(SpacingCompact))
-                        Text(leverage?.uppercase() ?: "NOT SET", color = T_TextSecondary, fontSize = 12.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
+                        Text(mcLeverageDisplay(leverage, if (isFutures) "2X" else "1X"), color = T_TextSecondary, fontSize = 12.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -321,12 +356,24 @@ fun MissionTerminalCard(
                 Spacer(modifier = Modifier.height(SpacingCompact))
                 CompactDataRow("ENTRY", mcFormatUsd(entryVal), T_TextPrimary)
                 Spacer(modifier = Modifier.height(SpacingCompact))
-                val setupDisplay = sMode.replace("OVERRIDDEN", "").replace("CUSTOM", "").replace("(", "").replace(")", "").replace("RECOMMENDED SETUP", "RECOMMENDED").trim()
-                val setupColor = if (setupDisplay.contains("RECOMMENDED", ignoreCase = true)) T_Green else T_Cyan
+                val setupDisplay = when {
+                    sMode.contains("CUSTOM-R", ignoreCase = true) || sMode.contains("CUSTOM RECOMMENDED", ignoreCase = true) || sMode.contains("REC-CUSTOM", ignoreCase = true) -> "CUSTOM-R"
+                    sMode.contains("CUSTOM-1", ignoreCase = true) || sMode.contains("CUSTOM SETUP-1", ignoreCase = true) -> "CUSTOM-1"
+                    sMode.contains("CUSTOM-2", ignoreCase = true) || sMode.contains("CUSTOM SETUP-2", ignoreCase = true) -> "CUSTOM-2"
+                    sMode.contains("SETUP-1", ignoreCase = true) -> "SETUP-1"
+                    sMode.contains("SETUP-2", ignoreCase = true) -> "SETUP-2"
+                    sMode.contains("RECOMMENDED", ignoreCase = true) -> "RECOMMENDED"
+                    else -> sMode.replace("OVERRIDDEN", "").replace("(", "").replace(")", "").trim()
+                }
+                val setupColor = when {
+                    setupDisplay.contains("RECOMMENDED", ignoreCase = true) -> T_Green
+                    setupDisplay.contains("CUSTOM", ignoreCase = true) -> T_Gold
+                    else -> T_Cyan
+                }
                 CompactDataRow("SETUP", setupDisplay, setupColor)
                 Spacer(modifier = Modifier.height(SpacingCompact))
-                val overrideCount = if (sMode.contains("OVERRIDDEN") || sMode.contains("CUSTOM")) "1" else "0" // Simulated override count
-                CompactDataRow("OVERRIDE", overrideCount, T_TextPrimary)
+                val overrideCountValue = mission?.missionHistoryLog?.count { it.contains("OVERRIDE APPLIED", ignoreCase = true) } ?: 0
+                CompactDataRow("OVERRIDE", overrideCountValue.toString(), T_TextPrimary)
             }
             // RIGHT COLUMN
             Column(modifier = Modifier.weight(1f).padding(start = SpacingNormal)) {
@@ -334,14 +381,14 @@ fun MissionTerminalCard(
                 Spacer(modifier = Modifier.height(SpacingCompact))
                 CompactDataRow("SL2", mcFormatMissionPriceText(mission?.sl2), if (mission?.sl2 != null) T_Gold else T_TextSecondary)
                 Spacer(modifier = Modifier.height(SpacingCompact))
-                val levValue = (leverage?.uppercase() ?: if (isFutures) "NOT SET" else "1X").replace("SPOT / 1X", "1X").replace("SPOT", "1X")
+                val levValue = (leverage?.uppercase() ?: if (isFutures) "2X" else "1X").replace("SPOT / 1X", "1X").replace("SPOT", "1X")
                 CompactDataRow("LEVERAGE", levValue, T_TextSecondary)
                 Spacer(modifier = Modifier.height(SpacingCompact))
-                CompactDataRow("ALLOCATION", mission?.positionSize?.uppercase() ?: "NOT SET", T_TextPrimary)
+                CompactDataRow("ALLOCATION", mission?.positionSize?.let { mcAllocationDisplay(it) } ?: "NOT SET", T_TextPrimary)
                 Spacer(modifier = Modifier.height(SpacingCompact))
                 val profUpper = mission?.riskProfile?.uppercase() ?: "NOT SET"
                 val profColor = mcRiskProfileColor(profUpper)
-                CompactDataRow("RISK PROFILE", profUpper, profColor)
+                CompactDataRow("CONSENSUS BIAS", profUpper, profColor)
                 Spacer(modifier = Modifier.height(SpacingCompact))
                 val isAutoActive = mission?.autoCloseEnabled == true
                 val isConditionValid = mission?.conditionValidity == "VALID"
@@ -361,18 +408,71 @@ fun MissionTerminalCard(
 
         HorizontalDivider(color = T_BorderHigh, thickness = 0.5.dp)
 
-        // AUTO-TRADING & AI POLICY ROW
+        // TITAN AI TRADE GUARDIAN / SUPERVISION LAYER
         Column(modifier = Modifier.fillMaxWidth().padding(horizontal = SpacingMedium, vertical = SpacingNormal)) {
-            val policyText = if (mission?.copilotMode?.contains("EXECUTION") == true) "ASSIST & EXECUTION" else "ASSIST ONLY"
-            CompactDataRow("AI COPILOT POLICY", policyText, if (policyText == "ASSIST ONLY") T_Cyan else T_Gold)
-            
-            if (policyText == "ASSIST & EXECUTION") {
-                Spacer(modifier = Modifier.height(SpacingCompact))
-                CompactDataRow("MODE", "SHADOW ONLY", T_Gold)
-            }
-            
+            Text(
+                text = "TITAN AI TRADE GUARDIAN",
+                color = T_Gold,
+                fontSize = 9.sp,
+                fontFamily = FontFamily.Monospace,
+                fontWeight = FontWeight.Bold
+            )
             Spacer(modifier = Modifier.height(SpacingCompact))
-            CompactDataRow("REAL ORDER", "NO", T_TextMuted)
+            Text(
+                text = "SUPERVISING COPILOT / AUTOPILOT / ASSIST-ONLY / ACTIVE TRADE STATE",
+                color = T_TextMuted,
+                fontSize = 8.sp,
+                fontFamily = FontFamily.Monospace,
+                lineHeight = 10.sp
+            )
+            Spacer(modifier = Modifier.height(SpacingNormal))
+
+            val policyText = if (mission?.copilotMode?.contains("EXECUTION", ignoreCase = true) == true) "ASSIST & EXECUTION" else "ASSIST ONLY"
+            val isAutoActive = mission?.autoCloseEnabled == true
+            val conditionText = mission?.conditionValidity?.uppercase() ?: if (isAutoActive) "PENDING" else "INACTIVE"
+            val isConditionValid = mission?.conditionValidity?.equals("VALID", ignoreCase = true) == true
+            val autoTradingStatus = when {
+                isAutoActive && isConditionValid -> "ACTIVE"
+                isAutoActive && !isConditionValid -> "INVALID"
+                else -> "INACTIVE"
+            }
+            val autoPilotState = if (
+                mission?.executionMode?.contains("AUTO", ignoreCase = true) == true ||
+                mission?.copilotMode?.contains("AUTO", ignoreCase = true) == true
+            ) "WATCHING" else "STANDBY"
+            val guardianMessage = when {
+                mcMissionRiskState(mission ?: return@Column) == "CRITICAL" -> "CRITICAL RISK: USER REVIEW REQUIRED"
+                autoTradingStatus == "INVALID" -> "AUTO-TRADING INVALID: CHECK CONDITIONS"
+                policyText == "ASSIST & EXECUTION" -> "COPILOT EXECUTION UNDER SHADOW SUPERVISION"
+                else -> "ASSIST-ONLY MONITORING ACTIVE"
+            }
+
+            Row(modifier = Modifier.fillMaxWidth()) {
+                Column(modifier = Modifier.weight(1f).padding(end = SpacingNormal)) {
+                    CompactDataRow("GUARDIAN STATE", "MONITORING", T_Green)
+                    Spacer(modifier = Modifier.height(SpacingCompact))
+                    CompactDataRow("COPILOT POLICY", policyText, if (policyText == "ASSIST ONLY") T_Cyan else T_Gold)
+                    Spacer(modifier = Modifier.height(SpacingCompact))
+                    CompactDataRow("TITAN AI AUTO PILOT", autoPilotState, if (autoPilotState == "WATCHING") T_Gold else T_TextSecondary)
+                }
+                Column(modifier = Modifier.weight(1f).padding(start = SpacingNormal)) {
+                    CompactDataRow("AUTO-TRADING", autoTradingStatus, when (autoTradingStatus) { "ACTIVE" -> T_Cyan; "INVALID" -> T_Red; else -> T_TextSecondary })
+                    Spacer(modifier = Modifier.height(SpacingCompact))
+                    CompactDataRow("CONDITION", conditionText, if (conditionText == "VALID") T_Green else if (conditionText == "INVALID") T_Red else T_TextSecondary)
+                    Spacer(modifier = Modifier.height(SpacingCompact))
+                    CompactDataRow("REAL ORDER", "NO", T_TextMuted)
+                }
+            }
+            Spacer(modifier = Modifier.height(SpacingCompact))
+            CompactDataRow("GUARDIAN MESSAGE", guardianMessage, when {
+                guardianMessage.contains("CRITICAL") || guardianMessage.contains("INVALID") -> T_Red
+                guardianMessage.contains("EXECUTION") -> T_Gold
+                else -> T_Cyan
+            })
+            if (!mission?.conditionInvalidReason.isNullOrBlank()) {
+                Spacer(modifier = Modifier.height(SpacingCompact))
+                CompactDataRow("REVIEW NOTE", mission?.conditionInvalidReason?.uppercase() ?: "NONE", T_Gold)
+            }
         }
 
         HorizontalDivider(color = T_BorderHigh, thickness = 0.5.dp)
@@ -423,9 +523,9 @@ fun MissionTerminalCard(
 
         HorizontalDivider(color = T_BorderHigh, thickness = 0.5.dp)
 
-        // 5. AI TRADE GUARDIAN STATUS
+        // 5. GUARDIAN ACTION STATUS
         Column(modifier = Modifier.fillMaxWidth().padding(horizontal = SpacingMedium, vertical = SpacingNormal)) {
-            Text("AI TRADE GUARDIAN", color = T_Gold, fontSize = 9.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
+            Text("GUARDIAN ACTION STATUS", color = T_Gold, fontSize = 9.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
             Spacer(modifier = Modifier.height(SpacingCompact))
             Row(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.weight(1f).padding(end = SpacingNormal)) {
@@ -628,9 +728,9 @@ fun MissionTerminalCard(
                             Text("Original Signal Entry: ${mcFormatMissionPriceText(originalEntry)}", color = T_TextSecondary, fontSize = 11.sp, fontFamily = FontFamily.SansSerif)
                             Text("TP1: ${mcFormatMissionPriceText(tp1)} | TP2: ${mcFormatMissionPriceText(tp2)} | TP3: ${mcFormatMissionPriceText(tp3)}", color = T_Green, fontSize = 11.sp, fontFamily = FontFamily.SansSerif)
                             Text("SL1: ${mcFormatMissionPriceText(manualStopLoss ?: stopLoss)} | SL2: ${mcFormatMissionPriceText(mission?.sl2)}", color = T_Red, fontSize = 11.sp, fontFamily = FontFamily.SansSerif)
-                            Text("Leverage: ${leverage ?: if (marketType.equals("Spot", ignoreCase = true)) "1X" else "Not Set"}", color = T_TextPrimary, fontSize = 11.sp, fontFamily = FontFamily.SansSerif)
+                            Text("Leverage: ${mcLeverageDisplay(leverage, if (marketType.equals("Spot", ignoreCase = true)) "1X" else "2X")}", color = T_TextPrimary, fontSize = 11.sp, fontFamily = FontFamily.SansSerif)
                             Text("Allocation: ${mission?.positionSize ?: "Not Set"}", color = T_TextPrimary, fontSize = 11.sp, fontFamily = FontFamily.SansSerif)
-                            Text("Risk Profile: ${mission?.riskProfile ?: "Not Set"}", color = T_Gold, fontSize = 11.sp, fontFamily = FontFamily.SansSerif)
+                            Text("Consensus Bias: ${mission?.riskProfile ?: "Not Set"}", color = T_Gold, fontSize = 11.sp, fontFamily = FontFamily.SansSerif)
                             Text("Remark: ${mission?.setupRemark ?: "None"}", color = T_TextSecondary, fontSize = 11.sp, fontFamily = FontFamily.SansSerif)
                             Text("Time in Trade: $timeElapsed", color = T_TextSecondary, fontSize = 11.sp, fontFamily = FontFamily.SansSerif)
                             Spacer(modifier = Modifier.height(8.dp))
@@ -647,7 +747,7 @@ fun MissionTerminalCard(
                             Spacer(modifier = Modifier.height(8.dp))
 
                             val policyText = if (mission?.copilotMode?.contains("EXECUTION") == true) "ASSIST & EXECUTION" else "ASSIST ONLY"
-                            Text("AI Copilot Policy: $policyText", color = T_Cyan, fontSize = 11.sp, fontFamily = FontFamily.SansSerif)
+                            Text("TITAN AI Copilot Policy: $policyText", color = T_Cyan, fontSize = 11.sp, fontFamily = FontFamily.SansSerif)
                             if (mission?.copilotMode?.contains("Shadow") == true || mission?.copilotMode?.contains("EXECUTION") == true) {
                                 Text("Mode: Shadow Only", color = T_Gold, fontSize = 11.sp, fontFamily = FontFamily.SansSerif)
                             }
@@ -692,14 +792,28 @@ fun MissionTerminalCard(
             }
 
             if (showOverride && mission != null && viewModel != null) {
-                var selectedSetup by remember { mutableStateOf(mission.setupMode ?: "RECOMMENDED SETUP") }
+                val currentOverrideCount = mission.missionHistoryLog.count { it.contains("OVERRIDE APPLIED", ignoreCase = true) }
+                val nextOverrideNumber = currentOverrideCount + 1
+                val initialOverrideSource = when {
+                    mission.setupMode?.contains("CUSTOM-2", ignoreCase = true) == true || mission.setupMode?.contains("CUSTOM SETUP-2", ignoreCase = true) == true || mission.setupMode?.contains("SETUP-2", ignoreCase = true) == true -> "CUSTOM SETUP-2"
+                    mission.setupMode?.contains("CUSTOM-1", ignoreCase = true) == true || mission.setupMode?.contains("CUSTOM SETUP-1", ignoreCase = true) == true || mission.setupMode?.contains("SETUP-1", ignoreCase = true) == true -> "CUSTOM SETUP-1"
+                    else -> "RECOMMENDED SETUP"
+                }
+                var selectedSetup by remember(mission.id, mission.setupMode, nextOverrideNumber) { mutableStateOf(initialOverrideSource) }
+                val nextOverrideLabel = when (selectedSetup) {
+                    "CUSTOM SETUP-1" -> "CUSTOM-1"
+                    "CUSTOM SETUP-2" -> "CUSTOM-2"
+                    else -> "CUSTOM-R"
+                }
                 var overrideTp1 by remember { mutableStateOf(mission.tp1?.replace(" / SIGNAL FALLBACK", "") ?: "") }
                 var overrideTp2 by remember { mutableStateOf(mission.tp2 ?: "") }
                 var overrideTp3 by remember { mutableStateOf(mission.tp3 ?: "") }
                 var overrideSl by remember { mutableStateOf(mission.manualStopLoss?.replace(" / SIGNAL FALLBACK", "") ?: "") }
-                var overrideLev by remember { mutableStateOf(mission.leverage?.replace(" / SIGNAL FALLBACK", "") ?: "") }
+                var overrideLev by remember(mission.id, mission.leverage, marketType) { mutableStateOf(mcLeverageDigits(mission.leverage).ifBlank { if (isFutures) "2" else "1" }) }
+                var overrideLevFocused by remember(mission.id) { mutableStateOf(false) }
                 var overrideRisk by remember { mutableStateOf(mission.riskProfile ?: "") }
-                var overrideAlloc by remember { mutableStateOf(mission.positionSize ?: "") }
+                var overrideAlloc by remember(mission.id, mission.positionSize) { mutableStateOf(mcAllocationDisplay(mission.positionSize, "2.0% Cap")) }
+                var overrideAllocFocused by remember(mission.id) { mutableStateOf(false) }
                 var overrideRemark by remember { mutableStateOf(mission.setupRemark ?: "") }
                 var aiPolicy by remember { mutableStateOf(mission.copilotMode?.takeIf { it.contains("EXECUTION") }?.let { "ASSIST & EXECUTION" } ?: "ASSIST ONLY") }
                 var overrideAutoTrading by remember { mutableStateOf(mission.autoCloseEnabled) }
@@ -711,7 +825,7 @@ fun MissionTerminalCard(
 
                 AlertDialog(
                     onDismissRequest = { showOverride = false },
-                    title = { Text("OVERRIDE SETUP", color = T_Gold, fontSize = 16.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace) },
+                    title = { Text("OVERRIDE SETUP → $nextOverrideLabel", color = T_Gold, fontSize = 16.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace) },
                     text = {
                         Column(modifier = Modifier.fillMaxWidth().heightIn(max = 500.dp)) {
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -730,16 +844,18 @@ fun MissionTerminalCard(
                                                 overrideTp2 = profile.tp2
                                                 overrideTp3 = profile.tp3
                                                 overrideSl = profile.stopLoss
-                                                overrideLev = profile.leverage
+                                                overrideLev = mcLeverageDigits(profile.leverage).ifBlank { if (isFutures) "2" else "1" }
                                                 overrideRisk = profile.riskProfile
-                                                overrideAlloc = profile.positionSize
+                                                overrideAlloc = mcAllocationDisplay(profile.positionSize, "2.0% Cap")
                                                 overrideRemark = profile.remark
                                             } else {
                                                 overrideTp1 = mission.targets
+                                                overrideTp2 = ""
+                                                overrideTp3 = ""
                                                 overrideSl = mission.stopLoss
-                                                overrideLev = ""
+                                                overrideLev = mcLeverageDigits(mission.leverage).ifBlank { if (isFutures) "2" else "1" }
                                                 overrideRisk = ""
-                                                overrideAlloc = ""
+                                                overrideAlloc = mcAllocationDisplay(mission.positionSize, "2.0% Cap")
                                                 overrideRemark = ""
                                             }
                                         }
@@ -762,9 +878,25 @@ fun MissionTerminalCard(
                                 item { androidx.compose.material3.OutlinedTextField(value = overrideTp2, onValueChange = { overrideTp2 = it }, label = { Text("TP2", fontSize = 10.sp) }, modifier = Modifier.fillMaxWidth(), singleLine = true, colors = textFieldColors) }
                                 item { androidx.compose.material3.OutlinedTextField(value = overrideTp3, onValueChange = { overrideTp3 = it }, label = { Text("TP3", fontSize = 10.sp) }, modifier = Modifier.fillMaxWidth(), singleLine = true, colors = textFieldColors) }
                                 item { androidx.compose.material3.OutlinedTextField(value = overrideSl, onValueChange = { overrideSl = it }, label = { Text("Stop Loss", fontSize = 10.sp) }, modifier = Modifier.fillMaxWidth(), singleLine = true, colors = textFieldColors) }
-                                item { androidx.compose.material3.OutlinedTextField(value = overrideLev, onValueChange = { overrideLev = it }, label = { Text("Leverage", fontSize = 10.sp) }, modifier = Modifier.fillMaxWidth(), singleLine = true, colors = textFieldColors) }
-                                item { androidx.compose.material3.OutlinedTextField(value = overrideRisk, onValueChange = { overrideRisk = it }, label = { Text("Risk Profile", fontSize = 10.sp) }, modifier = Modifier.fillMaxWidth(), singleLine = true, colors = textFieldColors) }
-                                item { androidx.compose.material3.OutlinedTextField(value = overrideAlloc, onValueChange = { overrideAlloc = it }, label = { Text("Allocation", fontSize = 10.sp) }, modifier = Modifier.fillMaxWidth(), singleLine = true, colors = textFieldColors) }
+                                item { androidx.compose.material3.OutlinedTextField(
+                                    value = if (overrideLevFocused) overrideLev else mcLeverageDisplay(overrideLev, if (isFutures) "2X" else "1X"),
+                                    onValueChange = { overrideLev = mcLeverageDigits(it) },
+                                    label = { Text("Leverage", fontSize = 10.sp) },
+                                    modifier = Modifier.fillMaxWidth().onFocusChanged { overrideLevFocused = it.isFocused },
+                                    singleLine = true,
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                    colors = textFieldColors
+                                ) }
+                                item { androidx.compose.material3.OutlinedTextField(value = overrideRisk, onValueChange = { overrideRisk = it }, label = { Text("Consensus Bias", fontSize = 10.sp) }, modifier = Modifier.fillMaxWidth(), singleLine = true, colors = textFieldColors) }
+                                item { androidx.compose.material3.OutlinedTextField(
+                                    value = if (overrideAllocFocused) mcAllocationDigits(overrideAlloc) else mcAllocationDisplay(overrideAlloc, "2.0% Cap"),
+                                    onValueChange = { overrideAlloc = mcAllocationDigits(it) },
+                                    label = { Text("Allocation", fontSize = 10.sp) },
+                                    modifier = Modifier.fillMaxWidth().onFocusChanged { overrideAllocFocused = it.isFocused },
+                                    singleLine = true,
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                                    colors = textFieldColors
+                                ) }
                                 item { androidx.compose.material3.OutlinedTextField(value = overrideRemark, onValueChange = { overrideRemark = it }, label = { Text("Remark", fontSize = 10.sp) }, modifier = Modifier.fillMaxWidth(), singleLine = true, colors = textFieldColors) }
                                 item {
                                     Spacer(modifier = Modifier.height(10.dp))
@@ -792,7 +924,7 @@ fun MissionTerminalCard(
                                 }
                                 item { 
                                     Spacer(modifier = Modifier.height(12.dp))
-                                    Text("AI Copilot Policy", color = T_TextPrimary, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                    Text("TITAN AI Copilot Policy", color = T_TextPrimary, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                                     Spacer(modifier = Modifier.height(8.dp))
                                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                         Box(
@@ -826,10 +958,10 @@ fun MissionTerminalCard(
                     confirmButton = {
                         Button(onClick = {
                             val newLogs = mutableListOf<String>()
-                            newLogs.add("OVERRIDE APPLIED")
-                            newLogs.add("SETUP UPDATED: $selectedSetup")
+                            newLogs.add("OVERRIDE APPLIED #$nextOverrideNumber")
+                            newLogs.add("SETUP UPDATED: $selectedSetup -> $nextOverrideLabel")
                             if (mission.copilotMode != aiPolicy) {
-                                newLogs.add("AI COPILOT POLICY UPDATED: $aiPolicy")
+                                newLogs.add("TITAN AI COPILOT POLICY UPDATED: $aiPolicy")
                                 if (aiPolicy.contains("EXECUTION")) {
                                     newLogs.add("SHADOW EXECUTION ENABLED")
                                 } else {
@@ -855,17 +987,16 @@ fun MissionTerminalCard(
                                 autoValidation.second?.let { newLogs.add("AUTO-TRADING VALIDATION: $it") }
                             }
                             val updatedLog = (mission.missionHistoryLog + newLogs).takeLast(20)
-
                             val updatedMission = mission.copy(
-                                setupMode = "Overridden ($selectedSetup)",
+                                setupMode = nextOverrideLabel,
                                 setupRemark = overrideRemark.ifBlank { null },
                                 tp1 = overrideTp1.ifBlank { null },
                                 tp2 = overrideTp2.ifBlank { null },
                                 tp3 = overrideTp3.ifBlank { null },
                                 manualStopLoss = overrideSl.ifBlank { null },
-                                leverage = overrideLev.ifBlank { null },
+                                leverage = mcLeverageDisplay(overrideLev, if (isFutures) "2X" else "1X").ifBlank { null },
                                 riskProfile = overrideRisk.ifBlank { null },
-                                positionSize = overrideAlloc.ifBlank { null },
+                                positionSize = mcAllocationDisplay(overrideAlloc, "2.0% Cap").ifBlank { null },
                                 copilotMode = aiPolicy,
                                 autoCloseEnabled = overrideAutoTrading,
                                 autoCloseConditions = overrideConditions,
