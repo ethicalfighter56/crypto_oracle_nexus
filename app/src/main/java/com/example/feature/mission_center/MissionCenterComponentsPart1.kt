@@ -255,7 +255,7 @@ fun MissionTerminalHeaderBlock(viewModel: CryptoViewModel) {
         ) {
             Column {
                 Text(
-                    text = "TITAN AI COPILOT TRADE GUARDIAN",
+                    text = "TITAN ORACLE AI TRADE GUARDIAN",
                     color = T_TextMuted,
                     fontSize = 8.sp,
                     fontFamily = FontFamily.Monospace,
