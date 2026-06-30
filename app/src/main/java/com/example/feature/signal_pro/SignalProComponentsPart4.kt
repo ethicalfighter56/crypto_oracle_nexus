@@ -1,6 +1,9 @@
 package com.example.feature.signal_pro
 
 import androidx.compose.animation.*
+import androidx.compose.foundation.relocation.bringIntoViewRequester
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.ui.res.painterResource
 import com.example.R
@@ -69,12 +72,20 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.ui.draw.shadow
 
 // Extracted from SignalProScreen.kt to keep the public screen entry point compact.
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun FuturesItemCard(coin: FuturesSignal, timeframeIndex: Int, viewModel: CryptoViewModel, livePrices: Map<String, Double>) {
     val isBengali by viewModel.isBengali.collectAsState()
     var isExpandedInternal by remember { mutableStateOf(false) }
     val expandedAsset = com.example.feature.signal_pro.LocalExpandedAsset.current
     val isExpanded = expandedAsset.value == "${coin.coinSymbol}_futures"
+    val futuresAutoFitRequester = remember { BringIntoViewRequester() }
+    LaunchedEffect(isExpanded) {
+        if (isExpanded) {
+            delay(180)
+            futuresAutoFitRequester.bringIntoView()
+        }
+    }
     
     val livePrice = livePrices["${coin.coinSymbol}USDT"] ?: coin.currentPrice
 
@@ -110,13 +121,10 @@ fun FuturesItemCard(coin: FuturesSignal, timeframeIndex: Int, viewModel: CryptoV
         shape = RoundedCornerShape(16.dp),
         modifier = Modifier
             .fillMaxWidth()
+            .bringIntoViewRequester(futuresAutoFitRequester)
             .border(1.dp, if (isExpanded && isLong) CryptoCyan else cardBorder, RoundedCornerShape(16.dp))
-            .clickable { 
-                if (isExpanded) {
-                    expandedAsset.value = null
-                } else {
-                    expandedAsset.value = "${coin.coinSymbol}_futures"
-                }
+            .clickable(enabled = !isExpanded) {
+                expandedAsset.value = "${coin.coinSymbol}_futures"
             }
     ) {
         Column(
@@ -124,7 +132,9 @@ fun FuturesItemCard(coin: FuturesSignal, timeframeIndex: Int, viewModel: CryptoV
                 .padding(12.dp)
         ) {
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { expandedAsset.value = if (isExpanded) null else "${coin.coinSymbol}_futures" },
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -310,8 +320,8 @@ fun FuturesItemCard(coin: FuturesSignal, timeframeIndex: Int, viewModel: CryptoV
 
             AnimatedVisibility(
                 visible = isExpanded,
-                enter = expandVertically() + fadeIn(),
-                exit = shrinkVertically() + fadeOut()
+                enter = expandVertically(animationSpec = tween(360)) + fadeIn(animationSpec = tween(220)),
+                exit = shrinkVertically(animationSpec = tween(260)) + fadeOut(animationSpec = tween(180))
             ) {
                 Column {
                     Spacer(modifier = Modifier.height(10.dp))
@@ -428,7 +438,7 @@ fun FuturesItemCard(coin: FuturesSignal, timeframeIndex: Int, viewModel: CryptoV
                     StartTradeFlow(viewModel = viewModel, mission = mission, livePrice = livePrice)
                     Spacer(modifier = Modifier.height(10.dp))
                     Text(
-                        text = "Tap here to collapse details ↑",
+                        text = "Tap here to collapse details ⤴",
                         fontSize = 12.sp,
                         color = CryptoCyan,
                         fontWeight = FontWeight.Bold,
@@ -443,6 +453,7 @@ fun FuturesItemCard(coin: FuturesSignal, timeframeIndex: Int, viewModel: CryptoV
         }
     }
 }
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun OraclePickCard(asset: Any, timeframeIndex: Int, viewModel: CryptoViewModel, livePrices: Map<String, Double> = emptyMap()) {
     val isBengali by viewModel.isBengali.collectAsState()
@@ -456,6 +467,13 @@ fun OraclePickCard(asset: Any, timeframeIndex: Int, viewModel: CryptoViewModel, 
     }
 
     val isExpanded = expandedAsset.value == "${symbol}_oraclepick"
+    val oracleAutoFitRequester = remember { BringIntoViewRequester() }
+    LaunchedEffect(isExpanded) {
+        if (isExpanded) {
+            delay(180)
+            oracleAutoFitRequester.bringIntoView()
+        }
+    }
 
     val isFutures = asset is FuturesSignal
     val isLong = if (asset is FuturesSignal) asset.isLong else true
@@ -505,6 +523,7 @@ fun OraclePickCard(asset: Any, timeframeIndex: Int, viewModel: CryptoViewModel, 
         shape = RoundedCornerShape(16.dp),
         modifier = Modifier
             .fillMaxWidth()
+            .bringIntoViewRequester(oracleAutoFitRequester)
             .border(
                 border = androidx.compose.foundation.BorderStroke(
                     1.35.dp,
@@ -514,12 +533,8 @@ fun OraclePickCard(asset: Any, timeframeIndex: Int, viewModel: CryptoViewModel, 
                 ),
                 shape = RoundedCornerShape(16.dp)
             )
-            .clickable { 
-                if (isExpanded) {
-                    expandedAsset.value = null
-                } else {
-                    expandedAsset.value = "${symbol}_oraclepick"
-                }
+            .clickable(enabled = !isExpanded) {
+                expandedAsset.value = "${symbol}_oraclepick"
             }
     ) {
         Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 12.dp)) {
@@ -540,7 +555,9 @@ fun OraclePickCard(asset: Any, timeframeIndex: Int, viewModel: CryptoViewModel, 
 
             // Coin primary asset info row
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { expandedAsset.value = if (isExpanded) null else "${symbol}_oraclepick" },
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -649,8 +666,8 @@ fun OraclePickCard(asset: Any, timeframeIndex: Int, viewModel: CryptoViewModel, 
 
             AnimatedVisibility(
                 visible = isExpanded,
-                enter = expandVertically() + fadeIn(),
-                exit = shrinkVertically() + fadeOut()
+                enter = expandVertically(animationSpec = tween(360)) + fadeIn(animationSpec = tween(220)),
+                exit = shrinkVertically(animationSpec = tween(260)) + fadeOut(animationSpec = tween(180))
             ) {
                 Column {
                     Spacer(modifier = Modifier.height(10.dp))
@@ -765,7 +782,7 @@ fun OraclePickCard(asset: Any, timeframeIndex: Int, viewModel: CryptoViewModel, 
                     StartTradeFlow(viewModel = viewModel, mission = mission, livePrice = curPrice)
                     Spacer(modifier = Modifier.height(10.dp))
                     Text(
-                        text = "Tap here to collapse details ↑",
+                        text = "Tap here to collapse details ⤴",
                         fontSize = 12.sp,
                         color = CryptoCyan,
                         fontWeight = FontWeight.Bold,
@@ -861,13 +878,23 @@ fun RealTimeInvestmentTrackingModule(
             )
 
             Spacer(modifier = Modifier.height(12.dp))
+            HorizontalDivider(color = BorderColor.copy(alpha = 0.5f))
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "MARKET EVIDENCE SUMMARY",
+                fontSize = 9.sp,
+                fontWeight = FontWeight.Bold,
+                color = TextSecondary,
+                letterSpacing = 0.5.sp,
+                modifier = Modifier.padding(bottom = 6.dp)
+            )
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(text = "Signal Heat: 94", fontSize = 9.sp, color = CryptoRedText)
                 Text(text = "Pressure: ${if (isLong) "Buy" else "Sell"} Side", fontSize = 9.sp, color = if (isLong) CryptoGreen else CryptoRedText)
-                Text(text = "Bias: ${if (isLong) "Bullish" else "Bearish"}", fontSize = 9.sp, color = if (isLong) CryptoGreen else CryptoRedText)
+                Text(text = "Trend Bias: ${if (isLong) "Bullish" else "Bearish"}", fontSize = 9.sp, color = if (isLong) CryptoGreen else CryptoRedText)
             }
             Spacer(modifier = Modifier.height(4.dp))
             Row(
@@ -875,7 +902,7 @@ fun RealTimeInvestmentTrackingModule(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(text = "Volatility: Elevated", fontSize = 9.sp, color = AccentGold)
-                Text(text = "Liquidity: Strong", fontSize = 9.sp, color = CryptoCyan)
+                Text(text = "Liquidity detail: Strong (Tier 1 Order Book)", fontSize = 9.sp, color = CryptoCyan)
             }
         }
     }

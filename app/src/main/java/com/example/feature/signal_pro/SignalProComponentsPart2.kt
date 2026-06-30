@@ -1,6 +1,9 @@
 package com.example.feature.signal_pro
 
 import androidx.compose.animation.*
+import androidx.compose.foundation.relocation.bringIntoViewRequester
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.ui.res.painterResource
 import com.example.R
@@ -69,12 +72,20 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.ui.draw.shadow
 
 // Extracted from SignalProScreen.kt to keep the public screen entry point compact.
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun SpotItemCard(coin: SpotSignal, timeframeIndex: Int, viewModel: CryptoViewModel, livePrices: Map<String, Double>) {
     val isBengali by viewModel.isBengali.collectAsState()
     var isExpandedInternal by remember { mutableStateOf(false) }
     val expandedAsset = com.example.feature.signal_pro.LocalExpandedAsset.current
     val isExpanded = expandedAsset.value == coin.coinSymbol
+    val spotAutoFitRequester = remember { BringIntoViewRequester() }
+    LaunchedEffect(isExpanded) {
+        if (isExpanded) {
+            delay(180)
+            spotAutoFitRequester.bringIntoView()
+        }
+    }
     
     val livePrice = livePrices["${coin.coinSymbol}USDT"] ?: coin.currentPrice
 
@@ -96,18 +107,17 @@ fun SpotItemCard(coin: SpotSignal, timeframeIndex: Int, viewModel: CryptoViewMod
         shape = RoundedCornerShape(16.dp),
         modifier = Modifier
             .fillMaxWidth()
+            .bringIntoViewRequester(spotAutoFitRequester)
             .border(1.dp, if (isExpanded) CryptoCyan else BorderColor, RoundedCornerShape(16.dp))
-            .clickable { 
-                if (isExpanded) {
-                    expandedAsset.value = null
-                } else {
-                    expandedAsset.value = coin.coinSymbol
-                }
+            .clickable(enabled = !isExpanded) {
+                expandedAsset.value = coin.coinSymbol
             }
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { expandedAsset.value = if (isExpanded) null else coin.coinSymbol },
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -309,8 +319,8 @@ fun SpotItemCard(coin: SpotSignal, timeframeIndex: Int, viewModel: CryptoViewMod
 
             AnimatedVisibility(
                 visible = isExpanded,
-                enter = expandVertically() + fadeIn(),
-                exit = shrinkVertically() + fadeOut()
+                enter = expandVertically(animationSpec = tween(360)) + fadeIn(animationSpec = tween(220)),
+                exit = shrinkVertically(animationSpec = tween(260)) + fadeOut(animationSpec = tween(180))
             ) {
                 Column {
                     Spacer(modifier = Modifier.height(10.dp))
@@ -426,7 +436,7 @@ fun SpotItemCard(coin: SpotSignal, timeframeIndex: Int, viewModel: CryptoViewMod
                     StartTradeFlow(viewModel = viewModel, mission = mission, livePrice = livePrice)
                     Spacer(modifier = Modifier.height(10.dp))
                     Text(
-                        text = "Tap here to collapse details ↑",
+                        text = "Tap here to collapse details ⤴",
                         fontSize = 12.sp,
                         color = CryptoCyan,
                         fontWeight = FontWeight.Bold,
@@ -461,24 +471,24 @@ fun DecisionBriefBlock(
                 )
             )
             .border(0.75.dp, accentColor.copy(alpha = 0.46f), RoundedCornerShape(10.dp))
-            .padding(horizontal = 10.dp, vertical = 7.dp)
+            .padding(horizontal = 8.dp, vertical = 5.dp)
     ) {
         Text(
             text = title,
-            fontSize = 11.5.sp,
+            fontSize = 10.5.sp,
             fontWeight = FontWeight.Black,
             color = accentColor,
             maxLines = 1,
             overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
         )
 
-        Spacer(modifier = Modifier.height(4.dp))
+        Spacer(modifier = Modifier.height(2.dp))
 
         Text(
             text = value,
-            fontSize = 13.5.sp,
+            fontSize = 11.5.sp,
             color = TextPrimary,
-            lineHeight = 18.sp
+            lineHeight = 14.5.sp
         )
     }
 }
