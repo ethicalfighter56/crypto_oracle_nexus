@@ -361,6 +361,7 @@ fun ShortTermOpportunisticSignalsSection(timeframe: String, isBengali: Boolean, 
                     enter = expandVertically(animationSpec = tween(360)) + fadeIn(animationSpec = tween(220)),
                     exit = shrinkVertically(animationSpec = tween(260)) + fadeOut(animationSpec = tween(180))
                 ) {
+                    Column(modifier = Modifier.fillMaxWidth()) {
                     Spacer(modifier = Modifier.height(7.dp))
                     HorizontalDivider(color = BorderColor, thickness = 1.dp)
                     Spacer(modifier = Modifier.height(6.dp))
@@ -414,6 +415,7 @@ fun ShortTermOpportunisticSignalsSection(timeframe: String, isBengali: Boolean, 
                             .padding(vertical = 6.dp),
                         textAlign = TextAlign.Center
                     )
+                    }
                 }
             }
         }
@@ -506,6 +508,7 @@ fun ShortTermOpportunisticSignalsSection(timeframe: String, isBengali: Boolean, 
                     enter = expandVertically(animationSpec = tween(360)) + fadeIn(animationSpec = tween(220)),
                     exit = shrinkVertically(animationSpec = tween(260)) + fadeOut(animationSpec = tween(180))
                 ) {
+                    Column(modifier = Modifier.fillMaxWidth()) {
                     Spacer(modifier = Modifier.height(7.dp))
                     HorizontalDivider(color = BorderColor, thickness = 1.dp)
                     Spacer(modifier = Modifier.height(6.dp))
@@ -559,6 +562,7 @@ fun ShortTermOpportunisticSignalsSection(timeframe: String, isBengali: Boolean, 
                             .padding(vertical = 6.dp),
                         textAlign = TextAlign.Center
                     )
+                    }
                 }
             }
         }
@@ -651,6 +655,7 @@ fun ShortTermOpportunisticSignalsSection(timeframe: String, isBengali: Boolean, 
                     enter = expandVertically(animationSpec = tween(360)) + fadeIn(animationSpec = tween(220)),
                     exit = shrinkVertically(animationSpec = tween(260)) + fadeOut(animationSpec = tween(180))
                 ) {
+                    Column(modifier = Modifier.fillMaxWidth()) {
                     Spacer(modifier = Modifier.height(7.dp))
                     HorizontalDivider(color = BorderColor, thickness = 1.dp)
                     Spacer(modifier = Modifier.height(6.dp))
@@ -704,6 +709,7 @@ fun ShortTermOpportunisticSignalsSection(timeframe: String, isBengali: Boolean, 
                             .padding(vertical = 6.dp),
                         textAlign = TextAlign.Center
                     )
+                    }
                 }
             }
         }
