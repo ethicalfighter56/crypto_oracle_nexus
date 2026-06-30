@@ -387,7 +387,7 @@ fun PremiumCopilotActivationBanner(isBengali: Boolean) {
             Box(modifier = Modifier.size(8.dp).background(T_Cyan, CircleShape))
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-                text = if (isBengali) "টাইটান এআই ট্রেড গাইডেন্স সক্রিয়" else "TITAN AI TRADE GUARDIAN ACTIVE",
+                text = if (isBengali) "টাইটান এআই ট্রেড গাইডেন্স সক্রিয়" else "TITAN ORACLE AI TRADE GUARDIAN ACTIVE",
                 color = T_TextPrimary,
                 fontSize = 12.sp,
                 fontFamily = FontFamily.Monospace,

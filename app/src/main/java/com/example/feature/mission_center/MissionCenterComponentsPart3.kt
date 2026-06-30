@@ -384,18 +384,71 @@ fun MissionTerminalCard(
 
         HorizontalDivider(color = T_BorderHigh, thickness = 0.5.dp)
 
-        // AUTO-TRADING & AI POLICY ROW
+        // TITAN ORACLE AI TRADE GUARDIAN / SUPERVISION LAYER
         Column(modifier = Modifier.fillMaxWidth().padding(horizontal = SpacingMedium, vertical = SpacingNormal)) {
-            val policyText = if (mission?.copilotMode?.contains("EXECUTION") == true) "ASSIST & EXECUTION" else "ASSIST ONLY"
-            CompactDataRow("TITAN AI COPILOT POLICY", policyText, if (policyText == "ASSIST ONLY") T_Cyan else T_Gold)
-            
-            if (policyText == "ASSIST & EXECUTION") {
-                Spacer(modifier = Modifier.height(SpacingCompact))
-                CompactDataRow("MODE", "SHADOW ONLY", T_Gold)
-            }
-            
+            Text(
+                text = "TITAN ORACLE AI TRADE GUARDIAN",
+                color = T_Gold,
+                fontSize = 9.sp,
+                fontFamily = FontFamily.Monospace,
+                fontWeight = FontWeight.Bold
+            )
             Spacer(modifier = Modifier.height(SpacingCompact))
-            CompactDataRow("REAL ORDER", "NO", T_TextMuted)
+            Text(
+                text = "SUPERVISING COPILOT / AUTOPILOT / ASSIST-ONLY / ACTIVE TRADE STATE",
+                color = T_TextMuted,
+                fontSize = 8.sp,
+                fontFamily = FontFamily.Monospace,
+                lineHeight = 10.sp
+            )
+            Spacer(modifier = Modifier.height(SpacingNormal))
+
+            val policyText = if (mission?.copilotMode?.contains("EXECUTION", ignoreCase = true) == true) "ASSIST & EXECUTION" else "ASSIST ONLY"
+            val isAutoActive = mission?.autoCloseEnabled == true
+            val conditionText = mission?.conditionValidity?.uppercase() ?: if (isAutoActive) "PENDING" else "INACTIVE"
+            val isConditionValid = mission?.conditionValidity?.equals("VALID", ignoreCase = true) == true
+            val autoTradingStatus = when {
+                isAutoActive && isConditionValid -> "ACTIVE"
+                isAutoActive && !isConditionValid -> "INVALID"
+                else -> "INACTIVE"
+            }
+            val autoPilotState = if (
+                mission?.executionMode?.contains("AUTO", ignoreCase = true) == true ||
+                mission?.copilotMode?.contains("AUTO", ignoreCase = true) == true
+            ) "WATCHING" else "STANDBY"
+            val guardianMessage = when {
+                mcMissionRiskState(mission ?: return@Column) == "CRITICAL" -> "CRITICAL RISK: USER REVIEW REQUIRED"
+                autoTradingStatus == "INVALID" -> "AUTO-TRADING INVALID: CHECK CONDITIONS"
+                policyText == "ASSIST & EXECUTION" -> "COPILOT EXECUTION UNDER SHADOW SUPERVISION"
+                else -> "ASSIST-ONLY MONITORING ACTIVE"
+            }
+
+            Row(modifier = Modifier.fillMaxWidth()) {
+                Column(modifier = Modifier.weight(1f).padding(end = SpacingNormal)) {
+                    CompactDataRow("GUARDIAN STATE", "MONITORING", T_Green)
+                    Spacer(modifier = Modifier.height(SpacingCompact))
+                    CompactDataRow("COPILOT POLICY", policyText, if (policyText == "ASSIST ONLY") T_Cyan else T_Gold)
+                    Spacer(modifier = Modifier.height(SpacingCompact))
+                    CompactDataRow("AI AUTO PILOT", autoPilotState, if (autoPilotState == "WATCHING") T_Gold else T_TextSecondary)
+                }
+                Column(modifier = Modifier.weight(1f).padding(start = SpacingNormal)) {
+                    CompactDataRow("AUTO-TRADING", autoTradingStatus, when (autoTradingStatus) { "ACTIVE" -> T_Cyan; "INVALID" -> T_Red; else -> T_TextSecondary })
+                    Spacer(modifier = Modifier.height(SpacingCompact))
+                    CompactDataRow("CONDITION", conditionText, if (conditionText == "VALID") T_Green else if (conditionText == "INVALID") T_Red else T_TextSecondary)
+                    Spacer(modifier = Modifier.height(SpacingCompact))
+                    CompactDataRow("REAL ORDER", "NO", T_TextMuted)
+                }
+            }
+            Spacer(modifier = Modifier.height(SpacingCompact))
+            CompactDataRow("GUARDIAN MESSAGE", guardianMessage, when {
+                guardianMessage.contains("CRITICAL") || guardianMessage.contains("INVALID") -> T_Red
+                guardianMessage.contains("EXECUTION") -> T_Gold
+                else -> T_Cyan
+            })
+            if (!mission?.conditionInvalidReason.isNullOrBlank()) {
+                Spacer(modifier = Modifier.height(SpacingCompact))
+                CompactDataRow("REVIEW NOTE", mission?.conditionInvalidReason?.uppercase() ?: "NONE", T_Gold)
+            }
         }
 
         HorizontalDivider(color = T_BorderHigh, thickness = 0.5.dp)
@@ -446,9 +499,9 @@ fun MissionTerminalCard(
 
         HorizontalDivider(color = T_BorderHigh, thickness = 0.5.dp)
 
-        // 5. AI TRADE GUARDIAN STATUS
+        // 5. GUARDIAN ACTION STATUS
         Column(modifier = Modifier.fillMaxWidth().padding(horizontal = SpacingMedium, vertical = SpacingNormal)) {
-            Text("TITAN AI TRADE GUARDIAN", color = T_Gold, fontSize = 9.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
+            Text("GUARDIAN ACTION STATUS", color = T_Gold, fontSize = 9.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
             Spacer(modifier = Modifier.height(SpacingCompact))
             Row(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.weight(1f).padding(end = SpacingNormal)) {
