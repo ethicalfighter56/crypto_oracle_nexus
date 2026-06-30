@@ -312,7 +312,7 @@ fun LeverageIntelligenceModule(coin: FuturesSignal) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(7.dp)) {
                 LeverageBox("SAFE LEVERAGE", "${coin.leverageConservative}x", "Conservative risk mitigation level", CryptoGreen, Modifier.weight(1f))
                 LeverageBox("MODERATE RISK", "${coin.leverageBalanced}x", "Default recommended moderate index", AccentGold, Modifier.weight(1f))
-                LeverageBox("MAX AGGRESIVE", "${coin.leverageAggressive}x", "Extreme danger volatility thresholds", CryptoRedText, Modifier.weight(1f))
+                LeverageBox("MAX AGGRESSIVE", "${coin.leverageAggressive}x", "Extreme danger volatility thresholds", CryptoRedText, Modifier.weight(1f))
             }
         }
     }

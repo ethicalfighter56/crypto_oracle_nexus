@@ -173,11 +173,21 @@ internal fun AllocationSizingTile(
 
         Spacer(modifier = Modifier.height(1.dp))
 
+        val allocationParts = value.split(" ", limit = 2)
         Text(
-            text = value,
+            text = allocationParts.getOrNull(0) ?: value,
             fontSize = 11.8.sp,
             fontWeight = FontWeight.Black,
             color = allocationProfileColor(label),
+            textAlign = TextAlign.Center,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+        Text(
+            text = allocationParts.getOrNull(1).orEmpty(),
+            fontSize = 8.2.sp,
+            fontWeight = FontWeight.Bold,
+            color = allocationProfileColor(label).copy(alpha = 0.86f),
             textAlign = TextAlign.Center,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis

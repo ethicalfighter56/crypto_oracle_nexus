@@ -79,6 +79,40 @@ private fun spLeverageDisplayValue(value: String?): String {
     return if (digits.isBlank()) "" else "${digits}X"
 }
 
+private fun spAllocationDigitsOnly(value: String?): String {
+    val raw = value.orEmpty().replace(",", ".")
+    val cleaned = StringBuilder()
+    var decimalUsed = false
+    raw.forEach { ch ->
+        when {
+            ch.isDigit() -> cleaned.append(ch)
+            ch == '.' && !decimalUsed -> {
+                cleaned.append(ch)
+                decimalUsed = true
+            }
+        }
+    }
+    return cleaned.toString().take(5)
+}
+
+private fun spAllocationDisplayValue(value: String?, fallback: String = "2.0% Cap"): String {
+    val source = value.orEmpty().ifBlank { fallback }
+    val numeric = spAllocationDigitsOnly(source).trimEnd('.')
+    if (numeric.isBlank()) return ""
+    val suffix = if (source.contains("MAX", ignoreCase = true) || numeric.toDoubleOrNull()?.let { it >= 10.0 } == true) "Max" else "Cap"
+    return "$numeric% $suffix"
+}
+
+private fun spRecommendedAllocation(highConfidence: Boolean): String = if (highConfidence) "5.0% Cap" else "2.0% Cap"
+
+private fun spAllocationForConsensusBias(bias: String): String {
+    return when (bias.uppercase()) {
+        "CONSERVATIVE" -> "2.0% Cap"
+        "AGGRESSIVE" -> "10.0% Max"
+        else -> "5.0% Cap"
+    }
+}
+
 // Extracted from SignalProScreen.kt to keep the public screen entry point compact.
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -200,7 +234,7 @@ fun StartTradeFlow(
     var setupSl1 by rememberSaveable(tradeFlowStateKey) { mutableStateOf(defaultStopLoss) }
     var setupSl2 by rememberSaveable(tradeFlowStateKey) { mutableStateOf("") }
     var setupLeverage by rememberSaveable(tradeFlowStateKey) { mutableStateOf(defaultLeverage) }
-    var setupAllocation by rememberSaveable(tradeFlowStateKey) { mutableStateOf(if (highConfidence) "5.0% Cap" else "2.0% Cap") }
+    var setupAllocation by rememberSaveable(tradeFlowStateKey) { mutableStateOf(spRecommendedAllocation(highConfidence)) }
     var setupRiskProfile by rememberSaveable(tradeFlowStateKey) { mutableStateOf(if (highConfidence) "MODERATE" else "CONSERVATIVE") }
     var setupRemark by rememberSaveable(tradeFlowStateKey) { mutableStateOf("AUTO-FILLED FROM SIGNAL PRO") }
     var selectedSetupPreset by rememberSaveable(tradeFlowStateKey) { mutableStateOf("RECOMMENDED") }
@@ -229,12 +263,8 @@ fun StartTradeFlow(
     }
 
     fun applyConsensusBias(bias: String) {
-        setupRiskProfile = bias
-        setupAllocation = when (bias) {
-            "CONSERVATIVE" -> "2.0% Cap"
-            "AGGRESSIVE" -> "10.0% Cap"
-            else -> "5.0% Cap"
-        }
+        setupRiskProfile = bias.uppercase()
+        setupAllocation = spAllocationForConsensusBias(bias)
     }
 
     fun applySetupPreset(preset: String) {
@@ -353,7 +383,7 @@ fun StartTradeFlow(
         manualStopLoss = nullableSetupValue(setupSl1),
         sl2 = nullableSetupValue(setupSl2),
         leverage = nullableSetupValue(spLeverageDisplayValue(setupLeverage)),
-        positionSize = nullableSetupValue(setupAllocation),
+        positionSize = nullableSetupValue(spAllocationDisplayValue(setupAllocation, spRecommendedAllocation(highConfidence))),
         riskProfile = nullableSetupValue(setupRiskProfile),
         setupRemark = nullableSetupValue(setupRemarkWithContext()),
         setupMode = selectedSetupMode,
@@ -594,7 +624,7 @@ fun StartTradeFlow(
                 SetupCompactPanel(title = "MISSION INTELLIGENCE") {
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(7.dp)) {
                         CompactLeverageTextField("LEVERAGE", setupLeverage, { setupLeverage = it }, Modifier.weight(1f), enabled = coreEditEnabled)
-                        CompactSetupTextField("ALLOCATION", setupAllocation, { setupAllocation = it }, Modifier.weight(1f), enabled = coreEditEnabled)
+                        CompactAllocationTextField("ALLOCATION", setupAllocation, { setupAllocation = it }, Modifier.weight(1f), enabled = coreEditEnabled)
                     }
                     Spacer(modifier = Modifier.height(7.dp))
                     Text("CONSENSUS BIAS", color = TextMuted, fontSize = 9.sp, fontWeight = FontWeight.Bold)
@@ -811,7 +841,7 @@ fun StartTradeFlow(
                         SetupSummaryLine("Locked Entry", String.format("$%.4f", verifiedEntryLocked), TextPrimary)
                         SetupSummaryLine("Target", setupTarget.ifBlank { mission.target ?: mission.targets }, CryptoGreen)
                         SetupSummaryLine("Stop Loss", setupSl1.ifBlank { mission.stopLoss }, CryptoRedText)
-                        SetupSummaryLine("Allocation", setupAllocation, CryptoCyan)
+                        SetupSummaryLine("Allocation", spAllocationDisplayValue(setupAllocation, spRecommendedAllocation(highConfidence)), CryptoCyan)
                         SetupSummaryLine("Consensus Bias", setupRiskProfile, signalProfileRiskColor(setupRiskProfile))
                     }
 
@@ -1230,6 +1260,48 @@ private fun CompactLeverageTextField(
         singleLine = true,
         readOnly = !enabled,
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+        textStyle = androidx.compose.ui.text.TextStyle(
+            color = TextPrimary,
+            fontSize = 11.sp,
+            fontWeight = FontWeight.SemiBold,
+            fontFamily = FontFamily.SansSerif,
+            fontFeatureSettings = "tnum"
+        ),
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedBorderColor = CryptoCyan.copy(alpha = 0.78f),
+            unfocusedBorderColor = TextMuted.copy(alpha = 0.40f),
+            focusedLabelColor = CryptoCyan,
+            unfocusedLabelColor = TextMuted,
+            cursorColor = CryptoCyan,
+            focusedTextColor = TextPrimary,
+            unfocusedTextColor = TextPrimary,
+            disabledTextColor = TextPrimary,
+            disabledBorderColor = TextMuted.copy(alpha = 0.24f),
+            disabledLabelColor = TextMuted.copy(alpha = 0.62f)
+        )
+    )
+}
+
+@Composable
+private fun CompactAllocationTextField(
+    label: String,
+    value: String,
+    onValueChange: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true
+) {
+    var focused by remember { mutableStateOf(false) }
+    val displayValue = if (focused) spAllocationDigitsOnly(value) else spAllocationDisplayValue(value)
+    OutlinedTextField(
+        value = displayValue,
+        onValueChange = { if (enabled) onValueChange(spAllocationDigitsOnly(it)) },
+        label = { Text(label, fontSize = 8.5.sp, maxLines = 1) },
+        modifier = modifier
+            .height(52.dp)
+            .onFocusChanged { focused = it.isFocused },
+        singleLine = true,
+        readOnly = !enabled,
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
         textStyle = androidx.compose.ui.text.TextStyle(
             color = TextPrimary,
             fontSize = 11.sp,

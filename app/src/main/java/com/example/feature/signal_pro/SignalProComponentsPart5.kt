@@ -688,11 +688,20 @@ fun SizingBox(label: String, size: String, modifier: Modifier = Modifier) {
             overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
         )
         Spacer(modifier = Modifier.height(2.dp))
+        val sizeParts = size.split(" ", limit = 2)
         Text(
-            text = size,
+            text = sizeParts.getOrNull(0) ?: size,
             fontSize = 10.5.sp,
             fontWeight = FontWeight.Black,
             color = profileColor,
+            maxLines = 1,
+            softWrap = false
+        )
+        Text(
+            text = sizeParts.getOrNull(1).orEmpty(),
+            fontSize = 7.8.sp,
+            fontWeight = FontWeight.Bold,
+            color = profileColor.copy(alpha = 0.86f),
             maxLines = 1,
             softWrap = false
         )

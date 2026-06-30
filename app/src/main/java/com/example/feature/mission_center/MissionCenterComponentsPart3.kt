@@ -47,6 +47,30 @@ private fun mcLeverageDisplay(raw: String?, fallback: String = "2X"): String {
     return if (digits.isBlank()) "" else "${digits}X"
 }
 
+private fun mcAllocationDigits(raw: String?): String {
+    val normalized = raw.orEmpty().replace(",", ".")
+    val cleaned = StringBuilder()
+    var decimalUsed = false
+    normalized.forEach { ch ->
+        when {
+            ch.isDigit() -> cleaned.append(ch)
+            ch == '.' && !decimalUsed -> {
+                cleaned.append(ch)
+                decimalUsed = true
+            }
+        }
+    }
+    return cleaned.toString().take(5)
+}
+
+private fun mcAllocationDisplay(raw: String?, fallback: String = "2.0% Cap"): String {
+    val source = raw.orEmpty().ifBlank { fallback }
+    val numeric = mcAllocationDigits(source).trimEnd('.')
+    if (numeric.isBlank()) return ""
+    val suffix = if (source.contains("MAX", ignoreCase = true) || numeric.toDoubleOrNull()?.let { it >= 10.0 } == true) "Max" else "Cap"
+    return "$numeric% $suffix"
+}
+
 // Extracted from MissionCenterScreen.kt to keep the public screen entry point compact.
 @Composable
 fun MissionTerminalCard(
@@ -360,11 +384,11 @@ fun MissionTerminalCard(
                 val levValue = (leverage?.uppercase() ?: if (isFutures) "2X" else "1X").replace("SPOT / 1X", "1X").replace("SPOT", "1X")
                 CompactDataRow("LEVERAGE", levValue, T_TextSecondary)
                 Spacer(modifier = Modifier.height(SpacingCompact))
-                CompactDataRow("ALLOCATION", mission?.positionSize?.uppercase() ?: "NOT SET", T_TextPrimary)
+                CompactDataRow("ALLOCATION", mission?.positionSize?.let { mcAllocationDisplay(it) } ?: "NOT SET", T_TextPrimary)
                 Spacer(modifier = Modifier.height(SpacingCompact))
                 val profUpper = mission?.riskProfile?.uppercase() ?: "NOT SET"
                 val profColor = mcRiskProfileColor(profUpper)
-                CompactDataRow("RISK PROFILE", profUpper, profColor)
+                CompactDataRow("CONSENSUS BIAS", profUpper, profColor)
                 Spacer(modifier = Modifier.height(SpacingCompact))
                 val isAutoActive = mission?.autoCloseEnabled == true
                 val isConditionValid = mission?.conditionValidity == "VALID"
@@ -384,10 +408,10 @@ fun MissionTerminalCard(
 
         HorizontalDivider(color = T_BorderHigh, thickness = 0.5.dp)
 
-        // TITAN ORACLE AI TRADE GUARDIAN / SUPERVISION LAYER
+        // TITAN AI TRADE GUARDIAN / SUPERVISION LAYER
         Column(modifier = Modifier.fillMaxWidth().padding(horizontal = SpacingMedium, vertical = SpacingNormal)) {
             Text(
-                text = "TITAN ORACLE AI TRADE GUARDIAN",
+                text = "TITAN AI TRADE GUARDIAN",
                 color = T_Gold,
                 fontSize = 9.sp,
                 fontFamily = FontFamily.Monospace,
@@ -429,7 +453,7 @@ fun MissionTerminalCard(
                     Spacer(modifier = Modifier.height(SpacingCompact))
                     CompactDataRow("COPILOT POLICY", policyText, if (policyText == "ASSIST ONLY") T_Cyan else T_Gold)
                     Spacer(modifier = Modifier.height(SpacingCompact))
-                    CompactDataRow("AI AUTO PILOT", autoPilotState, if (autoPilotState == "WATCHING") T_Gold else T_TextSecondary)
+                    CompactDataRow("TITAN AI AUTO PILOT", autoPilotState, if (autoPilotState == "WATCHING") T_Gold else T_TextSecondary)
                 }
                 Column(modifier = Modifier.weight(1f).padding(start = SpacingNormal)) {
                     CompactDataRow("AUTO-TRADING", autoTradingStatus, when (autoTradingStatus) { "ACTIVE" -> T_Cyan; "INVALID" -> T_Red; else -> T_TextSecondary })
@@ -788,7 +812,8 @@ fun MissionTerminalCard(
                 var overrideLev by remember(mission.id, mission.leverage, marketType) { mutableStateOf(mcLeverageDigits(mission.leverage).ifBlank { if (isFutures) "2" else "1" }) }
                 var overrideLevFocused by remember(mission.id) { mutableStateOf(false) }
                 var overrideRisk by remember { mutableStateOf(mission.riskProfile ?: "") }
-                var overrideAlloc by remember { mutableStateOf(mission.positionSize ?: "") }
+                var overrideAlloc by remember(mission.id, mission.positionSize) { mutableStateOf(mcAllocationDisplay(mission.positionSize, "2.0% Cap")) }
+                var overrideAllocFocused by remember(mission.id) { mutableStateOf(false) }
                 var overrideRemark by remember { mutableStateOf(mission.setupRemark ?: "") }
                 var aiPolicy by remember { mutableStateOf(mission.copilotMode?.takeIf { it.contains("EXECUTION") }?.let { "ASSIST & EXECUTION" } ?: "ASSIST ONLY") }
                 var overrideAutoTrading by remember { mutableStateOf(mission.autoCloseEnabled) }
@@ -821,7 +846,7 @@ fun MissionTerminalCard(
                                                 overrideSl = profile.stopLoss
                                                 overrideLev = mcLeverageDigits(profile.leverage).ifBlank { if (isFutures) "2" else "1" }
                                                 overrideRisk = profile.riskProfile
-                                                overrideAlloc = profile.positionSize
+                                                overrideAlloc = mcAllocationDisplay(profile.positionSize, "2.0% Cap")
                                                 overrideRemark = profile.remark
                                             } else {
                                                 overrideTp1 = mission.targets
@@ -830,7 +855,7 @@ fun MissionTerminalCard(
                                                 overrideSl = mission.stopLoss
                                                 overrideLev = mcLeverageDigits(mission.leverage).ifBlank { if (isFutures) "2" else "1" }
                                                 overrideRisk = ""
-                                                overrideAlloc = ""
+                                                overrideAlloc = mcAllocationDisplay(mission.positionSize, "2.0% Cap")
                                                 overrideRemark = ""
                                             }
                                         }
@@ -863,7 +888,15 @@ fun MissionTerminalCard(
                                     colors = textFieldColors
                                 ) }
                                 item { androidx.compose.material3.OutlinedTextField(value = overrideRisk, onValueChange = { overrideRisk = it }, label = { Text("Consensus Bias", fontSize = 10.sp) }, modifier = Modifier.fillMaxWidth(), singleLine = true, colors = textFieldColors) }
-                                item { androidx.compose.material3.OutlinedTextField(value = overrideAlloc, onValueChange = { overrideAlloc = it }, label = { Text("Allocation", fontSize = 10.sp) }, modifier = Modifier.fillMaxWidth(), singleLine = true, colors = textFieldColors) }
+                                item { androidx.compose.material3.OutlinedTextField(
+                                    value = if (overrideAllocFocused) mcAllocationDigits(overrideAlloc) else mcAllocationDisplay(overrideAlloc, "2.0% Cap"),
+                                    onValueChange = { overrideAlloc = mcAllocationDigits(it) },
+                                    label = { Text("Allocation", fontSize = 10.sp) },
+                                    modifier = Modifier.fillMaxWidth().onFocusChanged { overrideAllocFocused = it.isFocused },
+                                    singleLine = true,
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                                    colors = textFieldColors
+                                ) }
                                 item { androidx.compose.material3.OutlinedTextField(value = overrideRemark, onValueChange = { overrideRemark = it }, label = { Text("Remark", fontSize = 10.sp) }, modifier = Modifier.fillMaxWidth(), singleLine = true, colors = textFieldColors) }
                                 item {
                                     Spacer(modifier = Modifier.height(10.dp))
@@ -963,7 +996,7 @@ fun MissionTerminalCard(
                                 manualStopLoss = overrideSl.ifBlank { null },
                                 leverage = mcLeverageDisplay(overrideLev, if (isFutures) "2X" else "1X").ifBlank { null },
                                 riskProfile = overrideRisk.ifBlank { null },
-                                positionSize = overrideAlloc.ifBlank { null },
+                                positionSize = mcAllocationDisplay(overrideAlloc, "2.0% Cap").ifBlank { null },
                                 copilotMode = aiPolicy,
                                 autoCloseEnabled = overrideAutoTrading,
                                 autoCloseConditions = overrideConditions,

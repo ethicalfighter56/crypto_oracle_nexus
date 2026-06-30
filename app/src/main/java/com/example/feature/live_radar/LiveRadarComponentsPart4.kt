@@ -219,7 +219,7 @@ fun AiAutoPilotMockupSection(isBengali: Boolean) {
         
         // Safety Copy
         Text(
-            text = "TITAN Oracle Vision Scanner is simulation-only in this phase. No exchange order will be opened.",
+            text = "TITAN AI Auto Pilot is simulation-only in this phase. No exchange order will be opened.",
             color = AccentGold,
             fontSize = 10.sp,
             fontFamily = FontFamily.SansSerif,

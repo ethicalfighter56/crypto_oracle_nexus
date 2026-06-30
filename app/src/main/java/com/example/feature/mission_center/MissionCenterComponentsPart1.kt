@@ -255,7 +255,7 @@ fun MissionTerminalHeaderBlock(viewModel: CryptoViewModel) {
         ) {
             Column {
                 Text(
-                    text = "TITAN ORACLE AI TRADE GUARDIAN",
+                    text = "TITAN AI TRADE GUARDIAN",
                     color = T_TextMuted,
                     fontSize = 8.sp,
                     fontFamily = FontFamily.Monospace,
@@ -387,7 +387,7 @@ fun PremiumCopilotActivationBanner(isBengali: Boolean) {
             Box(modifier = Modifier.size(8.dp).background(T_Cyan, CircleShape))
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-                text = if (isBengali) "টাইটান এআই ট্রেড গাইডেন্স সক্রিয়" else "TITAN ORACLE AI TRADE GUARDIAN ACTIVE",
+                text = if (isBengali) "টাইটান এআই ট্রেড গাইডেন্স সক্রিয়" else "TITAN AI TRADE GUARDIAN ACTIVE",
                 color = T_TextPrimary,
                 fontSize = 12.sp,
                 fontFamily = FontFamily.Monospace,
@@ -444,7 +444,7 @@ fun MissionSetupSummary(isBengali: Boolean) {
                 SetupRow("SOURCE", "SIGNAL PRO", T_TextPrimary)
             }
             Column(modifier = Modifier.weight(1f)) {
-                SetupRow("RISK PROFILE", "MODERATE", T_Green)
+                SetupRow("CONSENSUS BIAS", "MODERATE", T_Green)
                 Spacer(modifier = Modifier.height(8.dp))
                 SetupRow("COPILOT MODE", "ALERT-ONLY", T_Cyan)
                 Spacer(modifier = Modifier.height(8.dp))
